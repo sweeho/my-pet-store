@@ -1,0 +1,330 @@
+records:
+  - record_key: fulfillment-management-entity-0001
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A TPA Supplier Order document SHALL contain an OrderId element, an OrderDate element, a ShippingAddress complex element, and a LineItems element containing one or more LineItem elements. Each Supplier Order is serialized to XML with the namespace http://blueprints.j2ee.sun.com/TPASupplierOrder.
+    confidence: high
+    confidence_basis: >
+      This is directly specified in the TPASupplierOrderXDE class implementation and corresponding XSD schema. The class methods (setOrderId, setOrderDate, setShippingAddress, addLineItem) and the XSD element definitions at TPASupplierOrder.xsd lines 11-30 directly enforce this structure.
+    risk_class: operational
+    basis: >
+      TPASupplierOrderXDE.java defines the document structure with createElement and appendChild calls. TPASupplierOrder.xsd lines 11-30 specify the exact element composition and types.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPASupplierOrderXDE.java
+        line_start: 119
+        line_end: 131
+        excerpt: |
+          public void copyDocument(Result result) throws XMLDocumentException {
+            Element supplierOrderElement = supplierOrderDocument.createElementNS(XML_NAMESPACE, XML_SUPPLIERORDER);
+            supplierOrderElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + XML_PREFIX, XML_NAMESPACE);
+            supplierOrderElement.appendChild(orderIdElement);
+            supplierOrderElement.appendChild(orderDateElement);
+            supplierOrderElement.appendChild(shippingAddressElement);
+            supplierOrderElement.appendChild(lineItemsElement);
+            supplierOrderDocument.appendChild(supplierOrderElement);
+
+  - record_key: fulfillment-management-entity-0002
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A TPA Invoice document SHALL contain an OrderId element, a UserId element, an OrderDate element, a ShippingDate element, and a LineItems element containing one or more LineItem elements. Each Invoice is serialized to XML with the namespace http://blueprints.j2ee.sun.com/TPAInvoice.
+    confidence: high
+    confidence_basis: >
+      The TPAInvoiceXDE class explicitly defines these elements as instance variables and the copyDocument method assembles them in order. The XSD schema at TPAInvoice.xsd lines 11-31 enforces this structure. Two independent declarations (code and schema) confirm the requirement.
+    risk_class: operational
+    basis: >
+      TPAInvoiceXDE.java defines fields for each element (orderIdElement, userIdElement, orderDateElement, shippingDateElement, lineItemsElement). TPAInvoice.xsd lines 11-31 specify the element sequence and types.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPAInvoiceXDE.java
+        line_start: 113
+        line_end: 126
+        excerpt: |
+          public void copyDocument(Result result) throws XMLDocumentException {
+            Element invoiceElement = invoiceDocument.createElementNS(XML_NAMESPACE, XML_INVOICE);
+            invoiceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + XML_PREFIX, XML_NAMESPACE);
+            invoiceElement.appendChild(orderIdElement);
+            invoiceElement.appendChild(userIdElement);
+            invoiceElement.appendChild(orderDateElement);
+            invoiceElement.appendChild(shippingDateElement);
+            invoiceElement.appendChild(lineItemsElement);
+            invoiceDocument.appendChild(invoiceElement);
+
+  - record_key: fulfillment-management-entity-0003
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A TPA LineItem SHALL contain the following required attributes: categoryId (string), productId (string), itemId (string), lineNo (non-negative integer), quantity (positive integer), and unitPrice (positive decimal >= 0.0). LineItems within an order SHALL have unique itemId attributes.
+    confidence: high
+    confidence_basis: >
+      The XSD schema specifies all attributes as required with type restrictions (TPALineItem.xsd lines 11-17). The uniqueness constraint is enforced at the order level via xsd:unique in both TPASupplierOrder.xsd and TPAInvoice.xsd. No conflicting implementation found in code; the code correctly adds line items with all required attributes.
+    risk_class: operational
+    basis: >
+      TPALineItem.xsd lines 11-24 define the lineItem complexType with required attributes and the positiveDecimal type restriction. TPASupplierOrder.xsd lines 23-26 and TPAInvoice.xsd lines 24-27 enforce itemId uniqueness with xsd:unique constraints.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/rsrc/schemas/TPALineItem.xsd
+        line_start: 10
+        line_end: 24
+        excerpt: |
+          <xsd:complexType name="lineItem">
+            <xsd:attribute name="categoryId" type="xsd:string" use="required" />
+            <xsd:attribute name="productId" type="xsd:string" use="required" />
+            <xsd:attribute name="itemId" type="xsd:string" use="required" />
+            <xsd:attribute name="lineNo" type="xsd:nonNegativeInteger" use="required" />
+            <xsd:attribute name="quantity" type="xsd:positiveInteger" use="required" />
+            <xsd:attribute name="unitPrice" type="positiveDecimal" use="required" />
+          </xsd:complexType>
+          <xsd:simpleType name="positiveDecimal">
+            <xsd:restriction base="xsd:decimal">
+              <xsd:minInclusive value="0.0" />
+            </xsd:restriction>
+          </xsd:simpleType>
+
+  - record_key: fulfillment-management-entity-0004
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A Shipping Address entity SHALL contain the following required string elements: FirstName, LastName, Street, City, State, Country, ZipCode, Email, and Phone.
+    confidence: high
+    confidence_basis: >
+      The XSD schema explicitly defines the address complexType with all elements as xsd:string (TPASupplierOrder.xsd lines 32-44). The Java code directly populates these fields via appendChild calls (TPASupplierOrderXDE.java lines 163-171). Both sources consistently specify these nine required fields.
+    risk_class: operational
+    basis: >
+      TPASupplierOrder.xsd lines 32-44 define the address complexType. TPASupplierOrderXDE.java lines 160-173 show the setShippingAddress method constructing the element with all nine required fields.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/rsrc/schemas/TPASupplierOrder.xsd
+        line_start: 32
+        line_end: 44
+        excerpt: |
+          <xsd:complexType name="address">
+            <xsd:sequence>
+              <xsd:element name="FirstName" type="xsd:string" />
+              <xsd:element name="LastName" type="xsd:string" />
+              <xsd:element name="Street" type="xsd:string" />
+              <xsd:element name="City" type="xsd:string" />
+              <xsd:element name="State" type="xsd:string" />
+              <xsd:element name="Country" type="xsd:string" />
+              <xsd:element name="ZipCode" type="xsd:string" />
+              <xsd:element name="Email" type="xsd:string" />
+              <xsd:element name="Phone" type="xsd:string" />
+            </xsd:sequence>
+          </xsd:complexType>
+
+  - record_key: order-approval-entity-0001
+    kind: entity
+    capability_key: order-approval
+    requirement: >
+      An OrderApproval document SHALL contain one or more Order elements. Each Order SHALL contain an OrderId element and an OrderStatus element. Both OrderId and OrderStatus contain text content.
+    confidence: high
+    confidence_basis: >
+      The DTD at OrderApproval.dtd lines 38-45 explicitly defines this structure. The OrderApproval.java and ChangedOrder.java classes directly implement this structure with data member access (orderId and orderStatus). Schema and code agree on the structure.
+    risk_class: operational
+    basis: >
+      OrderApproval.dtd lines 38-45 specify the element structure. OrderApproval.java lines 78-85 show the OrderApproval class managing a list of ChangedOrder objects. ChangedOrder.java lines 45-64 show the orderId and orderStatus fields that populate the XML elements.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/rsrc/schemas/OrderApproval.dtd
+        line_start: 38
+        line_end: 46
+        excerpt: |
+          <!ELEMENT OrderApproval (Order+)>
+          <!ELEMENT Order (OrderId, OrderStatus)>
+          <!ELEMENT OrderId (#PCDATA)>
+          <!ELEMENT OrderStatus (#PCDATA)>
+
+  - record_key: fulfillment-management-business-rule-0001
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      When creating a TPA Supplier Order, the OrderDate SHALL be formatted in yyyy-MM-dd format.
+    confidence: high
+    confidence_basis: >
+      The TPASupplierOrderXDE class explicitly uses a SimpleDateFormat with the pattern "yyyy-MM-dd" (line 78). This is the only date format used in the class and is applied in the setOrderDate method, making this a mandatory constraint on all supplier orders created by this component.
+    risk_class: operational
+    basis: >
+      TPASupplierOrderXDE.java line 78 defines the dateFormat as SimpleDateFormat("yyyy-MM-dd"). This formatter is used in setOrderDate at lines 154-158, which is the only method that populates the OrderDate element.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPASupplierOrderXDE.java
+        line_start: 78
+        line_end: 78
+        excerpt: |
+          private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPASupplierOrderXDE.java
+        line_start: 154
+        line_end: 158
+        excerpt: |
+          public void setOrderDate(Date orderDate) {
+            orderDateElement = XMLDocumentUtils.createElement(supplierOrderDocument, XML_NAMESPACE, XML_ORDERDATE,
+                                                              dateFormat.format(orderDate));
+            return;
+
+  - record_key: fulfillment-management-business-rule-0002
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      When creating a TPA Invoice, both OrderDate and ShippingDate SHALL be formatted in yyyy-MM-dd format.
+    confidence: high
+    confidence_basis: >
+      The TPAInvoiceXDE class uses the same SimpleDateFormat with pattern "yyyy-MM-dd" (line 70). Both setOrderDate and setShippingDate methods use this formatter. This is the only date format in the class and applies to all invoice creation.
+    risk_class: operational
+    basis: >
+      TPAInvoiceXDE.java line 70 defines dateFormat as SimpleDateFormat("yyyy-MM-dd"). This is used in setOrderDate (lines 154-158) and setShippingDate (lines 160-164).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPAInvoiceXDE.java
+        line_start: 70
+        line_end: 70
+        excerpt: |
+          private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPAInvoiceXDE.java
+        line_start: 154
+        line_end: 164
+        excerpt: |
+          public void setOrderDate(Date orderDate) {
+            orderDateElement = XMLDocumentUtils.createElement(invoiceDocument, XML_NAMESPACE, XML_ORDERDATE,
+                                                              dateFormat.format(orderDate));
+            return;
+          }
+          public void setShippingDate(Date shippingDate) {
+            shippingDateElement = XMLDocumentUtils.createElement(invoiceDocument, XML_NAMESPACE, XML_SHIPPINGDATE,
+                                                                 dateFormat.format(shippingDate));
+            return;
+
+  - record_key: fulfillment-management-business-rule-0003
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      TPA Supplier Orders and Invoices SHALL support validation against both DTD and XSD schemas. The system SHALL allow switching between DTD and XSD validation modes.
+    confidence: high
+    confidence_basis: >
+      Both TPASupplierOrderXDE and TPAInvoiceXDE implement the setSupportingXSD method and maintain both DTD_PUBLIC_ID/DTD_SYSTEM_ID and XSD_PUBLIC_ID/XSD_SYSTEM_ID constants (e.g., lines 58-63 in TPASupplierOrderXDE). The serialization method conditionally uses XSD or DTD based on the supportingXSD flag. This is not just infrastructure code; it reflects a deliberate design choice to support both validation modes.
+    risk_class: operational
+    basis: >
+      TPASupplierOrderXDE.java lines 58-63 define both DTD and XSD identifiers. Lines 94-96 set the validation mode. Lines 127-129 in copyDocument use the isSupportingXSD flag to select which validation approach to use. The same pattern appears in TPAInvoiceXDE.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPASupplierOrderXDE.java
+        line_start: 58
+        line_end: 63
+        excerpt: |
+          public static final String DTD_PUBLIC_ID = "-//Sun Microsystems, Inc. - J2EE Blueprints Group//DTD TPA-SupplierOrder 1.0//EN";
+          public static final String XSD_PUBLIC_ID = "http://blueprints.j2ee.sun.com/TPASupplierOrder";
+          public static final String XML_NAMESPACE = "http://blueprints.j2ee.sun.com/TPASupplierOrder";
+          public static final String XML_PREFIX = "tpaso";
+          public static final String DTD_SYSTEM_ID = "/com/sun/j2ee/blueprints/xmldocuments/rsrc/schemas/TPASupplierOrder.dtd";
+          public static final String XSD_SYSTEM_ID = "/com/sun/j2ee/blueprints/xmldocuments/rsrc/schemas/TPASupplierOrder.xsd";
+
+  - record_key: fulfillment-management-business-rule-0004
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      XML documents from this component SHALL be encoded in UTF-8.
+    confidence: high
+    confidence_basis: >
+      The XMLDocumentUtils class defines DEFAULT_ENCODING as a constant "UTF-8" (line 56). This constant is used as the default encoding throughout serialization methods (serialize, toXML, getDocumentAsString). No other encoding is used in the codebase; UTF-8 is enforced as the only encoding option.
+    risk_class: operational
+    basis: >
+      XMLDocumentUtils.java line 56 defines DEFAULT_ENCODING = "UTF-8". This is used in the serialize method (line 378), toXML methods (lines 390-436), and in TPASupplierOrderXDE/TPAInvoiceXDE's getDocumentAsString methods.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/XMLDocumentUtils.java
+        line_start: 56
+        line_end: 56
+        excerpt: |
+          public static final String DEFAULT_ENCODING = "UTF-8";
+
+  - record_key: fulfillment-management-integration-0001
+    kind: integration
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL support entity catalog resolution for XML schema/DTD references. When an entity URI is provided, the system SHALL attempt to map it using an entity catalog before falling back to direct URL resolution.
+    confidence: high
+    confidence_basis: >
+      The CustomEntityResolver class is purpose-built for this integration point. It loads entity mappings from a properties file (ENTITY_CATALOG at line 50) and provides mapEntityURI and resolveEntity methods. Both TPA document editor classes accept an optional entityCatalogURL parameter. The CustomEntityResolver is used consistently throughout the XMLDocumentUtils parsing and serialization methods.
+    risk_class: operational
+    basis: >
+      CustomEntityResolver.java lines 47-217 implement entity catalog resolution. XMLDocumentUtils methods (toXML, deserialize, transform) accept optional entityCatalogURL parameters and create CustomEntityResolver instances to handle mapping. TPASupplierOrderXDE and TPAInvoiceXDE constructors accept entityCatalogURL and pass it to CustomEntityResolver.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/CustomEntityResolver.java
+        line_start: 47
+        line_end: 62
+        excerpt: |
+          public class CustomEntityResolver implements EntityResolver {
+            public static final boolean TRACE = false;
+            public static final String ENTITY_CATALOG
+            = "/com/sun/j2ee/blueprints/xmldocuments/rsrc/EntityCatalog.properties";
+            private Properties entityCatalog = null;
+            private EntityResolver parentResolver = null;
+            public CustomEntityResolver() {
+              this((EntityResolver) null);
+              return;
+            }
+
+  - record_key: fulfillment-management-workflow-0001
+    kind: workflow
+    capability_key: fulfillment-management
+    requirement: >
+      To create a TPA Supplier Order document, the system SHALL: (1) instantiate a TPASupplierOrderXDE, (2) call newDocument to initialize, (3) set OrderId via setOrderId, (4) set OrderDate via setOrderDate with a Date object, (5) set ShippingAddress via setShippingAddress with required address components, (6) add one or more LineItems via addLineItem, (7) serialize to output via copyDocument or getDocumentAsString.
+    confidence: medium
+    confidence_basis: >
+      The TPASupplierOrderXDE class API directly implements this workflow (constructor at line 89, newDocument at line 110, setOrderId at line 149, setOrderDate at line 154, setShippingAddress at line 160, addLineItem at line 175, copyDocument at line 119, getDocumentAsString at line 139). The main method at lines 185-200 demonstrates this exact workflow. The code is well-structured for this sequence, though the workflow itself is inferred from the class design rather than explicitly documented as a requirement.
+    risk_class: operational
+    basis: >
+      TPASupplierOrderXDE.java class structure and main method demonstrate the document creation workflow. The newDocument method initializes elements, setter methods populate them, and copyDocument/getDocumentAsString serialize.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPASupplierOrderXDE.java
+        line_start: 185
+        line_end: 200
+        excerpt: |
+          public static void main(String[] args) {
+            try {
+              TPASupplierOrderXDE builder = new TPASupplierOrderXDE(null, true);
+              builder.newDocument();
+              builder.setOrderId("007");
+              builder.setShippingAddress("James", "Bond", "Seventh Street", "London", "LD", "Great Britain",
+                                         "77007", "james.bond@mi6.uk.gov", "700 777 7777");
+              builder.setOrderDate(new Date());
+              builder.addLineItem("GUN", "BERETTA", "007", "001", 1, 1000);
+              System.out.println(builder.getDocumentAsString());
+              System.exit(0);
+
+  - record_key: fulfillment-management-workflow-0002
+    kind: workflow
+    capability_key: fulfillment-management
+    requirement: >
+      To create a TPA Invoice document, the system SHALL: (1) instantiate a TPAInvoiceXDE, (2) call newDocument to initialize, (3) set OrderId via setOrderId, (4) set UserId via setUserId, (5) set OrderDate via setOrderDate with a Date object, (6) set ShippingDate via setShippingDate with a Date object, (7) add one or more LineItems via addLineItem, (8) serialize to output via copyDocument or getDocumentAsString.
+    confidence: medium
+    confidence_basis: >
+      The TPAInvoiceXDE class implements this workflow with the same structure as TPASupplierOrderXDE. The main method at lines 176-191 demonstrates the exact workflow. No conflicting implementations exist. The workflow is inferred from class design and demonstrated usage rather than explicitly stated, hence medium confidence.
+    risk_class: operational
+    basis: >
+      TPAInvoiceXDE.java class API and main method (lines 176-191) demonstrate the invoice creation workflow. The class provides all necessary methods in the required sequence.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/tpa/TPAInvoiceXDE.java
+        line_start: 176
+        line_end: 191
+        excerpt: |
+          public static void main(String[] args) {
+            try {
+              TPAInvoiceXDE builder = new TPAInvoiceXDE();
+              builder.newDocument();
+              builder.setOrderId("007");
+              builder.setUserId("Bond... James Bond");
+              builder.setShippingDate(new Date());
+              builder.setOrderDate(new Date());
+              builder.addLineItem("GUN", "BERETTA", "007", "001", 1, 1000);
+              System.out.println(builder.getDocumentAsString());
+              System.exit(0);
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/rsrc/schemas/OrderApproval.dtd
+    description: >
+      Line 44 contains a FIXME comment stating "should be attribute" for the OrderStatus element. It is currently defined as an element containing text (#PCDATA) but the developer noted it should be an XML attribute instead. The actual requirement (element vs attribute) is ambiguous without further context on whether this FIXME was acted upon in later versions or if it represents a known design flaw.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/xmldocuments/src/com/sun/j2ee/blueprints/xmldocuments/XMLDocumentUtils.java
+    description: >
+      Lines 374-377 contain commented-out code that would set an xsi:schemaLocation attribute for XSD support. The intent appears to be alternative schema location handling for XSD validation, but the code is disabled with no explanation. It is unclear whether this represents abandoned functionality, a workaround for a compatibility issue, or incomplete implementation.
+
+stack_metadata:
+  framework: J2EE / Java XML APIs
+  xml.parsing: JAXP (javax.xml.parsers, SAX, DOM, XSLT)
+  schema.support: DTD and XSD via JAXP
+  entity.resolution: Custom entity catalog (Properties-based mapping)
