@@ -1,0 +1,361 @@
+records:
+  - record_key: OAPPR-WORKFLOW-0001
+    kind: workflow
+    capability_key: order-approval
+    requirement: >
+      The system SHALL manage order status through a defined workflow with states:
+      PENDING (initial), APPROVED, DENIED, SHIPPED_PART, and COMPLETED.
+    confidence: high
+    confidence_basis: >
+      Both OrderStatusNames.java and ProcessManagerEJB.java define these states
+      with clear documentation. The workflow is enforced by the OrderApprovalMDB
+      which only processes PENDING orders, preventing re-processing of finalized states.
+    risk_class: operational
+    basis: >
+      OrderStatusNames.java defines the complete set of order states with comments
+      describing the workflow transitions. The comments explicitly state:
+      "pending->approved->shippedPart->completed or pending->denied".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/OrderStatusNames.java
+        line_start: 43
+        line_end: 66
+        excerpt: |
+          /**
+           * This class is the central location to store the names of the
+           * status that an order can be in.
+           * The states an order goes through are:
+           * pending->approved->shippedPart(shipped part of order)->completed(whole order shipped)  or
+           * pending->denied
+           */
+          public class OrderStatusNames {
+
+              /** for orders that have been placed but not yet approved */
+              public static final String PENDING = "PENDING";
+
+              /** for orders that have been approved */
+              public  static final String APPROVED = "APPROVED";
+
+              /** for orders that have been denied */
+              public  static final String DENIED = "DENIED";
+
+              /** for orders that have been partially completed*/
+              public  static final String SHIPPED_PART = "SHIPPED_PART";
+
+              /** for orders that have been completed*/
+              public  static final String COMPLETED = "COMPLETED";
+          }
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (stateless session bean)
+      ejb.bean: ManagerEJB (entity bean with CMP 2.x persistence)
+
+  - record_key: OAPPR-BUSINESS-0001
+    kind: business-rule
+    capability_key: order-approval
+    requirement: >
+      The system SHALL only process order status updates for orders currently in PENDING status.
+      Orders that have already been APPROVED, DENIED, or COMPLETED SHALL be skipped and not reprocessed.
+    confidence: high
+    confidence_basis: >
+      The OrderApprovalMDB explicitly checks the current status before processing.
+      Both the check logic and the skipping behavior are clearly documented in the
+      code with a comment explaining the rule. This prevents duplicate processing
+      of already-finalized orders.
+    risk_class: operational
+    basis: >
+      OrderApprovalMDB.doWork() method checks if the order status is PENDING before
+      processing. Non-PENDING orders are skipped via continue statement. The comment
+      at lines 201-203 explicitly states: "only PENDING orders can be updated. if
+      order already APPROVED or DENIED or COMPLETED, then order already processed
+      so dont process again".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+        line_start: 200
+        line_end: 207
+        excerpt: |
+          // only PENDING orders can be updated
+          //if order alreay APPROVED or DENIED or COMPLETED, then order
+          //already processed so dont process again
+          String curStatus = processManager.getStatus(co.getOrderId());
+          if(!curStatus.equals(OrderStatusNames.PENDING)) {
+            continue;
+          }
+    stack_metadata:
+      ejb.bean: OrderApprovalMDB (message-driven bean)
+
+  - record_key: OAPPR-WORKFLOW-0002
+    kind: workflow
+    capability_key: order-approval
+    requirement: >
+      When an order is approved, the system SHALL generate a supplier purchase order
+      for fulfillment and send it to the supplier queue.
+    confidence: high
+    confidence_basis: >
+      The logic is present in two places: (1) OrderApprovalMDB.doWork() creates
+      a supplier purchase order XML for each approved order, (2) OrderApprovalTD
+      sends the purchase order to the supplier queue. Both are consistently implemented
+      and documented.
+    risk_class: operational
+    basis: >
+      OrderApprovalMDB.doWork() checks if order status is APPROVED (line 219) and
+      if so, retrieves the purchase order and converts it to XML format (lines 220-222).
+      OrderApprovalTD.doTransition() then sends this XML to the supplier purchase
+      order queue (lines 92-97).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+        line_start: 218
+        line_end: 223
+        excerpt: |
+          //for all approved orders, send a PO to supplier
+          if(co.getOrderStatus().equals(OrderStatusNames.APPROVED)) {
+            po = poHome.findByPrimaryKey(co.getOrderId());
+            String xmlPO = getXmlPO(po, supplierOrderXDE);
+            supplierPoList.add(xmlPO);
+          }
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/transitions/OrderApprovalTD.java
+        line_start: 86
+        line_end: 105
+        excerpt: |
+          public void doTransition(TransitionInfo info) throws TransitionException {
+            String xmlPO = null;
+            Collection supplierPoList = info.getXMLMessageBatch();
+            String xmlMailOrderApprovals = info.getXMLMessage();
+
+            try {
+              Iterator it = supplierPoList.iterator();
+              while(it!= null && it.hasNext()) {
+                xmlPO = (String) it.next();
+                //send PO to supplier for this order
+                supplierQueueHelper.sendMessage(xmlPO);
+               }//end while
+
+               //send the list of valid order approval/deny to customer relations
+               sendMail(xmlMailOrderApprovals);
+    stack_metadata:
+      ejb.bean: OrderApprovalMDB (message-driven bean)
+      ejb.bean: OrderApprovalTD (transition delegate)
+
+  - record_key: OAPPR-BUSINESS-0002
+    kind: business-rule
+    capability_key: order-approval
+    requirement: >
+      When an order status is updated (whether approved or denied), the system SHALL send a
+      notification message to the customer relations department with the order approval status.
+    confidence: high
+    confidence_basis: >
+      The logic is implemented consistently across OrderApprovalMDB and OrderApprovalTD.
+      All processed orders (both approved and denied) are added to the mail list, and
+      this mail list is sent to the customer relations mail queue.
+    risk_class: operational
+    basis: >
+      OrderApprovalMDB.doWork() adds all orders (approved or denied) to oaMailList at
+      line 212, then converts this to XML at line 226 and returns it. OrderApprovalTD
+      then sends this xmlMailOrderApprovals to the mail queue (line 100).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+        line_start: 193
+        line_end: 227
+        excerpt: |
+          //generate list of valid orders to return
+          OrderApproval oaMailList = new OrderApproval();
+          String xmlMailOrderApprovals = null;
+          Collection coll = approval.getOrdersList();
+          Iterator it = coll.iterator();
+
+          while(it!= null && it.hasNext()) {
+            ChangedOrder co = (ChangedOrder) it.next();
+            // only PENDING orders can be updated
+            ...
+            //generate list of valid orders to return
+            //list contains orders to notify the customer of
+            //order status changes. List is sent to customer
+            //relations for emailing.
+            oaMailList.addOrder(co);
+            ...
+          }//end while
+
+          xmlMailOrderApprovals = oaMailList.toXML();
+          return new WorkResult(xmlMailOrderApprovals, supplierPoList);
+    stack_metadata:
+      ejb.bean: OrderApprovalMDB
+
+  - record_key: OAPPR-ENTITY-0001
+    kind: entity
+    capability_key: order-approval
+    requirement: >
+      The system SHALL persist order workflow state through a Manager entity with
+      orderId as primary key and status as a tracked field.
+    confidence: high
+    confidence_basis: >
+      The ManagerEJB entity bean is declared in ejb-jar.xml with explicit CMP field
+      definitions for orderId (primary key) and status. The schema and implementation
+      are consistent.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares ManagerEJB as a container-managed persistence entity bean
+      with prim-key-class of java.lang.String, primkey-field of orderId, and status
+      as a CMP field. ManagerEJB.java implements the abstract accessor methods for
+      both orderId and status.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 46
+        line_end: 80
+        excerpt: |
+          <entity>
+            <display-name>ManagerEB</display-name>
+            <ejb-name>ManagerEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerEJB</ejb-class>
+            <persistence-type>Container</persistence-type>
+            <prim-key-class>java.lang.String</prim-key-class>
+            <reentrant>False</reentrant>
+            <cmp-version>2.x</cmp-version>
+            <abstract-schema-name>Manager</abstract-schema-name>
+            <cmp-field>
+              <description>no description</description>
+              <field-name>status</field-name>
+            </cmp-field>
+            <cmp-field>
+              <description>no description</description>
+              <field-name>orderId</field-name>
+            </cmp-field>
+            <primkey-field>orderId</primkey-field>
+    stack_metadata:
+      ejb.bean: ManagerEJB (entity bean, CMP 2.x)
+      db.object: Manager (abstract schema)
+
+  - record_key: OAPPR-BUSINESS-0003
+    kind: business-rule
+    capability_key: order-approval
+    requirement: >
+      The system SHALL support querying all orders by their current status through a
+      findOrdersByStatus method that returns a collection of orders matching the status.
+    confidence: high
+    confidence_basis: >
+      The finder method is declared in both ejb-jar.xml (query definition) and
+      ProcessManagerEJB (business method), used consistently in the admin application
+      and OrderApprovalMDB. Used in multiple places in the codebase.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares a query at lines 70-79 for findOrdersByStatus method.
+      ProcessManagerLocal interface exposes getOrdersByStatus method. The ProcessManagerEJB
+      delegates to ManagerLocalHome.findOrdersByStatus. Admin application uses this
+      to display pending, approved, and denied orders separately.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 70
+        line_end: 79
+        excerpt: |
+          <query>
+            <description></description>
+            <query-method>
+              <method-name>findOrdersByStatus</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </query-method>
+            <ejb-ql>SELECT DISTINCT OBJECT(a) FROM Manager a WHERE a.status = ?1</ejb-ql>
+          </query>
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 86
+        line_end: 91
+        excerpt: |
+          /**
+           * Business method to get all orders of given status for the admin
+           */
+          public Collection getOrdersByStatus(String status) throws FinderException {
+              return mlh.findOrdersByStatus(status);
+          }
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (stateless session bean)
+      ejb.bean: ManagerEJB (entity bean)
+
+  - record_key: OAPPR-TECHNICAL-0001
+    kind: requirement
+    capability_key: order-approval
+    requirement: >
+      All ProcessManager EJB operations (createManager, updateStatus, getStatus,
+      getOrdersByStatus) and ManagerEJB operations (create, setStatus, getStatus,
+      findByPrimaryKey, findOrdersByStatus, remove) SHALL execute under a Required
+      transaction attribute, ensuring transactional consistency across operations.
+    confidence: high
+    confidence_basis: >
+      Every relevant method is explicitly declared in ejb-jar.xml container-transaction
+      elements with trans-attribute set to Required. This is enforced at the EJB
+      container level, not in application code.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines container-transaction blocks for all ProcessManager and
+      Manager methods, each with <trans-attribute>Required</trans-attribute>.
+      This ensures ACID properties for order status updates.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 262
+        line_end: 390
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>ManagerEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>create</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+          ...
+          [Similar entries for all ProcessManager and Manager methods]
+    stack_metadata:
+      ejb.transaction: Required
+
+  - record_key: OAPPR-TECHNICAL-0002
+    kind: requirement
+    capability_key: order-approval
+    requirement: >
+      ProcessManager EJB operations SHALL be accessible only through local interfaces
+      (ProcessManagerLocal/ProcessManagerLocalHome) within the same EJB container,
+      not through remote interfaces.
+    confidence: high
+    confidence_basis: >
+      ejb-jar.xml declares only local-home and local interfaces for ProcessManagerEJB,
+      with no remote-home or remote declarations. This is enforced at the EJB container
+      level and limits the communication boundary to local components.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml session bean definition at lines 81-100 contains only
+      local-home, local, and local-ref declarations. No remote interfaces are defined.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 81
+        line_end: 100
+        excerpt: |
+          <session>
+            <display-name>ProcessManagerSB</display-name>
+            <ejb-name>ProcessManagerEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.processmanager.ejb.ProcessManagerLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.processmanager.ejb.ProcessManagerLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.processmanager.ejb.ProcessManagerEJB</ejb-class>
+            <session-type>Stateless</session-type>
+            <transaction-type>Container</transaction-type>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/Manager</ejb-ref-name>
+              <ejb-ref-type>Entity</ejb-ref-type>
+              <local-home>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocalHome</local-home>
+              <local>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocal</local>
+              <ejb-link>ManagerEJB</ejb-link>
+            </ejb-local-ref>
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (stateless, local interfaces only)
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/processmanager/src
+    description: >
+      The actual approval decision logic (business rules for what causes approval vs denial)
+      is not present in the ProcessManager component itself. The OrderApprovalMDB in the
+      OPC application receives pre-made approval/denial decisions via XML messages. The
+      ProcessManager component only executes the state transitions that have already been
+      decided upstream. It is unclear from the processmanager code alone what criteria
+      determine whether an order is approved or denied.
