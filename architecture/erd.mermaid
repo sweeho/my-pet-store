@@ -1,129 +1,125 @@
 %% EXTRACTED FROM LEGACY SOURCE — evidence of what exists, not a build target. Where this disagrees with a capability delta spec, the delta spec wins.
 
 erDiagram
-    CATEGORY ||--o{ CATEGORY_DETAILS : has
-    CATEGORY ||--o{ PRODUCT : contains
-    PRODUCT ||--o{ PRODUCT_DETAILS : has
-    PRODUCT ||--o{ ITEM : contains
-    ITEM ||--o{ ITEM_DETAILS : has
-    ITEM ||--o{ LINE_ITEM : appears_in
-    USER ||--o{ CUSTOMER : creates
-    CUSTOMER ||--o{ CONTACT_INFO : has
-    CUSTOMER ||--o{ ADDRESS : has
-    CUSTOMER ||--o{ PROFILE : has
-    CUSTOMER ||--o{ CREDIT_CARD : has
-    PURCHASE_ORDER ||--o{ LINE_ITEM : contains
-    PURCHASE_ORDER ||--o{ CONTACT_INFO : bill_to
-    PURCHASE_ORDER ||--o{ CONTACT_INFO : ship_to
-    PURCHASE_ORDER ||--o{ CREDIT_CARD : payment
-    SUPPLIER_ORDER ||--o{ LINE_ITEM : contains
-    PURCHASE_ORDER ||--o{ SUPPLIER_ORDER : generates
-
-    CATEGORY {
-        string catid PK "max 10"
-    }
-
-    CATEGORY_DETAILS {
-        string catid FK
-        string locale FK
-        string name
-        string description
-        string image
-    }
-
-    PRODUCT {
-        string productid PK "max 10"
-        string catid FK
-    }
-
-    PRODUCT_DETAILS {
-        string productid FK
-        string locale FK
-        string name
-        string description
-        string image
-    }
-
-    ITEM {
-        string itemid PK "max 10"
-        string productid FK
-    }
-
-    ITEM_DETAILS {
-        string itemid FK
-        string locale FK
-        decimal listprice "NOT NULL"
-        decimal unitcost "NOT NULL"
-        string description
-        string image
-    }
-
-    USER {
-        string userName PK "max 25"
-        string password
-    }
+    CUSTOMER ||--|| ACCOUNT : has
+    CUSTOMER ||--|| PROFILE : has
+    ACCOUNT ||--|| CONTACTINFO : has
+    ACCOUNT ||--|| CREDITCARD : has
+    CONTACTINFO ||--|| ADDRESS : has
+    CUSTOMER ||--o{ PURCHASEORDER : places
+    PURCHASEORDER ||--o{ LINEITEM : contains
+    LINEITEM }o--|| ITEM : references
+    ITEM }o--|| PRODUCT : "part of"
+    PRODUCT }o--|| CATEGORY : "belongs to"
+    CATEGORY ||--o{ LOCALE_CONTENT : "has translations"
+    SUPPLIER }o--|| PURCHASEORDER : "receives as PO"
+    PURCHASEORDER ||--o{ INVOICE : "receives"
 
     CUSTOMER {
         string userId PK
-        string userName FK
-        string email
+        string password
+        string locale
     }
 
-    CONTACT_INFO {
-        string contactId PK
+    ACCOUNT {
+        string accountId PK
+        string customerId FK
+        string status
+    }
+
+    PROFILE {
+        string profileId PK
+        string customerId FK
+        string preferredLanguage
+        string favoriteCategory
+        boolean myListPreference
+        boolean bannerPreference
+    }
+
+    CONTACTINFO {
+        string contactInfoId PK
+        string accountId FK
         string givenName
         string familyName
+        string telephone
         string email
-        string phone
     }
 
     ADDRESS {
         string addressId PK
-        string street1
-        string street2
+        string contactInfoId FK
+        string streetName1
+        string streetName2
         string city
         string state
-        string postalCode
+        string zipCode
         string country
     }
 
-    PROFILE {
-        string userId FK
-        string preferredLanguage
-        string favoriteCategory
-        string myListPreference
-        string bannerPreference
-    }
-
-    CREDIT_CARD {
+    CREDITCARD {
         string cardId PK
+        string accountId FK
         string cardNumber
         string cardType
         string expiryDate
     }
 
-    PURCHASE_ORDER {
-        string orderId PK
-        string userId FK
-        string emailId
-        datetime orderDate
+    PURCHASEORDER {
+        string poId PK
+        string customerId FK
+        date poDate
         decimal totalPrice
+        string status
     }
 
-    LINE_ITEM {
-        string lineItemId PK
-        string orderId FK
-        string categoryId
-        string productId
-        string itemId
-        string lineNumber
+    LINEITEM {
+        string lineId PK
+        string poId FK
+        string itemId FK
+        integer lineNumber
         integer quantity
-        decimal unitPrice
         integer quantityShipped
+        decimal unitPrice
     }
 
-    SUPPLIER_ORDER {
+    ITEM {
+        string itemId PK
+        string productId FK
+        string categoryId FK
+        decimal price
+    }
+
+    PRODUCT {
+        string productId PK
+        string categoryId FK
+        string name
+    }
+
+    CATEGORY {
+        string categoryId PK
+        string name
+    }
+
+    LOCALE_CONTENT {
+        string contentId PK
+        string categoryId FK
+        string locale
+        string name
+        string description
+    }
+
+    INVENTORY {
+        string itemId PK
+        integer quantity
+    }
+
+    SUPPLIER {
         string supplierId PK
-        string purchaseOrderId FK
-        datetime orderDate
+        string name
+    }
+
+    INVOICE {
+        string invoiceId PK
+        string poId FK
+        date invoiceDate
     }

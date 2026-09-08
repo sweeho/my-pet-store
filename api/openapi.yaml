@@ -2,79 +2,15 @@
 
 openapi: 3.0.0
 info:
-  title: Petstore REST API
-  version: 1.3.2
-  description: |
-    Legacy Java EE petstore application REST API endpoints extracted from Struts configuration and action classes.
-    This is an evidence document of the legacy system's public interface.
-
-servers:
-  - url: http://localhost:5000
-    description: Development server
-
+  title: Petstore E-Commerce API
+  version: 1.0.0
+  description: REST API for the Java Pet Store e-commerce application
 paths:
-  /catalog:
-    get:
-      summary: Browse catalog by category
-      tags: [Catalog]
-      parameters:
-        - name: categoryId
-          in: query
-          schema: { type: string }
-        - name: start
-          in: query
-          schema: { type: integer, default: 0 }
-        - name: count
-          in: query
-          schema: { type: integer, default: 25 }
-        - name: locale
-          in: query
-          schema: { type: string, enum: [en_US, ja_JP, zh_CN], default: en_US }
-      responses:
-        '200':
-          description: Category with items
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  categoryId: { type: string }
-                  categoryName: { type: string }
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        itemId: { type: string }
-                        name: { type: string }
-                        unitCost: { type: number }
-                        listPrice: { type: number }
-                        description: { type: string }
-
-  /cart:
-    get:
-      summary: Get shopping cart
-      tags: [Cart]
-      responses:
-        '200':
-          description: Current cart contents
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        itemId: { type: string }
-                        quantity: { type: integer }
-                        unitCost: { type: number }
-                  subTotal: { type: number }
+  /signon:
     post:
-      summary: Add item to cart
-      tags: [Cart]
+      summary: User authentication
+      tags:
+        - Authentication
       requestBody:
         required: true
         content:
@@ -82,29 +18,62 @@ paths:
             schema:
               type: object
               properties:
-                itemId: { type: string }
-                quantity: { type: integer, default: 1 }
+                j_username:
+                  type: string
+                j_password:
+                  type: string
+      responses:
+        '302':
+          description: Redirect to original URL or home page
+        '200':
+          description: Sign-on error page displayed
+  /cart:
+    get:
+      summary: Display shopping cart
+      tags:
+        - Shopping Cart
       responses:
         '200':
-          description: Item added to cart
-
-  /cart/{itemId}:
-    delete:
-      summary: Remove item from cart
-      tags: [Cart]
+          description: Shopping cart page
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Update cart (add, remove, update quantities)
+      tags:
+        - Shopping Cart
       parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema: { type: string }
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [add, remove, update]
       responses:
         '200':
-          description: Item removed from cart
-
+          description: Cart updated and displayed
+  /catalog:
+    get:
+      summary: Browse product catalog by category
+      tags:
+        - Catalog
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category page with items
   /order:
     post:
       summary: Place order
-      tags: [Order]
+      tags:
+        - Order
       requestBody:
         required: true
         content:
@@ -112,75 +81,90 @@ paths:
             schema:
               type: object
               properties:
-                given_name_a: { type: string }
-                family_name_a: { type: string }
-                address_1_a: { type: string }
-                city_a: { type: string }
-                state_a: { type: string }
-                postal_code_a: { type: string }
-                country_a: { type: string }
-                given_name_b: { type: string }
-                family_name_b: { type: string }
-                address_1_b: { type: string }
-                city_b: { type: string }
-                state_b: { type: string }
-                postal_code_b: { type: string }
-                country_b: { type: string }
+                given_name_a:
+                  type: string
+                family_name_a:
+                  type: string
+                address_1_a:
+                  type: string
+                city_a:
+                  type: string
+                state_a:
+                  type: string
+                postal_code_a:
+                  type: string
       responses:
         '200':
-          description: Order created with confirmation
-
-  /signon:
-    post:
-      summary: User sign-in
-      tags: [Auth]
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                j_username: { type: string }
-                j_password: { type: string }
-                j_remember_username: { type: boolean }
-      responses:
+          description: Order confirmation page
         '302':
-          description: Redirect to original URL or error page
-
-  /createuser.do:
-    post:
-      summary: Create new user account
-      tags: [Auth]
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                j_username: { type: string, maxLength: 25 }
-                j_password: { type: string }
-                j_password_2: { type: string }
+          description: Redirect to confirmation
+  /customer:
+    get:
+      summary: View customer profile
+      tags:
+        - Account
       responses:
-        '302':
-          description: Redirect to success or error page
-
+        '200':
+          description: Customer profile page
+    post:
+      summary: Update customer profile
+      tags:
+        - Account
+      responses:
+        '200':
+          description: Profile updated
 components:
   schemas:
-    Item:
-      type: object
-      properties:
-        itemId: { type: string, maxLength: 10 }
-        categoryId: { type: string, maxLength: 10 }
-        productId: { type: string, maxLength: 10 }
-        listPrice: { type: number, format: decimal }
-        unitCost: { type: number, format: decimal }
-        description: { type: string }
-        locale: { type: string }
-
     User:
       type: object
       properties:
-        userName: { type: string, maxLength: 25 }
-        password: { type: string }
+        userId:
+          type: string
+        password:
+          type: string
+    ShoppingCart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal:
+          type: number
+    CartItem:
+      type: object
+      properties:
+        itemId:
+          type: string
+        quantity:
+          type: integer
+        unitCost:
+          type: number
+        lineTotal:
+          type: number
+    PurchaseOrder:
+      type: object
+      properties:
+        poId:
+          type: string
+        poDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PENDING, APPROVED, DENIED, COMPLETED]
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+    LineItem:
+      type: object
+      properties:
+        itemId:
+          type: string
+        quantity:
+          type: integer
+        quantityShipped:
+          type: integer
+        unitPrice:
+          type: number
