@@ -1,0 +1,470 @@
+records:
+  - record_key: account-mgmt-address-entity-0001
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL store address information as a persistent entity with
+      fields for street address (two lines), city, state/province, postal code,
+      and country. Address entities are cascade-deleted when their associated
+      contact information is removed.
+    confidence: high
+    confidence_basis: >
+      AddressEJB is declared as a CMP 2.x entity bean in ejb-jar.xml (lines 46-85)
+      with all six fields defined as cmp-field declarations (lines 57-80).
+      The abstract getter/setter methods in AddressEJB.java (lines 53-69) confirm
+      container-managed persistence. ContactInfoEJB's CMR field for Address
+      (contactinfo ejb-jar.xml) declares cascade-delete semantics. Two independent
+      sources (declarative and programmatic) confirm this structure.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares AddressEJB as entity with cmp-field for each attribute.
+      AddressEJB implements abstract methods for all six fields. ContactInfoEJB
+      has a CMR relationship to AddressLocal.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/address/src/ejb-jar.xml
+        line_start: 46
+        line_end: 85
+        excerpt: |
+          <entity>
+            <display-name>AddressEJB</display-name>
+            <ejb-name>AddressEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.address.ejb.AddressLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.address.ejb.AddressLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.address.ejb.AddressEJB</ejb-class>
+            <persistence-type>Container</persistence-type>
+            <cmp-version>2.x</cmp-version>
+            <cmp-field>
+              <field-name>zipCode</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>streetName2</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>state</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>streetName1</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>city</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>country</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/ejb/AddressEJB.java
+        line_start: 53
+        line_end: 69
+        excerpt: |
+          public abstract String getStreetName1();
+          public abstract void setStreetName1(String streetName1);
+          public abstract String getStreetName2();
+          public abstract void setStreetName2(String streetName2);
+          public abstract String getCity();
+          public abstract void setCity(String city);
+          public abstract String getState();
+          public abstract void setState(String state);
+          public abstract String getZipCode();
+          public abstract void setZipCode(String zipCode);
+          public abstract String getCountry();
+          public abstract void setCountry(String country);
+
+  - record_key: account-mgmt-address-optional-field-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support an optional second street address line
+      (StreetName2). When serialized to XML, the second street name is only
+      included if it is non-empty.
+    confidence: high
+    confidence_basis: >
+      Address.java toDOM method explicitly checks if streetName2 is not null
+      and not empty before appending it to the XML document (lines 147-149).
+      The Address.dtd declares StreetName with occurrence indicator ? making
+      the second street name optional (line 38). The Address class constructor
+      accepts streetName2 as a parameter (line 74).
+    risk_class: operational
+    basis: >
+      The toDOM method in Address.java shows conditional logic for streetName2.
+      The DTD schema shows the optional indicator. Form fields in JSP show
+      address_2 as optional.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/ejb/Address.java
+        line_start: 144
+        line_end: 155
+        excerpt: |
+          public Node toDOM(Document document) {
+            Element root = document.createElement(XML_ADDRESS);
+            XMLDocumentUtils.appendChild(document, root, XML_STREET_NAME, streetName1);
+            if (streetName2 != null && !streetName2.equals("")) {
+              XMLDocumentUtils.appendChild(document, root, XML_STREET_NAME, streetName2);
+            }
+            XMLDocumentUtils.appendChild(document, root, XML_CITY, city);
+            XMLDocumentUtils.appendChild(document, root, XML_STATE, state);
+            XMLDocumentUtils.appendChild(document, root, XML_ZIPCODE, zipCode);
+            XMLDocumentUtils.appendChild(document, root, XML_COUNTRY, country);
+            return root;
+          }
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/rsrc/schemas/Address.dtd
+        line_start: 38
+        line_end: 43
+        excerpt: |
+          <!ELEMENT Address (StreetName, StreetName?, City, State, ZipCode, Country?)>
+          <!ELEMENT StreetName (#PCDATA)>
+          <!ELEMENT City (#PCDATA)>
+          <!ELEMENT State (#PCDATA)>
+          <!ELEMENT ZipCode (#PCDATA)>
+
+  - record_key: account-mgmt-address-creation-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support multiple methods for creating Address entities.
+      GIVEN a request to create an address, the system SHALL accept either
+      (1) all six address fields as individual parameters, (2) an Address
+      object containing all fields, or (3) an empty creation with fields set
+      individually after instantiation.
+    confidence: high
+    confidence_basis: >
+      AddressEJB declares three overloaded ejbCreate methods (lines 73-103):
+      one with six String parameters (lines 73-82), one accepting an Address
+      object (lines 87-95), and one with no parameters (lines 99-101).
+      AddressLocalHome interface exposes all three create methods (lines 45-50).
+      AddressPopulator demonstrates the no-parameter approach with individual
+      setter calls (lines 94-100).
+    risk_class: operational
+    basis: >
+      AddressEJB implementation shows three creation paths. AddressLocalHome
+      declares all three create signatures. AddressPopulator code shows usage
+      of no-parameter creation with setters.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/ejb/AddressEJB.java
+        line_start: 73
+        line_end: 103
+        excerpt: |
+          public Object ejbCreate(String streetName1, String streetName2, String city,
+                                  String state, String zipCode, String country) throws CreateException {
+                                    setStreetName1(streetName1);
+                                    setStreetName2(streetName2);
+                                    setCity(city);
+                                    setState(state);
+                                    setZipCode(zipCode);
+                                    setCountry(country);
+                                    return null;
+          }
+          public Object ejbCreate(Address address) throws CreateException {
+            setStreetName1(address.getStreetName1());
+            setStreetName2(address.getStreetName2());
+            setCity(address.getCity());
+            setState(address.getState());
+            setZipCode(address.getZipCode());
+            setCountry(address.getCountry());
+            return null;
+          }
+          public Object ejbCreate() throws CreateException {
+            return null;
+          }
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/ejb/AddressLocalHome.java
+        line_start: 45
+        line_end: 50
+        excerpt: |
+          public AddressLocal create(String streetName1, String streetName2, String city,
+                                     String state, String zipCode, String country) throws CreateException;
+          public AddressLocal create(Address address) throws CreateException;
+          public AddressLocal create() throws CreateException;
+
+  - record_key: account-mgmt-address-xml-serialization-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support XML serialization and deserialization of
+      Address objects. Address objects can be converted to DOM nodes and
+      reconstructed from DOM nodes following the Address.dtd schema.
+    confidence: high
+    confidence_basis: >
+      Address.java implements toDOM method (lines 144-155) that converts the
+      address to a DOM Element. The fromDOM static method (lines 157-180)
+      reconstructs an Address from a DOM node using XMLDocumentUtils. The
+      Address class declares DTD constants (lines 54-55) and XML element
+      constants (lines 56-61) used in serialization.
+    risk_class: operational
+    basis: >
+      Address.java contains full toDOM and fromDOM implementations. Both methods
+      handle the two-street-name structure and use XMLDocumentUtils for field
+      extraction.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/ejb/Address.java
+        line_start: 53
+        line_end: 69
+        excerpt: |
+          public static final String DTD_PUBLIC_ID = "-//Sun Microsystems, Inc. - J2EE Blueprints Group//DTD Address 1.1//EN";
+          public static final String DTD_SYSTEM_ID = "/com/sun/j2ee/blueprints/address/rsrc/schemas/Address.dtd";
+          public static final String XML_ADDRESS = "Address";
+          public static final String XML_STREET_NAME = "StreetName";
+          public static final String XML_CITY = "City";
+          public static final String XML_STATE = "State";
+          public static final String XML_COUNTRY = "Country";
+          public static final String XML_ZIPCODE = "ZipCode";
+      - path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/ejb/Address.java
+        line_start: 157
+        line_end: 180
+        excerpt: |
+          public static Address fromDOM(Node node) throws XMLDocumentException {
+            Element element;
+            if (node.getNodeType() == Node.ELEMENT_NODE && (element = ((Element) node)).getTagName().equals(XML_ADDRESS)) {
+              Element child;
+              Address address = new Address();
+              child = XMLDocumentUtils.getFirstChild(element, XML_STREET_NAME, false);
+              address.streetName1 = XMLDocumentUtils.getContentAsString(child, false);
+              Element optionalChild = XMLDocumentUtils.getNextSibling(child, XML_STREET_NAME, true);
+              if (optionalChild != null) {
+                address.streetName2 = XMLDocumentUtils.getContentAsString(optionalChild, false);
+                child = optionalChild;
+              }
+              child = XMLDocumentUtils.getNextSibling(child, XML_CITY, false);
+              address.city = XMLDocumentUtils.getContentAsString(child, false);
+
+  - record_key: account-mgmt-address-field-constraints-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL enforce maximum length constraints on address fields
+      when collecting input via the user interface. Street address lines and
+      city fields SHALL have a maximum length of 70 characters. Postal code
+      fields SHALL have a maximum length of 12 characters.
+    confidence: medium
+    confidence_basis: >
+      The create_customer.jsp form (lines 70-71, 78, 85, 97-98) and
+      enter_order_information.jsp forms (lines 90, 102, 117, 140) declare
+      maxlength HTML attributes: "70" for street addresses and city, "12" for
+      postal code. However, these are client-side constraints only. The database
+      schema cannot be inspected to verify server-side enforcement. The
+      constraints appear in all language variants (en, ja, zh), suggesting
+      consistent application.
+    risk_class: operational
+    basis: >
+      JSP form input elements show maxlength attributes. These constraints are
+      applied consistently across customer creation, customer update, and order
+      information entry screens.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 68
+        line_end: 99
+        excerpt: |
+          <tr><td class="petstore_form" align="right"><b>Street Address</b></td>
+          <td align="left" colspan="2"><input class="petstore_form" type="text" name="address_1_a"
+          size="55" maxlength="70" value="1234 Moon Way"></td></tr>
+          <tr><td>&nbsp;</td>
+          <td align="left" colspan="2"><input class="petstore_form" type="text"
+          name="address_2_a" size="55" maxlength="70"></td></tr>
+          <tr><td class="petstore_form" align="right"><b>City</b></td>
+          <td align="left" colspan="2"><input class="petstore_form" type="text" name="city_a"
+          size="55" maxlength="70" value="Sunville"></td></tr>
+          <tr><td class="petstore_form" align="right"><b>Postal Code</b> <input
+          class="petstore_form" type="text" name="postal_code_a" size="12"
+          maxlength="12" value="10001"></td></tr>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/enter_order_information.jsp
+        line_start: 87
+        line_end: 141
+        excerpt: |
+          <waf:input cssClass="petstore_form" type="text" name="address_1_a"
+          size="55" maxlength="70" validation="validation">
+          <waf:input cssClass="petstore_form" type="text" name="address_2_a"
+          size="55" maxlength="70">
+          <waf:input cssClass="petstore_form" type="text" name="city_a" size="55"
+          maxlength="70" validation="validation">
+          <waf:input cssClass="petstore_form" type="text" name="postal_code_a"
+          size="12" maxlength="12" validation="validation">
+
+  - record_key: account-mgmt-address-state-options-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support state/province selection via a predefined list
+      of options including at least: California, New York, and Texas. The
+      list may include additional state/province options.
+    confidence: medium
+    confidence_basis: >
+      The create_customer.jsp form (lines 92-94) shows three state options:
+      California, New York, and Texas. The enter_order_information.jsp forms
+      show the same three options (line 130-132). State is a required field
+      (declared as select input without optional indicator), and the application
+      restricts choices to predefined values. However, the exact authoritative
+      list of all supported states is not visible - only the sample subset used
+      in forms.
+    risk_class: operational
+    basis: >
+      JSP forms declare select dropdowns for state/province selection. The same
+      three options appear consistently in both account creation and order
+      entry forms. No other state lists were found.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 89
+        line_end: 95
+        excerpt: |
+          <tr><td class="petstore_form" align="right"><b>State/Province</b></td>
+          <td class="petstore_form" align="left"><select size="1"
+          name="state_or_province_a"> <option
+          value="California">California</option> <option value="New York">New
+          York</option> <option value="Texas">Texas</option> </select></td>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/enter_order_information.jsp
+        line_start: 126
+        line_end: 133
+        excerpt: |
+          <waf:select size="1" name="state_or_province_a">
+          <waf:selected><c:out value="${customer.account.contactInfo.address.state}"/></waf:selected>
+          <waf:option value="California">CA</waf:option>
+          <waf:option value="New York">NY</waf:option>
+          <waf:option value="Texas">TX</waf:option>
+
+  - record_key: account-mgmt-address-country-options-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support country selection via a predefined list of
+      options including at least: United States, Canada, Japan, and China.
+      Additional countries may be supported.
+    confidence: medium
+    confidence_basis: >
+      The create_customer.jsp form (lines 105-107) declares four country
+      options: United States, Canada, Japan, China. The enter_order_information.jsp
+      form shows the same four countries (lines 151-155). Country is a required
+      field and choices are restricted to this predefined list. The select
+      elements do not include an "other" or "optional" indicator, implying
+      country is required.
+    risk_class: operational
+    basis: >
+      JSP forms declare select dropdowns for country selection with identical
+      options in both customer creation and order entry. The same four countries
+      appear consistently.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 102
+        line_end: 108
+        excerpt: |
+          <tr><td class="petstore_form" align="right"><b>Country</b></td>
+          <td class="petstore_form" align="left" colspan="2"><select size="1"
+          name="country_a"> <option value="USA">United States</option> <option
+          value="Canada">Canada</option> <option value="Japan">Japan</option>
+          <option value="China">China</option></select></td>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/enter_order_information.jsp
+        line_start: 150
+        line_end: 156
+        excerpt: |
+          <waf:select size="1" name="country_a">
+          <waf:selected><c:out value="${customer.account.contactInfo.address.country}"/></waf:selected>
+          <waf:option value="United States">United States</waf:option>
+          <waf:option value="Canada" />
+          <waf:option value="Japan" />
+          <waf:option value="China" />
+
+  - record_key: account-mgmt-address-transaction-handling-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL execute all Address entity operations (getters, setters,
+      creation, removal, and data retrieval) within a transaction context. Each
+      method SHALL have a transaction attribute of Required, ensuring that
+      either the caller's transaction is used or a new transaction is started.
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml assembly-descriptor contains container-transaction
+      declarations for all Address methods (lines 250-387). Every method has
+      trans-attribute set to "Required" (lines 257, 268, 279, 288, 299, 308, etc.).
+      This applies to all getters, setters, create, remove, and getData methods.
+      The declarative configuration is comprehensive and consistent.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml container-transaction section explicitly declares Required
+      for every Address method.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/address/src/ejb-jar.xml
+        line_start: 250
+        line_end: 387
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>AddressEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>getCountry</method-name>
+              <method-params />
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+          [... similar entries for all other methods ...]
+          <container-transaction>
+            <method>
+              <ejb-name>AddressEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>getData</method-name>
+              <method-params />
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+
+  - record_key: account-mgmt-address-access-permissions-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL allow all callers to invoke Address entity methods
+      without explicit authorization checks. All methods are accessible
+      without role-based restrictions (unchecked access).
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml method-permission section (lines 88-249) contains a
+      single unchecked element with no role restrictions, applying to all
+      Address methods listed. The unchecked indicator means no authorization
+      checking is performed. All Address methods are enumerated under this
+      unrestricted permission (lines 90-248).
+    risk_class: operational
+    basis: >
+      ejb-jar.xml assembly-descriptor's method-permission with unchecked
+      element covers all Address methods.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/address/src/ejb-jar.xml
+        line_start: 88
+        line_end: 249
+        excerpt: |
+          <method-permission>
+            <unchecked />
+            <method>
+              <ejb-name>AddressEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>getCity</method-name>
+              <method-params />
+            </method>
+            [... all other methods listed ...]
+            <method>
+              <ejb-name>AddressEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>findByPrimaryKey</method-name>
+              <method-params>
+                <method-param>java.lang.Object</method-param>
+              </method-params>
+            </method>
+          </method-permission>
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/address/src/ejb-jar.xml
+    description: >
+      The AddressEJB declares prim-key-class as java.lang.Object (line 53),
+      which is unusual for a CMP entity. Typically, CMP entities use a specific
+      primary key type (e.g., Integer, String, or a custom key class). Using
+      Object as the primary key type raises questions: (1) how are individual
+      Address instances uniquely identified and retrieved, (2) what is the
+      semantics of findByPrimaryKey when passed a java.lang.Object, and
+      (3) whether Address instances are always accessed through their CMR
+      relationship (via ContactInfo) rather than direct lookup. This affects
+      how Address entities can be queried and managed independently.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/address/src/com/sun/j2ee/blueprints/address/rsrc/schemas/Address.dtd
+    description: >
+      The Address.dtd declares Country as optional (Country?) but the JSP forms
+      treat Country as a required field with predefined options. This creates a
+      potential conflict: the schema allows Country to be missing, but the
+      application UI requires it. It is unclear whether Country truly becomes
+      optional in some workflow paths, or whether the DTD is overly permissive
+      compared to the actual requirement. Similar consideration applies to
+      StreetName? (the second line) which is optional in the DTD but shown with
+      optional form input but not marked as required in validation.
