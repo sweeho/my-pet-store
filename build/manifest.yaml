@@ -37,10 +37,10 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Sign-in form: username (text), password (password field), Remember My User Name checkbox, submit button; pre-populates username from bp_signon cookie if present"
-        - "Sign-up form: username (text), password (password field), password repeat (password field), submit button"
-        - "Sign-on error page: displays error message indicating authentication failed"
-        - "User session home page: displays welcome message with authenticated user's profile name and navigation links to account, catalog, shopping cart, and logout"
+        - "Sign-on form (signon.jsp) with fields: username (text input), password (password input), \"Remember My User Name\" checkbox. Form posts to j_signon_check endpoint. Pre-fills username from bp_signon cookie if present, otherwise defaults to 'j2ee'."
+        - "User creation form (signon.jsp, new customer section) with fields: username (text input), password (password input), password repeat (password input). Form posts to createuser.do endpoint. No default values; all fields initially empty."
+        - "Sign-on error page (signon_failed.jsp) displays generic error message: \"There were errors signing you in. The user name and password you entered were not found in our records. Please try again.\""
+        - "The supplier application SHALL display a form-based login screen that prompts for username and password. The login form SHALL submit to j_security_check endpoint using the J2EE standard form-based authentication mechanism."
     evidence:
       irRefs: [AUTH-ENT-0001, AUTH-VALI-0001, AUTH-OPER-0001, AUTH-SCRE-0001, AUTH-SCRE-0002, AUTH-SCRE-0003, AUTH-SCRE-0004]
       reviewedBy: null
@@ -74,7 +74,7 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Customer account profile screen: displays and allows editing of contact information (phone, email), billing and shipping addresses, credit card details, and language preference selection from en_US, ja_JP, zh_CN"
+        - "The customer profile screen SHALL display (read-only) contact information including first name, last name, street address, city, state/province, postal code, and country, along with other account details."
     evidence:
       irRefs: [ACCT-REQUIREMENT-0001, ACCOUNT-MGMT-RULE-0001, ACCOUNT-MGMT-SCREEN-0001]
       reviewedBy: null
@@ -171,10 +171,10 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Admin home page: displays administrative module description with navigation buttons to order management, inventory management, and logout"
-        - "Admin orders list screen: displays all orders with columns for customer name, order ID, order date, order total, and current status (PENDING, APPROVED, DENIED, COMPLETED); provides filters and action buttons"
-        - "Inventory update screen: displays all inventory items with item ID, product name, existing quantity, input field for new quantity, and checkbox to select items for bulk update; submit button posts to RcvrRequestProcessor with action=updateinventory"
-        - "Admin dashboard screen: displays key metrics including total orders count, pending approvals count, inventory status summary, and recent order activity log"
+        - "A login screen SHALL be displayed to users who attempt to access protected administrative functions. The login form SHALL request User ID and Password and submit via POST to j_security_check."
+        - "A home/index screen SHALL be displayed after successful authentication, providing options to launch the rich client for order management or to logout."
+        - "An error screen SHALL be displayed when login authentication fails, informing the user to verify their username and password and providing a link to return to the sign-in page."
+        - "The Orders View screen SHALL display a read-only table of all approved, completed, and denied orders, with columns for Order ID, User ID, Order Date, Order Amount, and Status."
     evidence:
       irRefs: [admin-ops-0001, admin-ops-0002, admin-ops-0003, admin-ops-0004, admin-ops-0005, admin-ops-0006, admin-ops-0007, ORDERLIST-SCREEN-0001, ADMIN-SCREEN-0003, CHARTDATA-REQ-0001, ADMIN-SCREEN-0001, ADMIN-SCREEN-0002, ADMIN-SCREEN-0004]
       reviewedBy: null
@@ -209,7 +209,7 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Shopping cart display: shows each item with name, quantity input, unit cost, total per line; displays cart subtotal; provides Update and Remove controls per item"
+        - "The shopping cart screen SHALL display items with names, quantities, unit costs, and a total, providing an \"Update Cart\" button for quantity changes and remove links for each item. An empty cart message is shown when cart.count == 0."
     evidence:
       irRefs: [CART-REQUIREMENT-0001, CART-REQUIREMENT-0002, CART-REQUIREMENT-0003, XMLDOC-ENTITY-0005, screen-cart-001, shopping-cart-workflow-001, shopping-cart-req-001, shopping-cart-req-002, shopping-cart-req-003, shopping-cart-calc-001, shopping-cart-persist-001]
       reviewedBy: null
@@ -246,9 +246,9 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Enter Order Information screen: captures billing first/last name, address (2 lines), city, state, postal code, country, phone, email; similar fields for shipping address with option to copy from billing"
-        - "Order review and confirmation screen: displays order summary with customer name, billing and shipping addresses, all cart items with quantities and unit prices, cart subtotal, and Confirm Order button"
-        - "Order completion confirmation screen: displays order confirmation number, order date, customer email, estimated delivery timeframe, and link to continue shopping or view order history"
+        - "The system SHALL present an \"Enter Order Information\" screen capturing billing and shipping contact details (first name, last name, street address, city, state/province, postal code) with all fields validated."
+        - "The order information screen SHALL display two sections: \"Billing Information\" and \"Shipping Information\", each with first name, last name, street address (two fields), city, state/province dropdown, postal code, country dropdown, telephone, and email fields. States shall be limited to CA, NY, TX. Countries shall include at least United States, Canada, Japan, and China."
+        - "Upon successful order placement, the system SHALL display a confirmation screen with the order ID and customer email address, confirming that a confirmation email will be sent."
     evidence:
       irRefs: [ORDER-PLACEMENT-REQ-0001, ORDER-PLACEMENT-RULE-0001, ORDER-PLACEMENT-RULE-0002, SCREEN-ORDER-INFO-0001, screen-order-info-001, screen-order-review-001, screen-order-complete-001, order-placement-entity-0001, order-placement-requirement-0001, order-placement-relationship-0001, order-placement-creditcard-0001, order-placement-date-format-0001, order-placement-transaction-0001, order-placement-access-control-0001]
       reviewedBy: null
@@ -314,8 +314,8 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Supplier fulfillment home page: displays heading and description of supplier inventory management module with navigation buttons to display inventory and logout"
-        - "Supplier inventory display screen: displays current inventory items in a table with columns for item ID, product name, category, existing quantity, and reorder level indicator; supports sorting and filtering"
+        - "The system SHALL display a home screen with a heading, description of the supplier module, and buttons to display inventory or logout."
+        - "The supplier application SHALL display an inventory update screen that lists all current inventory items with their existing quantities and allows administrators to enter new quantities. The screen SHALL display item ID, existing quantity, a text input for new quantity, and a checkbox to mark items for update."
     evidence:
       irRefs: [FULFL-RULE-0001, FULFL-RULE-0002, FULFL-RULE-0003, FULFL-RULE-0004, FULFL-RULE-0005, FULFL-RULE-0006, FULFL-RULE-0007, FULFL-RULE-0008, FULFL-RULE-0009, FULFL-RULE-0010, SCREEN-0001, SCREEN-0002, SCREEN-0003, FUL-ENT-0001, FUL-ENT-0002, FUL-ENT-0003, FUL-BUS-0001, FUL-BUS-0002, FUL-BUS-0003, FUL-BUS-0004, FUL-INT-0001, ENTITY-INV-0001]
       reviewedBy: null
@@ -349,8 +349,8 @@ capabilities:
       techStack: []
       affectedCode: []
       screens:
-        - "Order approval list screen: displays pending orders in a table with columns for customer name, order ID, order date, order total, and status; provides Approve and Deny action buttons for each order"
-        - "Order approval details screen: displays full order details including customer contact information, shipping address, all line items with product details, quantities and prices, order subtotal; provides Approve and Deny buttons with optional reason text area for each action"
+        - "The Orders Approval screen SHALL display a table of pending orders with columns for Order ID, User ID, Order Date, Order Amount, and Status. The Status column SHALL be editable via a dropdown selector allowing values PENDING, APPROVED, or DENIED. The screen SHALL provide three buttons: Approve (sets selected rows to APPROVED), Deny (sets selected rows to DENIED), and Commit (sends all changes to the server)."
+        - "The Orders Approval screen status column cells SHALL be rendered with background color coding: green for APPROVED status, red for DENIED status, and yellow for PENDING status."
     evidence:
       irRefs: [OPC-APPROVAL-0001, OPC-APPROVAL-0002, OPC-AUTO-APPROVAL-0001, OPC-APPROVAL-INTAKE-0001, OPC-STATUS-GUARD-0001, OPC-SUPPLIER-PO-GEN-0001, OPC-APPROVAL-NOTIFICATION-0001, OPC-WORKFLOW-0001, OPC-WORKFLOW-STATES-0001, ORDERAPP-SCREEN-0001, ORDERAPP-SCREEN-0002, ORDERAPP-BR-0001, ORDERAPP-WF-0001, order-approval-statusquery-0001, order-approval-statusupdate-0001, order-approval-transitions-0001, order-approval-workflow-0001, order-approval-creation-0001]
       reviewedBy: null
