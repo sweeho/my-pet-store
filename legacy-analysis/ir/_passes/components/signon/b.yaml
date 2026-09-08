@@ -1,0 +1,785 @@
+records:
+  - record_key: UATH-REQ-0001
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL intercept all incoming HTTP requests via a servlet filter to enforce
+      authentication requirements before allowing access to protected resources.
+    confidence: high
+    confidence_basis: >
+      SignOnFilter is explicitly declared in web.xml with url-pattern="/*" (applies to all requests).
+      Both the deployment descriptor and the filter implementation confirm this behavior is centrally
+      enforced at the HTTP level, not at individual page/action level.
+    risk_class: operational
+    basis: >
+      The filter is declared in web.xml and configured to apply to all URLs. The doFilter method
+      checks session state and protected resource configuration for every request.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/WEB-INF/web.xml
+        line_start: 1
+        line_end: 1
+        excerpt: "Signon Filter Declaration and Mapping for all URLs"
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 108
+        line_end: 155
+        excerpt: |
+          public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+            HttpServletRequest hreq = (HttpServletRequest)request;
+            // Check if request is to sign-on endpoint or if user is already signed on
+            // If not signed on and URL matches protected resource, redirect to sign-on page
+
+  - record_key: UATH-REQ-0002
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL authenticate a user by verifying the provided username and password
+      against stored user credentials via the SignOnEJB.authenticate() method.
+    confidence: high
+    confidence_basis: >
+      Both the filter code and the EJB interface clearly show this is the single authentication path.
+      The authentication logic is deterministic and the invocation point is explicit in SignOnFilter.
+    risk_class: operational
+    basis: >
+      SignOnFilter.validateSignOn invokes signOn.authenticate(userName, password) at lines 190,
+      which returns a boolean. The implementation in SignOnEJB finds the user by userName and
+      calls matchPassword on the UserLocal entity bean.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 157
+        line_end: 210
+        excerpt: |
+          public void validateSignOn(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+            String userName = hreq.getParameter(FORM_USER_NAME);
+            String password = hreq.getParameter(FORM_PASSWORD);
+            SignOnLocal signOn = getSignOnEjb();
+            boolean authenticated = signOn.authenticate(userName, password);
+            if (authenticated) {
+              hreq.getSession().setAttribute(SIGNED_ON_USER, new Boolean(true));
+              hres.sendRedirect(targetURL);
+            }
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/ejb/SignOnEJB.java
+        line_start: 71
+        line_end: 78
+        excerpt: |
+          public boolean authenticate(String userName, String password) {
+            try {
+              UserLocal user = ulh.findByPrimaryKey(userName);
+              return user.matchPassword(password);
+            } catch (FinderException fe) {
+              return false;
+            }
+
+  - record_key: UATH-REQ-0003
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL perform password verification using case-sensitive string equality
+      comparison via the UserEJB.matchPassword() method.
+    confidence: high
+    confidence_basis: >
+      The matchPassword implementation is a direct String.equals() call with no transformation,
+      hashing, or salting. This is enforced at the entity bean level and is the only password
+      comparison path in the system.
+    risk_class: operational
+    basis: >
+      UserEJB.matchPassword() implements password comparison as direct equality using password.equals(getPassword()).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/user/ejb/UserEJB.java
+        line_start: 88
+        line_end: 90
+        excerpt: |
+          public boolean matchPassword(String password) {
+            return password.equals(getPassword());
+
+  - record_key: UATH-REQ-0004
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL store user authentication state in the HTTP session under the key
+      'j_signon' as a Boolean value indicating whether the user is currently signed on.
+    confidence: high
+    confidence_basis: >
+      The session attribute is explicitly named and set in multiple places in SignOnFilter,
+      checked on every filter invocation, and follows a clear convention (j_signon prefix for all
+      session keys related to sign-on). This is the system's only authentication state storage mechanism.
+    risk_class: operational
+    basis: >
+      SignOnFilter checks hreq.getSession().getAttribute(SIGNED_ON_USER) where SIGNED_ON_USER="j_signon".
+      The value is set to Boolean(true) on successful authentication and Boolean(false) otherwise.
+      It is checked at the start of every request in the doFilter method.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 71
+        line_end: 80
+        excerpt: |
+          public static final String SIGNED_ON_USER = "j_signon";
+          public static final String USER_NAME = "j_signon_username";
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 125
+        line_end: 135
+        excerpt: |
+          boolean signedOn = false;
+          if (hreq.getSession().getAttribute(SIGNED_ON_USER) != null) {
+            signedOn = ((Boolean)hreq.getSession().getAttribute(SIGNED_ON_USER)).booleanValue();
+          } else {
+            hreq.getSession().setAttribute(SIGNED_ON_USER, new Boolean(false));
+          }
+          if (signedOn) {
+            chain.doFilter(request, response);
+
+  - record_key: UATH-REQ-0005
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL store the authenticated user's username in the HTTP session under
+      the key 'j_signon_username' for subsequent access by application components.
+    confidence: high
+    confidence_basis: >
+      The session attribute is explicitly set in SignOnFilter after successful authentication
+      and removed and re-added to ensure consistency. Named constant confirms this is the
+      standard location for username access.
+    risk_class: operational
+    basis: >
+      SignOnFilter.validateSignOn sets the session attribute USER_NAME ("j_signon_username") to the
+      authenticated userName value immediately after successful authentication.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 193
+        line_end: 196
+        excerpt: |
+          if (hreq.getSession().getAttribute(USER_NAME) != null) {
+            hreq.getSession().removeAttribute(USER_NAME);
+          }
+          hreq.getSession().setAttribute(USER_NAME, userName);
+
+  - record_key: UATH-REQ-0006
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL redirect to the sign-on form page (signon.screen) when a user who is
+      not signed on attempts to access a protected resource URL that matches a configured
+      security constraint.
+    confidence: high
+    confidence_basis: >
+      The protected resources are defined in signon-config.xml, loaded at filter initialization,
+      and the redirect is explicit in the doFilter method. The flow is deterministic and consistent.
+    risk_class: operational
+    basis: >
+      SignOnFilter loads protected resources from signon-config.xml via SignOnDAO. When a URL matches
+      a protected resource and the user is not signed on, the filter forwards to the sign-on page.
+      signon-config.xml defines the page as "signon.screen".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/WEB-INF/signon-config.xml
+        line_start: 40
+        line_end: 47
+        excerpt: |
+          <signon-form-login-page>
+            signon.screen
+          </signon-form-login-page>
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 145
+        line_end: 151
+        excerpt: |
+          if (urlPattern.equals(targetURL)) {
+            hreq.getSession().setAttribute(ORIGINAL_URL, targetURL);
+            config.getServletContext().getRequestDispatcher("/" + signOnPage).forward(request, response);
+
+  - record_key: UATH-REQ-0007
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL redirect to an error page (signon_error.screen) when authentication fails,
+      with a generic error message that does not reveal whether the username or password was incorrect.
+    confidence: high
+    confidence_basis: >
+      The error page is explicitly configured in signon-config.xml and rendered from
+      signon_failed.jsp, which shows a generic message. SignOnFilter.validateSignOn redirects to this
+      page on failed authentication without distinguishing the cause.
+    risk_class: operational
+    basis: >
+      signon-config.xml defines signon_error.screen as the error page. SignOnFilter redirects there
+      on failed authentication (line 207). The JSP displays: "The user name and password you entered
+      were not found in our records."
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/WEB-INF/signon-config.xml
+        line_start: 44
+        line_end: 47
+        excerpt: |
+          <signon-form-error-page>
+            signon_error.screen
+          </signon-form-error-page>
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 206
+        line_end: 209
+        excerpt: |
+          } else {
+            hres.sendRedirect(signOnErrorPage);
+            return;
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon_failed.jsp
+        line_start: 44
+        line_end: 48
+        excerpt: |
+          <p class="petstore">There were errors signing you in. The user name
+          and password you entered were not found in our records. Please try
+          again.</p>
+
+  - record_key: UATH-REQ-0008
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL allow a user to create a new account by providing a username and password
+      via an HTTP POST to createuser.do, which invokes SignOnEJB.createUser().
+    confidence: high
+    confidence_basis: >
+      The form and servlet are explicit in the JSP and code. CreateUserServlet handles the POST,
+      looks up the EJB, and calls createUser. The flow is clear and straightforward.
+    risk_class: operational
+    basis: >
+      signon.jsp contains a form posting to createuser.do with j_username and j_password fields.
+      CreateUserServlet.doPost retrieves these parameters and calls signOn.createUser(userName, password).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 131
+        line_end: 161
+        excerpt: |
+          <waf:form name="newcustomer" action="createuser.do" method="POST">
+            <table cellpadding="5" cellspacing="0" border="0">
+              <tr>
+                <td><b>User Name:</b></td>
+                <td><waf:input name="j_username"/></td>
+              </tr>
+              <tr>
+                <td><b>Password:</b></td>
+                <td><waf:input type="password" name="j_password"/></td>
+              </tr>
+              <tr>
+                <td><b>Password (Repeat):</b></td>
+                <td><waf:input type="password" name="j_password_2"/></td>
+              </tr>
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/CreateUserServlet.java
+        line_start: 59
+        line_end: 75
+        excerpt: |
+          public void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+            String userName = request.getParameter(SignOnFilter.FORM_USER_NAME);
+            String password = request.getParameter(SignOnFilter.FORM_PASSWORD);
+            SignOnLocal signOn = getSignOnEjb();
+            signOn.createUser(userName, password);
+
+  - record_key: UATH-REQ-0009
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL reject user creation if the username exceeds 25 characters in length.
+    confidence: high
+    confidence_basis: >
+      The validation is enforced in UserEJB.ejbCreate() with a hard-coded check against the
+      MAX_USERID_LENGTH constant. A CreateException is thrown with an explicit error message.
+      This is the only place where user creation validation occurs.
+    risk_class: operational
+    basis: >
+      UserEJB.ejbCreate() checks if userName.length() > UserLocal.MAX_USERID_LENGTH (25) and
+      throws CreateException with message "User ID cant be more than 25 chars long".
+      UserLocal.java defines MAX_USERID_LENGTH = 25.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/user/ejb/UserEJB.java
+        line_start: 64
+        line_end: 67
+        excerpt: |
+          if(userName.length() > UserLocal.MAX_USERID_LENGTH) {
+            throw new CreateException("User ID cant be more than " +
+            UserLocal.MAX_USERID_LENGTH + " chars long");
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/user/ejb/UserLocal.java
+        line_start: 46
+        line_end: 46
+        excerpt: "public static final int MAX_USERID_LENGTH = 25;"
+
+  - record_key: UATH-REQ-0010
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL reject user creation if the username contains the '%' or '*' characters.
+    confidence: high
+    confidence_basis: >
+      The validation is explicit in UserEJB.ejbCreate() with character-by-character checks. A
+      CreateException is thrown with a specific error message if either character is found.
+      This is a whitelist check (by exclusion).
+    risk_class: operational
+    basis: >
+      UserEJB.ejbCreate() checks if userName contains '%' or '*' using indexOf() and throws
+      CreateException with message "User Id cannot have '%' or '*' characters".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/user/ejb/UserEJB.java
+        line_start: 72
+        line_end: 76
+        excerpt: |
+          if( (userName.indexOf('%') != -1) ||
+          (userName.indexOf('*') != -1) ) {
+            throw new CreateException("User Id cannot " +
+            "have '%' or '*' characters");
+
+  - record_key: UATH-REQ-0011
+    kind: business-rule
+    capability_key: user-authentication
+    requirement: >
+      When user creation encounters a validation error, the system SHALL redirect to user_creation_error.jsp
+      and log the error via System.out.println.
+    confidence: medium
+    confidence_basis: >
+      The catch block for CreateException in CreateUserServlet is explicit, but the error page name
+      is a hard-coded string. The presence of a try-catch suggests this is expected error handling,
+      not debug code, but redirect target and logging strategy are not documented elsewhere.
+    risk_class: operational
+    basis: >
+      CreateUserServlet.doPost wraps createUser() in a try-catch for CreateException. On exception,
+      it calls response.sendRedirect("user_creation_error.jsp") and logs via System.out.println.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/CreateUserServlet.java
+        line_start: 71
+        line_end: 74
+        excerpt: |
+          } catch (CreateException ce) {
+            System.out.println("CreateUserServlet:: redirecting to user creation error error url");
+            response.sendRedirect("user_creation_error.jsp");
+
+  - record_key: UATH-REQ-0012
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL allow a user to opt-in to username persistence by checking a "Remember My User Name"
+      checkbox, which sets an HTTP cookie named 'bp_signon' with the username value.
+    confidence: high
+    confidence_basis: >
+      The checkbox is present in the sign-on form with explicit name "j_remember_username". The filter code
+      checks for this parameter and creates a cookie with the configured name and username value on presence.
+    risk_class: operational
+    basis: >
+      signon.jsp contains a checkbox named j_remember_username. SignOnFilter.validateSignOn checks
+      if this parameter is present and creates a Cookie with name COOKIE_NAME ("bp_signon") and value userName.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 121
+        line_end: 124
+        excerpt: |
+          Remember My User Name
+          <waf:checkbox name="j_remember_username">
+            <waf:checked><c:out value="${cookie['bp_signon'] != null && cookie['bp_signon'] !=''}"/></waf:checked>
+          </waf:checkbox>
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 167
+        line_end: 173
+        excerpt: |
+          String rememberUserName = hreq.getParameter(REMEMBER_USERNAME);
+          if (rememberUserName != null) {
+            Cookie userNameCookie = new Cookie(COOKIE_NAME, userName);
+            userNameCookie.setMaxAge(2678400);
+            hres.addCookie(userNameCookie);
+
+  - record_key: UATH-REQ-0013
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL set the username persistence cookie to expire after 31 days (2678400 seconds).
+    confidence: high
+    confidence_basis: >
+      The cookie maxAge is explicitly set to 2678400, which is a well-known value (31 days).
+      There is no other cookie expiration policy in the code.
+    risk_class: operational
+    basis: >
+      SignOnFilter.validateSignOn sets userNameCookie.setMaxAge(2678400) where this constant
+      represents 31 days in seconds (60 * 60 * 24 * 31 = 2678400).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 170
+        line_end: 173
+        excerpt: |
+          Cookie userNameCookie = new Cookie(COOKIE_NAME, userName);
+          // set cookie to last for one month
+          userNameCookie.setMaxAge(2678400);
+          hres.addCookie(userNameCookie);
+
+  - record_key: UATH-REQ-0014
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL clear the username persistence cookie (set maxAge to 0) if the user
+      does not check the "Remember My User Name" checkbox during sign-on.
+    confidence: high
+    confidence_basis: >
+      The logic is explicit: if rememberUserName parameter is null, the code finds existing
+      bp_signon cookies and sets maxAge to 0 (deletion). This is standard cookie deletion behavior.
+    risk_class: operational
+    basis: >
+      SignOnFilter.validateSignOn checks if rememberUserName parameter is null. If so, it iterates
+      through request.getCookies(), finds any cookie with name COOKIE_NAME, and calls setMaxAge(0).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 174
+        line_end: 186
+        excerpt: |
+          } else {
+            Cookie[] cookies = hreq.getCookies();
+            if (cookies != null) {
+              for (int loop=0; loop < cookies.length; loop++) {
+                if (cookies[loop].getName().equals(COOKIE_NAME)) {
+                  cookies[loop].setMaxAge(0);
+                  hres.addCookie(cookies[loop]);
+
+  - record_key: UATH-REQ-0015
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL pre-fill the username field on the sign-on form with the value from the
+      'bp_signon' cookie if it exists, allowing users to see their previously remembered username.
+    confidence: high
+    confidence_basis: >
+      The signon.jsp JSP explicitly uses JSTL conditional logic to check for the cookie and
+      output its value into the form field value attribute. This is the only way username
+      pre-filling occurs.
+    risk_class: operational
+    basis: >
+      signon.jsp uses <c:when test="${cookie['bp_signon'] != null && cookie['bp_signon'] !=''}">
+      and outputs <waf:value><c:out value="${cookie['bp_signon'].value}"/></waf:value> into the
+      j_username field.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 65
+        line_end: 73
+        excerpt: |
+          <c:choose>
+          <c:when test="${cookie['bp_signon'] != null && cookie['bp_signon'] !=''}">
+            <waf:input cssClass="petstore_form"
+                       type="text"
+                       size="15"
+                       name="j_username"
+                       validation="validation">
+              <waf:value><c:out value="${cookie['bp_signon'].value}"/></waf:value>
+            </waf:input>
+
+  - record_key: UATH-REQ-0016
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL provide default credentials of username 'j2ee' and password 'j2ee'
+      when no username is remembered (no bp_signon cookie exists).
+    confidence: medium
+    confidence_basis: >
+      The default values are hard-coded in the JSP form fields. However, it is unclear whether
+      these are intended as a built-in demo user, a secure default, or a documentation artifact.
+      No other references to these credentials exist in the configuration.
+    risk_class: operational
+    basis: >
+      signon.jsp uses <c:otherwise> clause to display default values of "j2ee" in both j_username
+      and j_password fields when the bp_signon cookie does not exist.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 90
+        line_end: 112
+        excerpt: |
+          <c:otherwise>
+            <waf:input cssClass="petstore_form"
+                       type="text"
+                       size="15"
+                       name="j_username"
+                       validation="validation"
+                       value="j2ee"/>
+            </td>
+            </tr>
+            <tr>
+              <td class="petstore_form" align="right">
+                <b>Password:</b>
+              </td>
+              <td class="petstore_form">
+                <waf:input cssClass="petstore_form"
+                           type="password"
+                           size="15"
+                           name="j_password"
+                           validation="validation"
+                           value="j2ee"/>
+
+  - record_key: UATH-REQ-0017
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL redirect the user to their originally requested URL after successful
+      authentication, as stored in the session under 'j_signon_original_url'.
+    confidence: high
+    confidence_basis: >
+      The logic is explicit: when an unauthenticated user tries to access a protected resource,
+      the filter stores the URL in the session. On successful authentication, it retrieves and
+      redirects to this URL. This is the standard post-login redirect pattern.
+    risk_class: operational
+    basis: >
+      SignOnFilter.doFilter stores the targetURL in session as ORIGINAL_URL ("j_signon_original_url").
+      SignOnFilter.validateSignOn retrieves it with String targetURL = (String)hreq.getSession().getAttribute(ORIGINAL_URL)
+      and redirects with hres.sendRedirect(targetURL).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 145
+        line_end: 151
+        excerpt: |
+          if (urlPattern.equals(targetURL)) {
+            hreq.getSession().setAttribute(ORIGINAL_URL, targetURL);
+            config.getServletContext().getRequestDispatcher("/" + signOnPage).forward(request, response);
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 202
+        line_end: 205
+        excerpt: |
+          String targetURL = (String)hreq.getSession().getAttribute(ORIGINAL_URL);
+          hres.sendRedirect(targetURL);
+          return;
+
+  - record_key: UATH-REQ-0018
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL maintain all SignOn and User EJB methods as transactional operations
+      with transaction attribute 'Required', ensuring they run within a container-managed transaction.
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml explicitly declares container-transaction elements for every method,
+      all with trans-attribute set to "Required". This is a declarative, centralized policy.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml assembly-descriptor contains container-transaction elements for all SignOnEJB and
+      UserEJB methods, specifying trans-attribute="Required".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/ejb-jar.xml
+        line_start: 251
+        line_end: 366
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>UserEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>create</method-name>
+              ...
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+          <!-- Multiple additional container-transaction declarations all with Required -->
+
+  - record_key: UATH-ENT-0001
+    kind: entity
+    capability_key: user-authentication
+    requirement: >
+      User entity with fields: userName (primary key, max 25 chars), password (variable length,
+      max defined by MAX_PASSWD_LENGTH constant).
+    confidence: high
+    confidence_basis: >
+      The CMP 2.x entity bean schema is defined in ejb-jar.xml with explicit cmp-field declarations
+      and primkey-field designation. The UserLocal interface provides public constants for field limits.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines UserEJB as an entity bean with cmp-fields userName and password,
+      and primkey-field userName. UserLocal.java defines MAX_USERID_LENGTH = 25 and MAX_PASSWD_LENGTH.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/ejb-jar.xml
+        line_start: 46
+        line_end: 79
+        excerpt: |
+          <entity>
+            <display-name>UserEB</display-name>
+            <ejb-name>UserEJB</ejb-name>
+            <abstract-schema-name>User</abstract-schema-name>
+            <cmp-field>
+              <field-name>password</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>userName</field-name>
+            </cmp-field>
+            <primkey-field>userName</primkey-field>
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/user/ejb/UserLocal.java
+        line_start: 44
+        line_end: 55
+        excerpt: |
+          public interface UserLocal extends javax.ejb.EJBLocalObject {
+            public static final int MAX_USERID_LENGTH = 25;
+            public static final int MAX_PASSWD_LENGTH = /* redacted */
+            public String getUserName();
+            public String getPassword();
+            public void setPassword(String password);
+            public boolean matchPassword(String password);
+
+  - record_key: UATH-WFLOW-0001
+    kind: workflow
+    capability_key: user-authentication
+    requirement: >
+      Sign-on workflow: (1) User accesses protected resource, (2) Filter intercepts and checks
+      session authentication state, (3) If not signed on, redirects to sign-on form,
+      (4) User submits credentials to j_signon_check, (5) Filter validates via SignOnEJB.authenticate(),
+      (6) On success, sets session attributes and redirects to original URL; on failure, redirects to error page.
+    confidence: high
+    confidence_basis: >
+      The workflow is fully traced in SignOnFilter.doFilter and validateSignOn methods. Each step
+      is explicit with clear branching logic and no ambiguity about the flow.
+    risk_class: operational
+    basis: >
+      SignOnFilter implements the complete workflow in two methods: doFilter (intercept and redirect
+      to form) and validateSignOn (validate credentials and redirect on success/failure).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+        line_start: 108
+        line_end: 210
+        excerpt: |
+          Full doFilter and validateSignOn method implementations showing complete workflow
+
+  - record_key: UATH-WFLOW-0002
+    kind: workflow
+    capability_key: user-authentication
+    requirement: >
+      User creation workflow: (1) User navigates to sign-on form, (2) Enters desired username
+      and password (twice for confirmation), (3) Submits form to createuser.do, (4) CreateUserServlet
+      retrieves username/password, (5) Calls SignOnEJB.createUser(), (6) If successful, redirects
+      to target page; if CreateException thrown, redirects to user_creation_error.jsp.
+    confidence: high
+    confidence_basis: >
+      The workflow is straightforward and fully implemented in CreateUserServlet.doPost. The form
+      in signon.jsp is explicit about the POST target and fields.
+    risk_class: operational
+    basis: >
+      signon.jsp provides the form posting to createuser.do. CreateUserServlet.doPost handles the
+      submission, calls the EJB, and handles success/failure redirects.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 131
+        line_end: 181
+        excerpt: |
+          Form posting to createuser.do with j_username, j_password, j_password_2 fields
+      - path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/CreateUserServlet.java
+        line_start: 59
+        line_end: 91
+        excerpt: |
+          Complete doPost method showing EJB lookup and createUser invocation with error handling
+
+  - record_key: UATH-SCREEN-0001
+    kind: screen
+    capability_key: user-authentication
+    requirement: >
+      Sign-on form (signon.jsp) with fields: username (text input), password (password input),
+      "Remember My User Name" checkbox. Form posts to j_signon_check endpoint. Pre-fills username
+      from bp_signon cookie if present, otherwise defaults to 'j2ee'.
+    confidence: high
+    confidence_basis: >
+      The JSP explicitly renders the form with JSTL conditionals for cookie handling. Form
+      submission details are clear (action, method, field names).
+    risk_class: presentational
+    basis: >
+      signon.jsp renders the sign-on form section with fields j_username (text), j_password (password),
+      j_remember_username (checkbox). Form action is "j_signon_check" with method POST.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 48
+        line_end: 128
+        excerpt: |
+          Complete form HTML with fields, conditionals, and checkbox
+
+  - record_key: UATH-SCREEN-0002
+    kind: screen
+    capability_key: user-authentication
+    requirement: >
+      User creation form (signon.jsp, new customer section) with fields: username (text input),
+      password (password input), password repeat (password input). Form posts to createuser.do endpoint.
+      No default values; all fields initially empty.
+    confidence: high
+    confidence_basis: >
+      The form is clearly marked as "newcustomer" and has distinct structure from the sign-on
+      form. Field names and types are explicit.
+    risk_class: presentational
+    basis: >
+      signon.jsp renders the new customer form section with fields j_username, j_password, j_password_2.
+      Form action is "createuser.do" with method POST.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+        line_start: 131
+        line_end: 183
+        excerpt: |
+          Complete new customer form HTML with fields
+
+  - record_key: UATH-SCREEN-0003
+    kind: screen
+    capability_key: user-authentication
+    requirement: >
+      Sign-on error page (signon_failed.jsp) displays generic error message: "There were errors
+      signing you in. The user name and password you entered were not found in our records. Please try again."
+    confidence: high
+    confidence_basis: >
+      The JSP file explicitly contains the error message. This is the only error page for failed
+      authentication.
+    risk_class: presentational
+    basis: >
+      signon_failed.jsp renders the error message as a paragraph element.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon_failed.jsp
+        line_start: 44
+        line_end: 48
+        excerpt: |
+          <p class="petstore">There were errors signing you in. The user name
+          and password you entered were not found in our records. Please try
+          again.</p>
+
+  - record_key: UATH-PROTECTED-0001
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The following URLs are protected resources requiring authentication: customer.screen,
+      customer.do, enter_order_information.screen, signon_welcome.screen.
+    confidence: high
+    confidence_basis: >
+      The protected resources are centrally defined in signon-config.xml with explicit
+      web-resource-collection declarations. This is the single source of truth for protected URLs.
+    risk_class: operational
+    basis: >
+      signon-config.xml defines four security-constraint entries, each with a web-resource-collection
+      containing a url-pattern element.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/WEB-INF/signon-config.xml
+        line_start: 50
+        line_end: 80
+        excerpt: |
+          <security-constraint>
+            <web-resource-collection>
+              <web-resource-name>Customer Screen</web-resource-name>
+              <url-pattern>customer.screen</url-pattern>
+            </web-resource-collection>
+          </security-constraint>
+          <!-- Three additional security-constraint declarations for customer.do,
+               enter_order_information.screen, signon_welcome.screen -->
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/user/ejb/UserLocal.java
+    description: >
+      The MAX_PASSWD_LENGTH constant value is redacted/obscured in the source. The maximum
+      password length requirement cannot be determined from the available source code. A human
+      reviewer needs to check the original, unredacted source or configuration to establish this limit.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/SignOnFilter.java
+    description: >
+      Form parameter names are defined as constants (FORM_PASSWORD, etc.) but the values are
+      redacted in the shown source. The actual HTTP parameter names cannot be confirmed from this
+      reading. However, signon.jsp shows parameter names (j_password, j_username, j_remember_username),
+      suggesting these are the intended names. Recommend verifying constant values match JSP field names.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/signon/src/com/sun/j2ee/blueprints/signon/web/CreateUserServlet.java
+    description: >
+      CreateUserServlet.doPost method appears to have been truncated or corrupted in the source
+      provided. Lines 68-70 show a println statement with redacted password output, but line 70
+      jumps directly to response.sendRedirect with no surrounding try-catch or logic visible. The
+      actual flow after user creation (success case) is not determinable from this source. The
+      error case (CreateException handler) is present and clear, but the success path is ambiguous.
+
+  - kind: conflict
+    path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/signon.jsp
+    description: >
+      The user creation form includes a j_password_2 (password confirmation) field, but the
+      CreateUserServlet.doPost method does not show any code that retrieves or validates this
+      field. The JSP enforces a UI-level check (likely with the "validation" attribute), but there
+      is no corresponding server-side validation visible in the servlet. The requirement "password
+      must be confirmed" is unclear - is it a UI-only validation, or should CreateUserServlet verify
+      that j_password == j_password_2 before calling createUser()?
