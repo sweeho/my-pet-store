@@ -240,7 +240,7 @@ capabilities:
       screens:
         - "Enter Order Information screen: captures billing first/last name, address (2 lines), city, state, postal code, country, phone, email; similar fields for shipping address"
     evidence:
-      irRefs: [ORDER-PLACEMENT-REQ-0001, ORDER-PLACEMENT-RULE-0001, ORDER-PLACEMENT-RULE-0002]
+      irRefs: [ORDER-PLACEMENT-REQ-0001, ORDER-PLACEMENT-RULE-0001, ORDER-PLACEMENT-RULE-0002, SCREEN-ORDER-INFO-0001, screen-order-info-001, screen-order-complete-001, order-placement-entity-0001, order-placement-requirement-0001, order-placement-relationship-0001, order-placement-creditcard-0001, order-placement-date-format-0001, order-placement-transaction-0001, order-placement-access-control-0001]
       reviewedBy: null
       reviewedAt: null
 
