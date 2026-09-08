@@ -1,0 +1,325 @@
+records:
+  - record_key: payment-processing-entity-0001
+    kind: entity
+    capability_key: payment-processing
+    requirement: >
+      The credit card entity SHALL store three attributes: card number, card type, and
+      expiry date.
+    confidence: high
+    confidence_basis: >
+      The DTD, CMP field declarations, and constructor signatures all converge on this
+      three-field structure. The requirement is enforced at multiple levels (schema,
+      bean definition, and interfaces).
+    risk_class: financial
+    basis: >
+      DTD defines CreditCard element with CardNumber, CardType, and ExpiryDate children.
+      CreditCardEJB declares three CMP fields (cardNumber, cardType, expiryDate).
+      CreditCardLocalHome create() methods accept these three parameters.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/rsrc/schemas/CreditCard.dtd
+        line_start: 38
+        line_end: 41
+        excerpt: |
+          <!ELEMENT CreditCard (CardNumber, CardType, ExpiryDate)>
+          <!ELEMENT CardNumber (#PCDATA)>
+          <!ELEMENT CardType (#PCDATA)>
+          <!ELEMENT ExpiryDate (#PCDATA)>
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+        line_start: 50
+        line_end: 57
+        excerpt: |
+          public abstract String getCardNumber();
+          public abstract void setCardNumber(String cardNumber);
+          public abstract String getCardType();
+          public abstract void setCardType(String cardType);
+          public abstract String getExpiryDate();
+          public abstract void setExpiryDate(String expiryDate);
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/ejb-jar.xml
+        line_start: 57
+        line_end: 68
+        excerpt: |
+          <cmp-field>
+            <description>no description</description>
+            <field-name>expiryDate</field-name>
+          </cmp-field>
+          <cmp-field>
+            <description>no description</description>
+            <field-name>cardType</field-name>
+          </cmp-field>
+          <cmp-field>
+            <description>no description</description>
+            <field-name>cardNumber</field-name>
+          </cmp-field>
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      persistence: CMP 2.x
+
+  - record_key: payment-processing-requirement-0001
+    kind: requirement
+    capability_key: payment-processing
+    requirement: >
+      The system SHALL parse expiry date in MM/YY format, extracting month as the
+      substring before "/" and year as the substring after "/".
+    confidence: medium
+    confidence_basis: >
+      The parsing logic is explicitly coded in getExpiryMonth() and getExpiryYear()
+      methods, but no external specification (config, validation rules, or tests) exists
+      to confirm this is the intended format. The code is authoritative but unvalidated
+      against any stated requirement.
+    risk_class: financial
+    basis: >
+      CreditCardEJB.getExpiryMonth() and getExpiryYear() parse expiryDate by locating
+      "/" character. Month is substring before slash, year is substring after.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+        line_start: 88
+        line_end: 107
+        excerpt: |
+          public String getExpiryMonth() {
+            String dateString = getExpiryDate();
+            if (dateString != null) {
+              // get the slash and return the text before it
+              int slashStart = dateString.indexOf("/");
+              if (slashStart != -1) return dateString.substring(0,slashStart);
+            }
+            return "01";
+          }
+
+          public String getExpiryYear() {
+            String dateString = getExpiryDate();
+            if (dateString != null) {
+              // get the slash and return the text after it
+              int slashStart = dateString.indexOf("/");
+              if (slashStart != -1) return dateString.substring(slashStart +1, dateString.length());
+
+            }
+            return "2010";
+          }
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      method: getExpiryMonth, getExpiryYear
+
+  - record_key: payment-processing-requirement-0002
+    kind: requirement
+    capability_key: payment-processing
+    requirement: >
+      If expiry date is null or does not contain a "/" character, the system SHALL
+      return default month "01" and default year "2010".
+    confidence: low
+    confidence_basis: >
+      The default values are hard-coded with no external specification or configuration.
+      The year "2010" appears arbitrary and may be legacy dead code. Confidence is low
+      due to lack of authoritative source for these defaults.
+    risk_class: operational
+    basis: >
+      CreditCardEJB.getExpiryMonth() returns "01" as default and getExpiryYear()
+      returns "2010" when dateString is null or "/" not found. No configuration,
+      comment, or test justifies these values.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+        line_start: 88
+        line_end: 107
+        excerpt: |
+          public String getExpiryMonth() {
+            String dateString = getExpiryDate();
+            if (dateString != null) {
+              int slashStart = dateString.indexOf("/");
+              if (slashStart != -1) return dateString.substring(0,slashStart);
+            }
+            return "01";
+          }
+
+          public String getExpiryYear() {
+            String dateString = getExpiryDate();
+            if (dateString != null) {
+              int slashStart = dateString.indexOf("/");
+              if (slashStart != -1) return dateString.substring(slashStart +1, dateString.length());
+            }
+            return "2010";
+          }
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      method: getExpiryMonth, getExpiryYear
+
+  - record_key: payment-processing-requirement-0003
+    kind: requirement
+    capability_key: payment-processing
+    requirement: >
+      All credit card entity bean operations SHALL execute within a Required transaction
+      context.
+    confidence: high
+    confidence_basis: >
+      This is declared uniformly in ejb-jar.xml for all methods (create, remove,
+      getters, setters). The declarative configuration is the authoritative source
+      for transaction boundaries in EJB.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml <container-transaction> declarations specify trans-attribute Required
+      for all CreditCardEJB methods including create, remove, getters, setters, and
+      findByPrimaryKey.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/ejb-jar.xml
+        line_start: 83
+        line_end: 234
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>CreditCardEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>remove</method-name>
+              <method-params>
+                <method-param>java.lang.Object</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+          <!-- ... all other methods similarly declared with Required ... -->
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      ejb.transaction: Required
+
+  - record_key: payment-processing-requirement-0004
+    kind: requirement
+    capability_key: payment-processing
+    requirement: >
+      Credit card entity creation SHALL support three constructor variants: no-arg
+      constructor, constructor with (cardNumber, cardType, expiryDate), and constructor
+      with CreditCard object.
+    confidence: high
+    confidence_basis: >
+      All three constructor variants are explicitly declared in CreditCardLocalHome
+      interface and implemented in CreditCardEJB.ejbCreate() methods. Both home
+      interface and bean converge on this requirement.
+    risk_class: operational
+    basis: >
+      CreditCardLocalHome.create() methods define three overloads. CreditCardEJB
+      implements corresponding ejbCreate() methods for each variant.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardLocalHome.java
+        line_start: 45
+        line_end: 49
+        excerpt: |
+          public CreditCardLocal create() throws CreateException;
+          public CreditCardLocal create(String cardNumber, String cardType, String expiryDate) throws CreateException;
+          public CreditCardLocal create(CreditCard creditCard) throws CreateException;
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+        line_start: 62
+        line_end: 86
+        excerpt: |
+          public Object ejbCreate(String cardNumber, String cardType,
+                                  String expiryDate) throws CreateException {
+                                    setCardNumber(cardNumber);
+                                    setCardType(cardType);
+                                    setExpiryDate(expiryDate);
+                                    return null;
+          }
+
+          public Object ejbCreate(CreditCard creditCard) throws CreateException {
+            setCardNumber(creditCard.getCardNumber());
+            setCardType(creditCard.getCardType());
+            setExpiryDate(creditCard.getExpiryDate());
+            return null;
+          }
+
+          public Object ejbCreate() throws CreateException {
+            return null;
+          }
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      method: ejbCreate
+
+  - record_key: payment-processing-requirement-0005
+    kind: requirement
+    capability_key: payment-processing
+    requirement: >
+      The credit card entity bean SHALL be configured as non-reentrant.
+    confidence: high
+    confidence_basis: >
+      Non-reentrant status is explicitly declared in ejb-jar.xml and is an enforced
+      property of the EJB configuration. This is definitively stated.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml <reentrant>False</reentrant> declaration on the CreditCardEJB entity.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/ejb-jar.xml
+        line_start: 46
+        line_end: 73
+        excerpt: |
+          <entity>
+            <display-name>CreditCardEB</display-name>
+            <ejb-name>CreditCardEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.creditcard.ejb.CreditCardLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.creditcard.ejb.CreditCardLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.creditcard.ejb.CreditCardEJB</ejb-class>
+            <persistence-type>Container</persistence-type>
+            <prim-key-class>java.lang.Object</prim-key-class>
+            <reentrant>False</reentrant>
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      persistence: CMP 2.x
+
+  - record_key: payment-processing-requirement-0006
+    kind: requirement
+    capability_key: payment-processing
+    requirement: >
+      All credit card entity bean methods SHALL be accessible without explicit
+      authorization checks (unchecked permission).
+    confidence: high
+    confidence_basis: >
+      ejb-jar.xml <unchecked /> declaration explicitly opens all methods. The bean
+      uses use-caller-identity for security context propagation, meaning authorization
+      is delegated to callers, not enforced at the bean level.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml <method-permission><unchecked /></method-permission> on all
+      CreditCardEJB methods. Security identity is use-caller-identity.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/ejb-jar.xml
+        line_start: 69
+        line_end: 82
+        excerpt: |
+          <security-identity>
+            <description></description>
+            <use-caller-identity></use-caller-identity>
+          </security-identity>
+        </entity>
+      <assembly-descriptor>
+        <method-permission>
+          <unchecked />
+          <method>
+            <ejb-name>CreditCardEJB</ejb-name>
+            <method-name>*</method-name>
+          </method>
+        </method-permission>
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      security: use-caller-identity
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+    description: >
+      The default expiry year "2010" is hard-coded with no apparent business rationale.
+      This value is 15+ years in the past as of the codebase creation date (2002 sources).
+      It appears to be a placeholder or legacy default that may never be reached in
+      production, or it may represent a genuine business rule (e.g., cards defaulting to
+      a fixed future year). A human needs to confirm whether this is intentional.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+    description: >
+      The expiryDate format is inferred from substring parsing logic but never validated
+      against a format constraint or pattern (no regex, no validation.xml). The assumed
+      MM/YY format is reasonable but not enforced. A caller could set expiryDate to any
+      string (e.g., "invalid", "12345", ""), and getExpiryMonth/getExpiryYear would
+      return defaults without error. It is unclear whether invalid dates should be
+      rejected or silently defaulted.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+    description: >
+      No validator, filter, or constraint exists to enforce card number format, card
+      type enumeration, or expiry date range checks. The component accepts and persists
+      any string values. It is unclear whether validation is intended to occur at a
+      higher level (order processing, payment gateway), or whether this component should
+      enforce constraints. Pass A may have additional context on validation scope.
