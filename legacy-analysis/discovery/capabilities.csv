@@ -1,0 +1,12 @@
+capability_key,name,summary
+catalog-browsing,Catalog browsing and search,Product catalog navigation by category and search across items
+shopping-cart,Shopping cart management,Add items to cart, update quantities, remove items, view cart totals
+account-management,Customer account management,Sign up, sign in, profile management, address book, account editing
+order-placement,Order placement and checkout,Order submission with billing and shipping details, order confirmation
+payment-processing,Payment processing and validation,Credit card storage, expiry validation, card type acceptance rules
+order-approval,Order approval workflow,Business rule evaluation for order approval, thresholds, tier-based authorization
+fulfillment-management,Supplier order fulfillment,Purchase order creation for suppliers, delivery tracking, order completion
+internationalization,Internationalization and localization,Multi-language UI support, locale-specific content, currency handling
+user-authentication,User authentication and authorization,Sign on/sign off, session management, role-based access control
+notifications,Order and approval notifications,Email notifications for order status, approvals, denials, completions
+admin-operations,Administrative operations,Order management, system monitoring, override capabilities

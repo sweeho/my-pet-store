@@ -1,0 +1,580 @@
+{
+  "application": "Sun Petstore 1.3.2 Reference Implementation",
+  "version": "1.3.2",
+  "generated_at": "2026-09-08",
+  "summary": {
+    "total_modules": 19,
+    "high_risk_modules": 4,
+    "medium_risk_modules": 7,
+    "low_risk_modules": 8,
+    "total_loc": 45087,
+    "total_screens": 42
+  },
+  "modules": {
+    "apps/petstore": {
+      "type": "web_application",
+      "loc": 18460,
+      "screens": 30,
+      "risk": "high",
+      "description": "Customer-facing shopping application with catalog browsing, cart, account management, and checkout",
+      "dependencies": [
+        "components/cart",
+        "components/catalog",
+        "components/customer",
+        "components/creditcard",
+        "components/purchaseorder",
+        "components/signon",
+        "components/contactinfo",
+        "components/lineitem",
+        "waf"
+      ],
+      "technologies": [
+        "Struts",
+        "JSP",
+        "EJB 2.0"
+      ],
+      "entry_points": [
+        "MainServlet",
+        "TemplateServlet"
+      ],
+      "integration_points": [
+        "JMS: PurchaseOrder queue"
+      ]
+    },
+    "apps/opc": {
+      "type": "web_application",
+      "loc": 5212,
+      "screens": 1,
+      "risk": "high",
+      "description": "Order Processing Center - backend service for order approval workflow and supplier routing",
+      "dependencies": [
+        "components/purchaseorder",
+        "components/processmanager",
+        "components/xmldocuments",
+        "components/mailer",
+        "components/supplierpo",
+        "components/lineitem",
+        "components/asyncsender"
+      ],
+      "technologies": [
+        "JMS",
+        "EJB 2.0",
+        "Message-driven beans",
+        "XML processing"
+      ],
+      "entry_points": [
+        "PurchaseOrderMDB",
+        "OrderApprovalMDB",
+        "InvoiceMDB"
+      ],
+      "integration_points": [
+        "JMS: PurchaseOrder queue (input)",
+        "JMS: Supplier PO queue (output)",
+        "JMS: Mail queue (output)"
+      ]
+    },
+    "apps/admin": {
+      "type": "web_application",
+      "loc": 5497,
+      "screens": 4,
+      "risk": "medium",
+      "description": "Administrative interface for order management, monitoring, and system configuration",
+      "dependencies": [
+        "components/purchaseorder",
+        "components/customer",
+        "components/lineitem",
+        "waf"
+      ],
+      "technologies": [
+        "Struts",
+        "JSP",
+        "EJB 2.0"
+      ],
+      "entry_points": [
+        "MainServlet"
+      ]
+    },
+    "apps/supplier": {
+      "type": "web_application",
+      "loc": 4097,
+      "screens": 7,
+      "risk": "medium",
+      "description": "Supplier-side application for order fulfillment and delivery tracking",
+      "dependencies": [
+        "components/purchaseorder",
+        "components/lineitem",
+        "components/supplierpo",
+        "waf"
+      ],
+      "technologies": [
+        "Struts",
+        "JSP",
+        "EJB 2.0",
+        "JMS"
+      ],
+      "entry_points": [
+        "SupplierOrderMDB"
+      ],
+      "integration_points": [
+        "JMS: Supplier PO queue (input)",
+        "JMS: Invoice queue (output)"
+      ]
+    },
+    "waf": {
+      "type": "framework",
+      "loc": 8334,
+      "screens": 19,
+      "risk": "medium",
+      "description": "Web Application Framework - Struts-based MVC framework with template servlet and locale support",
+      "dependencies": [
+        "components/signon",
+        "components/encodingfilter",
+        "components/uidgen"
+      ],
+      "technologies": [
+        "Struts 1.x",
+        "JSP",
+        "Servlet 2.3"
+      ],
+      "entry_points": [
+        "MainServlet",
+        "TemplateServlet"
+      ]
+    },
+    "components/purchaseorder": {
+      "type": "ejb_component",
+      "loc": 2366,
+      "screens": 0,
+      "risk": "high",
+      "description": "Purchase order entity and lifecycle management - central to order processing",
+      "dependencies": [
+        "components/lineitem",
+        "components/creditcard",
+        "components/contactinfo"
+      ],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "apps/petstore",
+        "apps/opc",
+        "apps/admin",
+        "apps/supplier"
+      ],
+      "state_machine": "pending → approved/denied → fulfilled → completed"
+    },
+    "components/creditcard": {
+      "type": "ejb_component",
+      "loc": 769,
+      "screens": 0,
+      "risk": "high",
+      "description": "Credit card entity for payment processing and validation",
+      "dependencies": [],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "apps/petstore",
+        "components/purchaseorder"
+      ],
+      "validation_rules": [
+        "Expiry date format: MM/YYYY",
+        "Card type enumeration (Visa, MasterCard, Amex, etc.)",
+        "Card number storage (plaintext - security concern)"
+      ]
+    },
+    "components/cart": {
+      "type": "ejb_component",
+      "loc": 829,
+      "screens": 0,
+      "risk": "medium",
+      "description": "Shopping cart - stateful session EJB maintaining customer selections",
+      "dependencies": [
+        "components/lineitem",
+        "components/catalog"
+      ],
+      "technologies": [
+        "EJB 2.0 Stateful Session Bean"
+      ],
+      "used_by": [
+        "apps/petstore"
+      ],
+      "note": "Requires sticky sessions in production"
+    },
+    "components/catalog": {
+      "type": "ejb_component",
+      "loc": 2866,
+      "screens": 0,
+      "risk": "medium",
+      "description": "Product catalog hierarchy - categories, products, items with locale-specific details",
+      "dependencies": [],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "apps/petstore"
+      ],
+      "data_model": [
+        "Category (catid)",
+        "CategoryDetails (locale-specific)",
+        "Product (productid)",
+        "ProductDetails (locale-specific)",
+        "Item (itemid)",
+        "ItemDetails (locale-specific, with pricing)"
+      ]
+    },
+    "components/customer": {
+      "type": "ejb_component",
+      "loc": 2385,
+      "screens": 0,
+      "risk": "medium",
+      "description": "Customer account and profile management",
+      "dependencies": [
+        "components/contactinfo",
+        "components/creditcard"
+      ],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "apps/petstore",
+        "apps/admin"
+      ]
+    },
+    "components/signon": {
+      "type": "ejb_component",
+      "loc": 1559,
+      "screens": 0,
+      "risk": "medium",
+      "description": "Authentication and authorization - servlet filter, session management",
+      "dependencies": [],
+      "technologies": [
+        "Servlet Filter",
+        "Session beans"
+      ],
+      "used_by": [
+        "waf",
+        "apps/petstore",
+        "apps/admin"
+      ],
+      "integration_points": [
+        "Servlet filter on all requests",
+        "JSP sign-on form"
+      ]
+    },
+    "components/processmanager": {
+      "type": "ejb_component",
+      "loc": 1322,
+      "screens": 0,
+      "risk": "medium",
+      "description": "Process/workflow engine - event-driven state transitions and delegation",
+      "dependencies": [],
+      "technologies": [
+        "EJB 2.0",
+        "Event-driven architecture"
+      ],
+      "used_by": [
+        "apps/opc"
+      ],
+      "pattern": "Transition delegates for order approval, fulfillment, notifications"
+    },
+    "components/supplierpo": {
+      "type": "ejb_component",
+      "loc": 1924,
+      "screens": 0,
+      "risk": "medium",
+      "description": "Supplier purchase order management and fulfillment tracking",
+      "dependencies": [
+        "components/lineitem",
+        "components/purchaseorder"
+      ],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "apps/opc",
+        "apps/supplier"
+      ]
+    },
+    "components/lineitem": {
+      "type": "ejb_component",
+      "loc": 820,
+      "screens": 0,
+      "risk": "low",
+      "description": "Order line item management - quantity, pricing, item reference",
+      "dependencies": [
+        "components/catalog"
+      ],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "components/purchaseorder",
+        "components/supplierpo",
+        "apps/admin"
+      ]
+    },
+    "components/contactinfo": {
+      "type": "ejb_component",
+      "loc": 1266,
+      "screens": 0,
+      "risk": "low",
+      "description": "Contact information and address management",
+      "dependencies": [
+        "components/address"
+      ],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "components/customer",
+        "components/purchaseorder"
+      ]
+    },
+    "components/address": {
+      "type": "ejb_component",
+      "loc": 992,
+      "screens": 0,
+      "risk": "low",
+      "description": "Address entity and validation",
+      "dependencies": [],
+      "technologies": [
+        "EJB 2.0 Entity Bean",
+        "CMP"
+      ],
+      "used_by": [
+        "components/contactinfo"
+      ]
+    },
+    "components/xmldocuments": {
+      "type": "component",
+      "loc": 2042,
+      "screens": 0,
+      "risk": "low",
+      "description": "XML serialization for orders, approvals, invoices, and POs",
+      "dependencies": [],
+      "technologies": [
+        "XML DOM",
+        "XML marshalling"
+      ],
+      "used_by": [
+        "apps/opc"
+      ]
+    },
+    "components/mailer": {
+      "type": "component",
+      "loc": 840,
+      "screens": 0,
+      "risk": "low",
+      "description": "Email notification content generation and sending",
+      "dependencies": [
+        "components/xmldocuments"
+      ],
+      "technologies": [
+        "JMS MDB",
+        "Email templating"
+      ],
+      "used_by": [
+        "apps/opc"
+      ],
+      "queue_consumers": [
+        "MailOrderApprovalMDB",
+        "MailInvoiceMDB",
+        "MailCompletedOrderMDB"
+      ]
+    },
+    "components/asyncsender": {
+      "type": "component",
+      "loc": 549,
+      "screens": 0,
+      "risk": "low",
+      "description": "Asynchronous message sending and JMS dispatch",
+      "dependencies": [],
+      "technologies": [
+        "JMS",
+        "Message-driven beans"
+      ],
+      "used_by": [
+        "apps/opc"
+      ]
+    },
+    "components/uidgen": {
+      "type": "component",
+      "loc": 756,
+      "screens": 0,
+      "risk": "low",
+      "description": "Unique ID generation service",
+      "dependencies": [],
+      "technologies": [
+        "EJB 2.0 Session Bean",
+        "Service Locator pattern"
+      ],
+      "used_by": [
+        "waf",
+        "multiple components"
+      ]
+    },
+    "components/servicelocator": {
+      "type": "component",
+      "loc": 758,
+      "screens": 0,
+      "risk": "low",
+      "description": "JNDI lookup abstraction and service location",
+      "dependencies": [],
+      "technologies": [
+        "JNDI",
+        "Service Locator pattern"
+      ],
+      "used_by": [
+        "multiple components"
+      ]
+    },
+    "components/encodingfilter": {
+      "type": "component",
+      "loc": 180,
+      "screens": 0,
+      "risk": "low",
+      "description": "UTF-8 request encoding servlet filter",
+      "dependencies": [],
+      "technologies": [
+        "Servlet Filter"
+      ],
+      "used_by": [
+        "waf"
+      ]
+    },
+    "components/util": {
+      "type": "component",
+      "loc": 181,
+      "screens": 0,
+      "risk": "low",
+      "description": "Utility classes and helpers",
+      "dependencies": [],
+      "used_by": [
+        "multiple components"
+      ]
+    }
+  },
+  "critical_paths": [
+    {
+      "name": "Order Fulfillment",
+      "flow": "petstore → cart → purchaseorder → opc → supplierpo → supplier",
+      "risk": "high",
+      "description": "End-to-end order from customer through fulfillment"
+    },
+    {
+      "name": "Order Approval",
+      "flow": "purchaseorder → processmanager → OrderApprovalTD → xmldocuments → mailer",
+      "risk": "high",
+      "description": "Order evaluation against approval thresholds"
+    },
+    {
+      "name": "Payment",
+      "flow": "customer → creditcard → purchaseorder",
+      "risk": "high",
+      "description": "Credit card association with orders"
+    }
+  ],
+  "integration_points": {
+    "jms_queues": [
+      {
+        "name": "PurchaseOrderQueue",
+        "producer": "petstore (indirect via web service)",
+        "consumer": "opc/PurchaseOrderMDB",
+        "message_type": "Order submission"
+      },
+      {
+        "name": "SupplierPurchaseOrderQueue",
+        "producer": "opc/OrderApprovalTD",
+        "consumer": "supplier/SupplierOrderMDB",
+        "message_type": "Purchase order for fulfillment"
+      },
+      {
+        "name": "MailQueue",
+        "producer": "opc (OrderApprovalTD, InvoiceMDB)",
+        "consumer": "opc/MailMDB",
+        "message_type": "Email notification content"
+      },
+      {
+        "name": "InvoiceQueue",
+        "producer": "supplier",
+        "consumer": "opc/InvoiceMDB",
+        "message_type": "Fulfillment confirmation"
+      }
+    ],
+    "ejb_local_calls": [
+      "cart → catalog",
+      "cart → lineitem",
+      "purchaseorder → lineitem",
+      "purchaseorder → creditcard",
+      "purchaseorder → contactinfo",
+      "customer → contactinfo",
+      "customer → creditcard"
+    ],
+    "servlet_filters": [
+      {
+        "name": "EncodingFilter",
+        "path": "/*",
+        "effect": "UTF-8 encoding normalization"
+      },
+      {
+        "name": "SignOnFilter",
+        "path": "/*",
+        "effect": "Authentication enforcement"
+      }
+    ]
+  },
+  "data_flow": {
+    "order_submission": {
+      "petstore": "User submits cart + billing/shipping",
+      "purchaseorder_ejb": "PO entity created",
+      "jms": "PurchaseOrder message → OPC queue"
+    },
+    "order_approval": {
+      "opc_mdb": "Message received",
+      "processmanager": "Thresholds evaluated",
+      "outcome": "Approved or Denied"
+    },
+    "supplier_fulfillment": {
+      "xml": "SupplierPO generated",
+      "jms": "PO message → Supplier queue",
+      "supplier_app": "Fulfillment tracked"
+    },
+    "customer_notification": {
+      "mailer": "Email content from template",
+      "jms": "Mail message → CR queue",
+      "customer": "Receives approval/denial/completion email"
+    }
+  },
+  "database_schema_highlights": {
+    "catalog_tables": [
+      "category",
+      "category_details",
+      "product",
+      "product_details",
+      "item",
+      "item_details"
+    ],
+    "order_tables": [
+      "PurchaseOrderEJBTable",
+      "PurchaseOrderEJB_lineItems_LineItemEJB_Table"
+    ],
+    "customer_tables": [
+      "CustomerEJBTable",
+      "ContactInfoEJBTable",
+      "AddressEJBTable",
+      "CreditCardEJBTable"
+    ],
+    "platform_specific": {
+      "cloudscape": "char for strings, LONGINT for PKs",
+      "oracle": "varchar for strings, NUMBER types"
+    }
+  }
+}
