@@ -1,58 +1,34 @@
-# Admin Operations Capability — Proposal
+# Administrative Operations Capability — Proposal
 
 ## Summary
 
-The Admin Operations capability provides a rich client interface for system administrators to manage orders, approve or deny pending orders, and generate business intelligence reports on sales revenue and order volumes. This capability is built on Java Web Start deployment and XML-based RPC communication.
+Administrative operations provide tools for administrators to manage orders, update order status, and generate sales and inventory reports. Administrators access a protected rich client interface via Java Web Start to perform operational tasks.
 
 ## Scope
 
-This specification defines:
-- **JNLP deployment** — Dynamic Java Network Launch Protocol generation for rich client Java Web Start
-- **Order management** — View orders filtered by status (PENDING, APPROVED, DENIED, COMPLETED)
-- **Order approval workflow** — Approve or deny pending orders in batch
-- **Report generation** — Revenue and order quantity reports by date range and category
-- **Session management** — HTTP session validation and timeout enforcement
-- **Asynchronous notifications** — Queue-based notification of order approvals/denials
+- Administrator authentication via form-based login with session management
+- Protected admin interface with role-based access control
+- Rich client deployment via Java Web Start
+- Order retrieval and display by status (pending, approved, completed, denied)
+- Order status updates with asynchronous batch processing
+- Revenue and order count reporting by category with date range filtering
+- Admin home page with launch and logout options
 
-## Key Workflows
+## Key Features
 
-| Workflow | Trigger | Output |
-|----------|---------|--------|
-| View Orders | Admin requests order list by status | XML response with order IDs, users, dates, amounts, status |
-| Approve/Deny Orders | Admin selects orders and updates status | Batch update sent asynchronously to message queue |
-| Generate Revenue Report | Admin specifies date range and category | Aggregated sales amounts by category with total |
-| Generate Order Report | Admin specifies date range and category | Aggregated order quantities by category with total |
+- Secure administrator login with session timeout (54 minutes)
+- Admin home page providing options to launch rich client or logout
+- Orders View showing all approved, completed, and denied orders
+- Order data retrieval including Order ID, User ID, Order Date, Order Amount, Order Status
+- Order status updates supporting multiple orders in single operation
+- Revenue reports by category with date filtering
+- Order count reports by category with date filtering
+- Rich client application deployment via Java Web Start with session ID propagation
+- Login form with pre-populated default credentials for development/testing
 
-## Rich Client Architecture
+## Risk
 
-The admin interface uses a two-tier architecture:
-1. **Thin Web Server** — Servlet front-end serving JNLP and XML request handler
-2. **Rich Desktop Client** — Java Swing application launched via Web Start
-
-Communication is via HTTP POST with XML payloads. Session ID is embedded in the connection string to maintain authentication across the client/server boundary.
-
-## Key Integration Points
-
-- **Order Management System** — Retrieves order details and status from OPC Admin Facade
-- **Workflow Engine** — Uses ProcessManager EJB to query and update order status
-- **Async Messaging** — Sends order approvals/denials via JMS AsyncSender for notification
-- **Business Intelligence** — Aggregates sales and order data from the order database
-
-## Risk & Constraints
-
-- **Session Management**: 54-minute timeout applies to rich client sessions; inactivity may disconnect clients
-- **Date Format**: Report dates must be in mm/dd/yyyy format; misformat may cause parsing errors
-- **Batch Operations**: Order status updates are sent asynchronously; UI updates don't guarantee server completion
-- **Authorization**: Only users in "administrator" role can access admin operations; form-based authentication required
-
-## Security Boundaries
-
-- **Authentication**: Form-based login enforced at servlet container level
-- **Authorization**: Role-based access control via security-constraint in web.xml (administrator role required)
-- **Session Validation**: HTTP session checked on every rich client request; expired sessions return error
-- **No Transport Security**: Transport guarantee is "NONE"; HTTP not HTTPS (security risk in production)
-
-## Dependencies
-
-- **Upstream**: Account Management (customer/order identification), Order Approval (order status workflow)
-- **Downstream**: Notifications (order approval/denial messages), Order Fulfillment (supplier PO generation)
+- Hardcoded default credentials (jps_admin/admin) in login form may be development-only
+- Session ID included in JNLP file for rich client authentication — unclear if additional credential exchange occurs
+- Request type validation missing — unknown types return error without listing valid types
+- Date parsing in MM/dd/yyyy format uses deprecated Date constructor without timezone handling

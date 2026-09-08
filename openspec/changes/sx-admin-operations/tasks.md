@@ -1,107 +1,91 @@
-# Admin Operations — Implementation Tasks
+# Administrative Operations — Implementation Tasks
 
-## 1. Authentication & Authorization
+## 1. Admin Authentication & Security
 
-- [ ] 1.1 Implement form-based authentication for /admin endpoints with login.jsp
-- [ ] 1.2 Configure security-constraint in web.xml to restrict /AdminRequestProcessor to administrator role
-- [ ] 1.3 Implement session-based authorization checking in ApplRequestProcessor
-- [ ] 1.4 Configure session timeout of 54 minutes in web.xml
-- [ ] 1.5 Implement logout functionality that invalidates the session
-- [ ] 1.6 Implement session validation error response when session is expired
+- [ ] 1.1 Configure web.xml security-constraint for administrator role
+- [ ] 1.2 Set form-based login-config with login.jsp and error.jsp
+- [ ] 1.3 Implement session-timeout of 54 minutes in web.xml
+- [ ] 1.4 Create login.jsp with username (j_username) and password (j_password) fields
+- [ ] 1.5 Pre-populate login form with default values (jps_admin / admin) for development
+- [ ] 1.6 Implement form action as j_security_check (J2EE standard endpoint)
+- [ ] 1.7 Create error.jsp for failed authentication display
+- [ ] 1.8 Implement session attributes j_signon and j_signon_username
+- [ ] 1.9 Create logout.jsp to call session.invalidate() and redirect to index.html
 
-## 2. JNLP & Web Start Deployment
+## 2. Admin Home Page & Navigation
 
-- [ ] 2.1 Implement dynamic JNLP generation in AdminRequestProcessor.buildJNLP()
-- [ ] 2.2 Embed HTTP session ID in JNLP application arguments
-- [ ] 2.3 Set JNLP codebase to correct server URL
-- [ ] 2.4 Configure JAR file resources in JNLP
-- [ ] 2.5 Set appropriate Java version requirement in JNLP
-- [ ] 2.6 Configure JNLP response content-type as application/x-java-jnlp-file
-- [ ] 2.7 Test rich client launch via Web Start
+- [ ] 2.1 Create index.jsp for authenticated admin users
+- [ ] 2.2 Display description of admin client capabilities (order management, sales visibility)
+- [ ] 2.3 Add form to launch Java Web Start with currentScreen=manageorders
+- [ ] 2.4 Add form to logout with currentScreen=logout
+- [ ] 2.5 Wire AdminRequestProcessor routing for both forms
 
-## 3. Rich Client Backend API
+## 3. Rich Client Deployment (Java Web Start)
 
-- [ ] 3.1 Implement XML parsing in ApplRequestProcessor for incoming requests
-- [ ] 3.2 Implement request type dispatching (GETORDERS, UPDATESTATUS, REVENUE, ORDERS)
-- [ ] 3.3 Implement error handling for invalid/unknown request types
-- [ ] 3.4 Implement XML response generation with proper headers and structure
-- [ ] 3.5 Implement ServletOutputStream-based response writing
+- [ ] 3.1 Implement AdminRequestProcessor.doPost to handle manageorders screen
+- [ ] 3.2 Generate JNLP file in buildJNLP() method
+- [ ] 3.3 Include session ID (jsessionid) in JNLP server URL
+- [ ] 3.4 Set response content type to application/x-java-jnlp-file
+- [ ] 3.5 Implement logout handling in AdminRequestProcessor
 
-## 4. Order Management Workflows
+## 4. Rich Client Request Handler (ApplRequestProcessor)
 
-- [ ] 4.1 Implement GETORDERS workflow to retrieve orders by status
-- [ ] 4.2 Implement AdminRequestBD.getOrdersByStatus() to delegate to OPCAdminFacade EJB
-- [ ] 4.3 Implement response marshaling with OrderId, UserId, OrderDate, OrderAmount, OrderStatus fields
-- [ ] 4.4 Implement UPDATESTATUS workflow to update order status in batch
-- [ ] 4.5 Implement OrderApproval object serialization to XML
-- [ ] 4.6 Implement AsyncSender EJB invocation for asynchronous notification
-- [ ] 4.7 Test batch order updates complete without errors
+- [ ] 4.1 Implement ApplRequestProcessor for rich client XML requests
+- [ ] 4.2 Parse XML request and extract request type and parameters
+- [ ] 4.3 Validate session ID and deny requests from unauthenticated clients
+- [ ] 4.4 Route request types: GETORDERS, UPDATESTATUS, REVENUE, ORDERS
+- [ ] 4.5 Return XML responses with consistent structure
 
-## 5. Report Generation
+## 5. Order Management
 
-- [ ] 5.1 Implement REVENUE report generation (getChartInfo with request type REVENUE)
-- [ ] 5.2 Implement ORDERS report generation (getChartInfo with request type ORDERS)
-- [ ] 5.3 Implement date range filtering (Start and End dates)
-- [ ] 5.4 Implement optional category filtering (ReqCategory parameter)
-- [ ] 5.5 Implement date parsing in getProperDate() for mm/dd/yyyy format
-- [ ] 5.6 Implement revenue aggregation with float values and TotalSales sum
-- [ ] 5.7 Implement order quantity aggregation with integer values and TotalSales sum
-- [ ] 5.8 Implement category-level and item-level aggregation based on ReqCategory presence
-- [ ] 5.9 Test date parsing with valid and edge-case dates (e.g., 01/01/2020, 12/31/2025)
-- [ ] 5.10 Test report generation for all supported categories
+- [ ] 5.1 Implement AdminRequestBD.getOrdersByStatus(status)
+- [ ] 5.2 Delegate to OPCAdminFacade.getOrdersByStatus(status)
+- [ ] 5.3 Implement ApplRequestProcessor.getOrders() to marshal XML response
+- [ ] 5.4 Create OrderDetails transfer object with orderId, userId, orderDate, orderValue, orderStatus
+- [ ] 5.5 Implement XML marshaling to <Order> elements with OrderId, UserId, OrderDate, OrderAmount, OrderStatus
 
-## 6. Rich Client Communication
+## 6. Order Status Updates
 
-- [ ] 6.1 Implement HttpPostPetStoreProxy to connect to ApplRequestProcessor
-- [ ] 6.2 Implement session ID embedding in request URL (jsessionid parameter)
-- [ ] 6.3 Implement XML request serialization for GETORDERS, UPDATESTATUS, REVENUE, ORDERS
-- [ ] 6.4 Implement XML response parsing in rich client
-- [ ] 6.5 Implement error message extraction and display in rich client
-- [ ] 6.6 Test rich client can establish connection and send requests
-- [ ] 6.7 Test session persistence across multiple requests
+- [ ] 6.1 Implement AdminRequestBD.updateOrders(OrderApproval oa)
+- [ ] 6.2 Delegate to AsyncSender EJB via ServiceLocator
+- [ ] 6.3 Implement ApplRequestProcessor.updateOrders() to parse XML
+- [ ] 6.4 Extract order IDs and new status from XML
+- [ ] 6.5 Create ChangedOrder objects for each order
+- [ ] 6.6 Support multiple orders in single batch update
+- [ ] 6.7 Return SUCCESS or error message in XML response
 
-## 7. Data Access & Integration
+## 7. Revenue Reporting
 
-- [ ] 7.1 Implement OPCAdminFacade EJB lookup and invocation
-- [ ] 7.2 Implement order retrieval by status from order database
-- [ ] 7.3 Implement AsyncSender EJB lookup via ServiceLocator
-- [ ] 7.4 Implement message sending for order approvals/denials
-- [ ] 7.5 Implement chart/report data queries (revenue, order quantities)
-- [ ] 7.6 Implement category and date filtering in database queries
-- [ ] 7.7 Test end-to-end order retrieval workflow
-- [ ] 7.8 Test asynchronous order approval notifications
+- [ ] 7.1 Implement AdminRequestBD.getChartInfo(REVENUE, start, end, category)
+- [ ] 7.2 Delegate to OPCAdminFacade.getChartInfo() with request type REVENUE
+- [ ] 7.3 Implement ApplRequestProcessor.getChartInfo() for REVENUE type
+- [ ] 7.4 Parse date range from Start/End parameters in MM/dd/yyyy format
+- [ ] 7.5 Retrieve revenue Map from EJB
+- [ ] 7.6 Marshal results to XML with Category or Item elements (conditional on category parameter)
+- [ ] 7.7 Include revenue amounts and TotalSales in response
 
-## 8. Error Handling & Validation
+## 8. Order Count Reporting
 
-- [ ] 8.1 Implement session null check with appropriate error message
-- [ ] 8.2 Implement request parsing error handling
-- [ ] 8.3 Implement database query error handling with user-friendly messages
-- [ ] 8.4 Implement EJB lookup error handling
-- [ ] 8.5 Implement date parsing error handling (invalid format)
-- [ ] 8.6 Implement null value handling for optional fields (ReqCategory)
-- [ ] 8.7 Test error scenarios (invalid dates, empty status, missing required fields)
+- [ ] 8.1 Implement ApplRequestProcessor.getChartInfo() for ORDERS type
+- [ ] 8.2 Retrieve order count Map from EJB via getChartInfo(ORDERS, start, end, category)
+- [ ] 8.3 Marshal results to XML with Category or Item elements
+- [ ] 8.4 Include order quantities and TotalSales in response
 
-## 9. Testing
+## 9. Rich Client UI — Orders View
 
-- [ ] 9.1 Write unit tests for GETORDERS request parsing and response generation
-- [ ] 9.2 Write unit tests for UPDATESTATUS request parsing
-- [ ] 9.3 Write unit tests for REVENUE report aggregation
-- [ ] 9.4 Write unit tests for ORDERS report aggregation
-- [ ] 9.5 Write unit tests for date parsing (mm/dd/yyyy format)
-- [ ] 9.6 Write integration tests for order retrieval from OPCAdminFacade
-- [ ] 9.7 Write integration tests for async order approval notifications
-- [ ] 9.8 Write integration tests for report generation with real data
-- [ ] 9.9 Write E2E tests for rich client to server communication
-- [ ] 9.10 Write E2E tests for complete admin workflow (login → launch → manage orders → reports)
-- [ ] 9.11 Test session timeout behavior
-- [ ] 9.12 Test concurrent admin sessions
+- [ ] 9.1 Implement OrdersViewPanel in rich client
+- [ ] 9.2 Create OrdersViewTableModel extending DefaultTableModel
+- [ ] 9.3 Define columns: Order ID, User ID, Order Date, Order Amount, Status
+- [ ] 9.4 Set isCellEditable() to return false (read-only)
+- [ ] 9.5 Implement DataSource.loadOrdersByStatus() to fetch from server
+- [ ] 9.6 Display approved, completed, and denied orders in table
 
-## 10. Security & Compliance
+## 10. Error Handling & Validation
 
-- [ ] 10.1 Verify form-based authentication enforces password requirements
-- [ ] 10.2 Verify administrator role check on all admin endpoints
-- [ ] 10.3 Verify session validation on every request
-- [ ] 10.4 Consider upgrading transport-guarantee to CONFIDENTIAL (HTTPS) for production
-- [ ] 10.5 Verify no sensitive data is logged in error messages
-- [ ] 10.6 Review JNLP file for security permissions (all-permissions required?)
-- [ ] 10.7 Test against unauthorized access attempts
+- [ ] 10.1 Validate administrator role on all protected endpoints
+- [ ] 10.2 Check for null session and deny unauthenticated requests
+- [ ] 10.3 Return descriptive error messages for invalid request types
+- [ ] 10.4 Return error messages for failed order updates
+- [ ] 10.5 Handle RemoteException from EJB calls
+- [ ] 10.6 Handle ServiceLocatorException for EJB lookup failures
+

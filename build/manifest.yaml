@@ -168,7 +168,7 @@ capabilities:
       techStack: []
       affectedCode: []
     evidence:
-      irRefs: []
+      irRefs: [admin-ops-0001, admin-ops-0002, admin-ops-0003, admin-ops-0004, admin-ops-0005, admin-ops-0006, admin-ops-0007, ORDERLIST-SCREEN-0001, ADMIN-SCREEN-0003, CHARTDATA-REQ-0001]
       reviewedBy: null
       reviewedAt: null
 
