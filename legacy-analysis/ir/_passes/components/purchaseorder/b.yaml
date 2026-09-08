@@ -1,0 +1,719 @@
+records:
+  - record_key: FUL-ENT-0001
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A Purchase Order (PO) entity SHALL be persisted as a persistent container
+      for order information including order ID, user ID, email ID, order date,
+      locale, total value, and relationships to contact information, credit card,
+      and line items.
+    confidence: high
+    confidence_basis: >
+      The PurchaseOrderEJB is defined as a CMP entity bean in ejb-jar.xml with
+      multiple cmp-fields (poId, poUserId, poEmailId, poDate, poLocale, poValue)
+      and cmr-fields for relationships. The PurchaseOrder.java value object
+      documents the same fields and their purposes. Double enforcement through
+      both configuration and code provides high confidence.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines PurchaseOrderEJB as CMP entity with fields poId, poUserId,
+      poEmailId, poDate, poLocale, poValue. PurchaseOrder.java value object
+      (lines 75-83) declares fields orderId, userId, emailId, orderDate, locale,
+      totalPrice, shippingInfo, billingInfo, creditCard, lineItems. EJB create
+      method (PurchaseOrderEJB.java lines 197-205) initializes all fields from
+      PurchaseOrder value object.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 48
+        line_end: 84
+        excerpt: |
+          <entity>
+            <description>PurchaseOrder CMP EJB</description>
+            <ejb-name>PurchaseOrderEJB</ejb-name>
+            <prim-key-class>java.lang.String</prim-key-class>
+            <cmp-field>
+              <field-name>poId</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>poUserId</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>poEmailId</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>poDate</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>poLocale</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>poValue</field-name>
+            </cmp-field>
+            <primkey-field>poId</primkey-field>
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrder.java
+        line_start: 75
+        line_end: 83
+        excerpt: |
+          private Locale locale = Locale.US;
+          private String orderId;
+          private String userId;
+          private String emailId;
+          private Date orderDate;
+          private ContactInfo shippingInfo;
+          private ContactInfo billingInfo;
+          private float totalPrice;
+          private CreditCard creditCard;
+          private ArrayList lineItems = null;
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 197
+        line_end: 205
+        excerpt: |
+          public String ejbCreate(PurchaseOrder purchaseOrder) throws CreateException {
+                setPoId(purchaseOrder.getOrderId());
+                setPoUserId(purchaseOrder.getUserId());
+                setPoEmailId(purchaseOrder.getEmailId());
+                setPoDate(purchaseOrder.getOrderDate().getTime());
+                setPoLocale(purchaseOrder.getLocale().toString());
+                setPoValue(purchaseOrder.getTotalPrice());
+                return null;
+          }
+    stack_metadata:
+      ejb.bean: PurchaseOrderEJB
+      persistence_type: Container
+      cmp_version: "2.x"
+
+  - record_key: FUL-ENT-0002
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A Purchase Order SHALL maintain a one-to-one relationship with ContactInfo
+      for billing contact information and shipping contact information,
+      with cascade delete semantics.
+    confidence: high
+    confidence_basis: >
+      The relationship is declared in ejb-jar.xml with explicit cascade-delete
+      on the ContactInfo side of the relationship (lines 301, 330). Code in
+      PurchaseOrderEJB.ejbPostCreate (lines 217-219) creates and associates
+      the ContactInfo. The getData() method (line 267) retrieves billing info,
+      and line 268 has a comment indicating shipping info usage. Both passes
+      should converge on this, confirming high confidence.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines PurchaseOrder-ContactInfo one-to-one relationship
+      (lines 286-310) with cascade-delete. cmr-field contactInfo is defined
+      on PurchaseOrder. PurchaseOrderEJB (lines 217-219) creates ContactInfoLocal
+      in ejbPostCreate using shipping info from the PurchaseOrder parameter.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 286
+        line_end: 310
+        excerpt: |
+          <ejb-relation>
+            <ejb-relation-name>PurchaseOrder-ContactInfo</ejb-relation-name>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>purchaseorder-has-contactinfo</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <relationship-role-source>
+                <ejb-name>PurchaseOrderEJB</ejb-name>
+              </relationship-role-source>
+              <cmr-field>
+                <cmr-field-name>contactInfo</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>contactinfo-for-purchaseorder</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+              <relationship-role-source>
+                <ejb-name>ContactInfoEJB</ejb-name>
+              </relationship-role-source>
+            </ejb-relationship-role>
+          </ejb-relation>
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 211
+        line_end: 224
+        excerpt: |
+          public void ejbPostCreate(PurchaseOrder purchaseOrder)
+                                                   throws CreateException {
+              try {
+                  ServiceLocator serviceLocator = new ServiceLocator();
+                  ContactInfoLocalHome cinforef = (ContactInfoLocalHome)
+                      serviceLocator.getLocalHome(JNDINames.CINFO_EJB);
+                  ContactInfoLocal cinfoloc = (ContactInfoLocal)
+                      cinforef.create(purchaseOrder.getShippingInfo());
+                  setContactInfo(cinfoloc);
+    stack_metadata:
+      ejb.relationship: PurchaseOrder-ContactInfo
+      multiplicity: "1:1"
+
+  - record_key: FUL-ENT-0003
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      A Purchase Order SHALL maintain a one-to-many relationship with LineItem
+      entities, allowing one or more line items per purchase order,
+      with cascade delete semantics.
+    confidence: high
+    confidence_basis: >
+      The one-to-many relationship is explicitly declared in ejb-jar.xml
+      with cascade-delete on the LineItem side. Code in PurchaseOrderEJB.ejbPostCreate
+      (lines 225-234) creates line items in a loop. The DTD (line 38) specifies
+      LineItem+ (one or more). getAllItems() method provides typed collection access.
+      This is consistently enforced across declarative and programmatic layers.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines PurchaseOrder-LineItem one-to-many relationship
+      (lines 372-397) with cascade-delete on LineItem side. cmr-field lineItems
+      with type java.util.Collection declared on PurchaseOrder. PurchaseOrderEJB
+      (lines 225-234) creates LineItemLocal in a loop during ejbPostCreate.
+      DTD (line 38) specifies PurchaseOrder requires one or more LineItem.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 372
+        line_end: 397
+        excerpt: |
+          <ejb-relation>
+            <ejb-relation-name>PurchaseOrder-LineItem</ejb-relation-name>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>purchaseorder-has-lineitems</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <relationship-role-source>
+                <ejb-name>PurchaseOrderEJB</ejb-name>
+              </relationship-role-source>
+              <cmr-field>
+                <cmr-field-name>lineItems</cmr-field-name>
+                <cmr-field-type>java.util.Collection</cmr-field-type>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>lineItem-for-purchaseorder</ejb-relationship-role-name>
+              <multiplicity>Many</multiplicity>
+              <cascade-delete />
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 225
+        line_end: 234
+        excerpt: |
+          LineItemLocalHome lineItemref = (LineItemLocalHome)
+              serviceLocator.getLocalHome(JNDINames.LI_EJB);
+          Collection litems = purchaseOrder.getLineItems();
+          Iterator it = litems.iterator();
+          while((it != null) && (it.hasNext())) {
+              LineItem li = (LineItem) it.next();
+              LineItemLocal lineItemloc = (LineItemLocal)
+                  lineItemref.create(li, 0);
+              addLineItem(lineItemloc);
+          }
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/rsrc/schemas/PurchaseOrder.dtd
+        line_start: 38
+        line_end: 38
+        excerpt: |
+          <!ELEMENT PurchaseOrder (OrderId, UserId, EmailId, OrderDate, ShippingInfo, BillingInfo, TotalPrice, CreditCard, LineItem+)>
+    stack_metadata:
+      ejb.relationship: PurchaseOrder-LineItem
+      multiplicity: "1:N"
+
+  - record_key: PAY-ENT-0001
+    kind: entity
+    capability_key: payment-processing
+    requirement: >
+      A Purchase Order SHALL maintain a one-to-one relationship with a CreditCard
+      entity containing card number, card type, and expiry date,
+      with cascade delete semantics.
+    confidence: high
+    confidence_basis: >
+      The CreditCard relationship is declared in ejb-jar.xml with explicit
+      cascade-delete semantics (line 357). PurchaseOrderEJB.ejbPostCreate
+      (lines 220-224) creates and associates the CreditCard. The CreditCardEJB
+      entity defines fields for cardNumber, cardType, and expiryDate (lines 221-232
+      in ejb-jar.xml). This is multiply enforced in configuration and code.
+    risk_class: financial
+    basis: >
+      ejb-jar.xml defines PurchaseOrder-Card one-to-one relationship (lines 342-366)
+      with cascade-delete. cmr-field creditCard defined on PurchaseOrder.
+      CreditCardEJB entity (lines 210-237) has cmp-fields: expiryDate, cardType,
+      cardNumber. PurchaseOrderEJB (lines 220-224) creates CreditCardLocal in
+      ejbPostCreate using creditCard from PurchaseOrder value object.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 342
+        line_end: 366
+        excerpt: |
+          <ejb-relation>
+            <ejb-relation-name>PurchaseOrder-Card</ejb-relation-name>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>purchaseorder-has-card</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <relationship-role-source>
+                <ejb-name>PurchaseOrderEJB</ejb-name>
+              </relationship-role-source>
+              <cmr-field>
+                <cmr-field-name>creditCard</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>card-for-purchaseorder</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+              <relationship-role-source>
+                <ejb-name>CreditCardEJB</ejb-name>
+              </relationship-role-source>
+            </ejb-relationship-role>
+          </ejb-relation>
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 210
+        line_end: 237
+        excerpt: |
+          <entity>
+            <display-name>CreditCardEB</display-name>
+            <ejb-name>CreditCardEJB</ejb-name>
+            <cmp-field>
+              <field-name>expiryDate</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>cardType</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>cardNumber</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 220
+        line_end: 224
+        excerpt: |
+          CreditCardLocalHome cardref = (CreditCardLocalHome)
+              serviceLocator.getLocalHome(JNDINames.CARD_EJB);
+          CreditCardLocal cardloc = (CreditCardLocal)
+              cardref.create(purchaseOrder.getCreditCard());
+          setCreditCard(cardloc);
+    stack_metadata:
+      ejb.relationship: PurchaseOrder-Card
+      multiplicity: "1:1"
+
+  - record_key: INT-BUS-0001
+    kind: business-rule
+    capability_key: internationalization
+    requirement: >
+      A Purchase Order SHALL store a locale attribute that defaults to en_US
+      and SHALL support XML serialization with locale as an XML attribute.
+    confidence: high
+    confidence_basis: >
+      The locale field is declared as a cmp-field in ejb-jar.xml and is stored
+      as a string. PurchaseOrder.java defines locale with a default of Locale.US
+      (line 74). The DTD declares locale as a CDATA attribute with default value
+      "en_US" (lines 40-42). The toDOM() method (line 258) explicitly sets the
+      locale XML attribute. Multiple independent sources confirm this requirement.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines poLocale cmp-field on PurchaseOrderEJB. PurchaseOrder.java
+      (line 74) declares "private Locale locale = Locale.US". DTD (lines 40-42)
+      declares locale CDATA attribute with default "en_US". PurchaseOrder.toDOM()
+      (line 258) sets XML attribute. setPoLocale (PurchaseOrderEJB line 133) takes
+      the locale string from value object.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrder.java
+        line_start: 74
+        line_end: 74
+        excerpt: |
+          private Locale locale = Locale.US;
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/rsrc/schemas/PurchaseOrder.dtd
+        line_start: 40
+        line_end: 42
+        excerpt: |
+          <!ATTLIST PurchaseOrder
+          	locale CDATA "en_US"
+          >
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrder.java
+        line_start: 256
+        line_end: 259
+        excerpt: |
+          Element root = document.createElement(XML_PURCHASEORDER);
+          root.setAttribute(XML_LOCALE, locale.toString());
+          XMLDocumentUtils.appendChild(document, root, XML_ORDERID, orderId);
+    stack_metadata:
+      localization_mechanism: Locale object with XML serialization
+
+  - record_key: FUL-BUS-0001
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      When processing an invoice for a Purchase Order, the system SHALL update
+      the quantityShipped field on each matching LineItem by adding the quantity
+      received for that item, and SHALL determine if all line items have been
+      completely shipped (quantity shipped equals quantity ordered).
+    confidence: high
+    confidence_basis: >
+      PurchaseOrderHelper.processInvoice() method (lines 80-103) explicitly
+      implements this logic. The method iterates line items, adds to quantityShipped,
+      then checks if all items are completely shipped. The method has clear
+      documentation (lines 69-79) stating its purpose. The logic is straightforward
+      and unambiguous in both code and documentation.
+    risk_class: operational
+    basis: >
+      PurchaseOrderHelper.processInvoice() (lines 80-103) accepts a PurchaseOrderLocal
+      and a Map of lineItemIds to shipped quantities. It iterates line items,
+      finding matches in the map, and adds to quantityShipped (line 89).
+      Then it loops again checking if each item's quantity equals quantityShipped
+      (line 98), returning false if any mismatch found, true if all complete.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderHelper.java
+        line_start: 69
+        line_end: 103
+        excerpt: |
+          /**
+           * This method processes invoice information received from supplier by opc. Its
+           * job is to update the LineItem fields for the received invoices.
+           * Additionally it checks if all invoices of the given PO are shipped,
+           * it will return true to indicate all invoices for a purchase order have
+           * been joined together and the order is completely fulfilled.
+           *
+           * @param <Code>po</Code>
+           * @param <Code>lineItemIds</Code>
+           *
+           * @return true or false to indicate if order is completely done
+           */
+          public boolean processInvoice(PurchaseOrderLocal po, Map lineItemIds) {
+
+            //set the quantity of line items shipped in the PO
+            Collection liColl = po.getLineItems();
+            Iterator liIt = liColl.iterator();
+            while((liIt != null) && (liIt.hasNext())) {
+              LineItemLocal li = (LineItemLocal) liIt.next();
+              if(lineItemIds.containsKey(li.getItemId())) {
+                          Integer shipped = (Integer) lineItemIds.get(li.getItemId());
+                  li.setQuantityShipped(li.getQuantityShipped() + shipped.intValue());
+                  }
+            }//end while
+
+            // now loop through all LIs and see if all are shipped completely
+            liColl = po.getLineItems();
+            liIt = liColl.iterator();
+            while((liIt != null) && (liIt.hasNext())) {
+              LineItemLocal li = (LineItemLocal) liIt.next();
+              if(li.getQuantity() != li.getQuantityShipped()) {
+                  return false;
+                  }
+            }//end while
+            return true;
+          }
+    stack_metadata:
+      fulfillment_logic: invoice processing
+      comparison_type: simple equality
+
+  - record_key: ORD-BUS-0001
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      When creating a Purchase Order, the system SHALL accept a PurchaseOrder
+      value object containing order ID, user ID, email ID, order date, locale,
+      total price, shipping info (ContactInfo), billing info (ContactInfo),
+      credit card information, and a collection of line items, and SHALL persist
+      all of this data in related entity beans.
+    confidence: high
+    confidence_basis: >
+      The create method signature and implementation in PurchaseOrderEJB
+      (lines 197-238) shows this explicitly. The ejbCreate method accepts
+      PurchaseOrder and initializes all CMP fields (lines 198-204).
+      The ejbPostCreate method creates related entities: ContactInfo, CreditCard,
+      and LineItem collection (lines 214-237). Both the entity and value object
+      define identical fields. This is consistently implemented.
+    risk_class: operational
+    basis: >
+      PurchaseOrderEJB.ejbCreate() (lines 197-205) accepts PurchaseOrder value
+      object and sets all cmp-fields from it: poId, poUserId, poEmailId, poDate,
+      poLocale, poValue. PurchaseOrderEJB.ejbPostCreate() (lines 211-238) creates
+      associated entities: ContactInfoLocal from getShippingInfo() (line 218),
+      CreditCardLocal from getCreditCard() (line 223), and collection of
+      LineItemLocal from getLineItems() (lines 227-234).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 197
+        line_end: 238
+        excerpt: |
+          public String ejbCreate(PurchaseOrder purchaseOrder) throws CreateException {
+                setPoId(purchaseOrder.getOrderId());
+                setPoUserId(purchaseOrder.getUserId());
+                setPoEmailId(purchaseOrder.getEmailId());
+                setPoDate(purchaseOrder.getOrderDate().getTime());
+                setPoLocale(purchaseOrder.getLocale().toString());
+                setPoValue(purchaseOrder.getTotalPrice());
+                return null;
+          }
+
+          /**
+           * the ejb create method
+           * @param <Code>purchaseOrder</Code> the Purchase Order details
+           */
+          public void ejbPostCreate(PurchaseOrder purchaseOrder)
+                                                   throws CreateException {
+              try {
+                  ServiceLocator serviceLocator = new ServiceLocator();
+                  ContactInfoLocalHome cinforef = (ContactInfoLocalHome)
+                      serviceLocator.getLocalHome(JNDINames.CINFO_EJB);
+                  ContactInfoLocal cinfoloc = (ContactInfoLocal)
+                      cinforef.create(purchaseOrder.getShippingInfo());
+                  setContactInfo(cinfoloc);
+                  CreditCardLocalHome cardref = (CreditCardLocalHome)
+                      serviceLocator.getLocalHome(JNDINames.CARD_EJB);
+                  CreditCardLocal cardloc = (CreditCardLocal)
+                      cardref.create(purchaseOrder.getCreditCard());
+                  setCreditCard(cardloc);
+                  LineItemLocalHome lineItemref = (LineItemLocalHome)
+                      serviceLocator.getLocalHome(JNDINames.LI_EJB);
+                  Collection litems = purchaseOrder.getLineItems();
+                  Iterator it = litems.iterator();
+                  while((it != null) && (it.hasNext())) {
+                      LineItem li = (LineItem) it.next();
+                      LineItemLocal lineItemloc = (LineItemLocal)
+                          lineItemref.create(li, 0);
+                      addLineItem(lineItemloc);
+                  }
+              } catch(ServiceLocatorException ne) {
+                  throw new CreateException("ServiceLocator Ex while persisting PO CMR :" + ne.getMessage());
+              }
+          }
+    stack_metadata:
+      ejb.transaction: Required
+
+  - record_key: ORD-BUS-0002
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      The system SHALL support querying Purchase Orders by a date range,
+      using an ejbql query that finds all POs where the order date falls
+      between two specified timestamps.
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml explicitly declares a finder method findPOBetweenDates
+      with EJB-QL (lines 117-127). The method is declared in the LocalHome
+      interface and is listed in container-transaction configuration (lines 593-604).
+      This is a standard J2EE EJB declarative query and is unambiguous.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares query element for findPOBetweenDates (lines 117-127)
+      with EJB-QL: "SELECT OBJECT(a) From PurchaseOrder a WHERE a.poDate
+      BETWEEN ?1 AND ?2". Method parameters are two long values (timestamps).
+      Method is declared in container-transaction with Required attribute
+      (lines 593-604).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 117
+        line_end: 127
+        excerpt: |
+          <query>
+            <description></description>
+            <query-method>
+              <method-name>findPOBetweenDates</method-name>
+              <method-params>
+                <method-param>long</method-param>
+                <method-param>long</method-param>
+              </method-params>
+            </query-method>
+            <ejb-ql>SELECT OBJECT(a) From PurchaseOrder a WHERE a.poDate BETWEEN ?1 AND ?2</ejb-ql>
+          </query>
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 593
+        line_end: 604
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>PurchaseOrderEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>findPOBetweenDates</method-name>
+              <method-params>
+                <method-param>long</method-param>
+                <method-param>long</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+    stack_metadata:
+      ejb.query_language: EJB-QL
+
+  - record_key: ORD-BUS-0003
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      A Purchase Order SHALL support conversion to and from XML format using
+      DOM-based serialization, with DTD validation support and a default
+      encoding of UTF-8.
+    confidence: high
+    confidence_basis: >
+      PurchaseOrder.java implements toXML() and fromXML() methods (lines 194-247)
+      with multiple overloads for different source/result types. The DTD is
+      defined in PurchaseOrder.dtd with public and system IDs specified as class
+      constants (lines 60-61). The class has methods for DOM conversion (toDOM,
+      fromDOM) and supports optional validation (line 62 VALIDATING = true).
+      The XMLDocumentUtils.DEFAULT_ENCODING is used (lines 205, 207, 219).
+      This is thoroughly implemented and documented.
+    risk_class: operational
+    basis: >
+      PurchaseOrder.java (lines 194-247) defines toXML/fromXML methods.
+      DTD constants defined (lines 60-62): DTD_PUBLIC_ID, DTD_SYSTEM_ID, VALIDATING.
+      toXML implementation calls XMLDocumentUtils.toXML with DTD_PUBLIC_ID
+      and DEFAULT_ENCODING (lines 205, 207). fromXML calls fromDOM which parses
+      XML (lines 225-247). toDOM/fromDOM methods implement DOM tree conversion
+      (lines 249-276, 278-320).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrder.java
+        line_start: 59
+        line_end: 73
+        excerpt: |
+          public static final boolean TRACE = false;
+          public static final String DTD_PUBLIC_ID = "-//Sun Microsystems, Inc. - J2EE Blueprints Group//DTD PurchaseOrder 1.1//EN";
+          public static final String DTD_SYSTEM_ID = "/com/sun/j2ee/blueprints/purchaseorder/rsrc/schemas/PurchaseOrder.dtd";
+          public static final boolean VALIDATING = true;
+          public static final String XML_PURCHASEORDER = "PurchaseOrder";
+          public static final String XML_LOCALE = "locale";
+          public static final String XML_ORDERID = "OrderId";
+          public static final String XML_USERID = "UserId";
+          public static final String XML_EMAILID = "EmailId";
+          public static final String XML_ORDERDATE = "OrderDate";
+          public static final String XML_SHIPPINGINFO = "ShippingInfo";
+          public static final String XML_BILLINGINFO = "BillingInfo";
+          public static final String XML_TOTALPRICE = "TotalPrice";
+          public static final String XML_CREDITCARD = "CreditCard";
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrder.java
+        line_start: 194
+        line_end: 223
+        excerpt: |
+          public void toXML(Result result) throws XMLDocumentException {
+            toXML(result, null);
+            return;
+          }
+
+          public String toXML() throws XMLDocumentException {
+            return toXML((URL) null);
+          }
+
+          public void toXML(Result result, URL entityCatalogURL) throws XMLDocumentException {
+            if (entityCatalogURL != null) {
+              XMLDocumentUtils.toXML(toDOM(), DTD_PUBLIC_ID, entityCatalogURL, XMLDocumentUtils.DEFAULT_ENCODING, result);
+            } else {
+              XMLDocumentUtils.toXML(toDOM(), DTD_PUBLIC_ID, DTD_SYSTEM_ID, XMLDocumentUtils.DEFAULT_ENCODING, result);
+            }
+            return;
+          }
+    stack_metadata:
+      serialization_format: XML with DTD validation
+
+  - record_key: FUL-BUS-0002
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      A Purchase Order SHALL support retrieval of all associated line items as
+      value objects (not managed entity references), to allow access outside of
+      transaction boundaries, via the getAllItems() method.
+    confidence: high
+    confidence_basis: >
+      PurchaseOrderEJB.getAllItems() method (lines 246-257) is explicitly designed
+      for this purpose as stated in its javadoc (lines 241-244). The method iterates
+      line items, calls getData() on each to convert to value objects, and returns
+      an ArrayList. This is documented in the javadoc explaining the transaction
+      boundary requirement. The implementation is clear and straightforward.
+    risk_class: operational
+    basis: >
+      PurchaseOrderEJB.getAllItems() (lines 246-257) iterates through getLineItems()
+      collection, calls getData() on each LineItemLocal to convert to value object,
+      and returns ArrayList. Javadoc (lines 241-244) explicitly states: "This gets
+      all line items for this po and returns a collection of Value objects. This
+      is required because managed objects cant be accessed outside transaction
+      bounsaries".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 240
+        line_end: 257
+        excerpt: |
+          /**
+           * This gets all line items for this po and returns a collection of
+           * Value objects. This is required because managed objects cant be accessed
+           * outside transaction bounsaries
+           * @return <Code>Collection</Code> of <Code>LineItem</Code> value objects
+           */
+          public Collection getAllItems() {
+              Collection liColl = getLineItems();
+              if(liColl == null)
+                  return(null);
+              ArrayList retVal = new ArrayList();
+              Iterator it = liColl.iterator();
+              while((it!=null) && (it.hasNext())) {
+                  LineItemLocal loc = (LineItemLocal) it.next();
+                  retVal.add(loc.getData());
+              }
+              return(retVal);
+          }
+    stack_metadata:
+      pattern: Value Object conversion
+
+  - record_key: ORD-BUS-0004
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      A Purchase Order value object SHALL support conversion to an entity bean
+      via the ejbCreate/ejbPostCreate methods, accepting a single PurchaseOrder
+      parameter, and all associated entities (ContactInfo, CreditCard, LineItems)
+      SHALL be created in the same transaction with Required semantics.
+    confidence: high
+    confidence_basis: >
+      ejb-jar.xml declares container-transaction with trans-attribute Required
+      for the create method (lines 572-581). PurchaseOrderEJB shows ejbCreate
+      and ejbPostCreate work together, with ejbCreate initializing CMP fields and
+      ejbPostCreate creating related entities using ServiceLocator. Both methods
+      are covered by the Required transaction. This is double-enforced: declaratively
+      in configuration and programmatically in code.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml (lines 572-581) declares container-transaction for create method
+      with trans-attribute Required. PurchaseOrderEJB.ejbCreate (lines 197-205)
+      initializes all cmp-fields. PurchaseOrderEJB.ejbPostCreate (lines 211-238)
+      creates related entities in a single try block. All creation happens in the
+      same transaction context.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/ejb-jar.xml
+        line_start: 571
+        line_end: 581
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>PurchaseOrderEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>create</method-name>
+              <method-params>
+                <method-param>com.sun.j2ee.blueprints.purchaseorder.ejb.PurchaseOrder</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+      - path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+        line_start: 197
+        line_end: 205
+        excerpt: |
+          public String ejbCreate(PurchaseOrder purchaseOrder) throws CreateException {
+                setPoId(purchaseOrder.getOrderId());
+                setPoUserId(purchaseOrder.getUserId());
+                setPoEmailId(purchaseOrder.getEmailId());
+                setPoDate(purchaseOrder.getOrderDate().getTime());
+                setPoLocale(purchaseOrder.getLocale().toString());
+                setPoValue(purchaseOrder.getTotalPrice());
+                return null;
+          }
+    stack_metadata:
+      ejb.transaction: Required
+      transaction_scope: create and post-create
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+    description: >
+      In the getData() method (line 268), shippingInfo is set to the same value
+      as billingInfo with a comment "// XXX", which indicates unresolved intent.
+      It is unclear whether this is intentional (both should be the same),
+      a placeholder (waiting for real implementation), or a bug. This impacts the
+      order placement and fulfillment workflows and should be clarified.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/purchaseorder/src/com/sun/j2ee/blueprints/purchaseorder/ejb/PurchaseOrderEJB.java
+    description: >
+      Exception handling in ejbPostCreate (line 235-237) catches ServiceLocatorException
+      and throws CreateException with a message. The specifics of which service
+      lookup might fail (ContactInfo, CreditCard, or LineItem) are not distinguished,
+      making it difficult to understand the failure modes and retry strategy
+      for order creation failures.
