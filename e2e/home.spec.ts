@@ -14,7 +14,7 @@ test.describe("Home page", () => {
   test("shows the hero content and desktop nav", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Vortex");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Pet Store");
     await expect(page.getByRole("link", { name: "Get started" })).toBeVisible();
 
     for (const item of ["Features", "Tech Stack", "Docs", "GitHub"]) {
