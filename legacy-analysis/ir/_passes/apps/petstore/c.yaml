@@ -1,0 +1,670 @@
+records:
+  - record_key: CAT-ENTITY-0001
+    kind: entity
+    capability_key: catalog-browsing
+    requirement: >
+      The system SHALL maintain a catalog entity model with categories, products, and items,
+      where each item belongs to exactly one product, and each product belongs to exactly one
+      category. The primary identifier for an item is itemid (char(10), NOT NULL, PRIMARY KEY).
+    confidence: high
+    confidence_basis: >
+      Both DDL schema (PopulateSQL.xml lines 125-140, 254-268) and SQL queries (CatalogDAOSQL.xml)
+      enforce this constraint via foreign keys and primary keys. The relationship is consistently
+      enforced across two database dialects (Cloudscape and Oracle).
+    risk_class: operational
+    basis: >
+      PopulateSQL.xml defines item table with primary key (itemid) and foreign key constraint
+      fk_item_1 referencing product(productid). Item_details table extends item with locale-specific
+      pricing and description (lines 146-161).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/populate/PopulateSQL.xml
+        line_start: 125
+        line_end: 140
+        excerpt: |
+          create table item (
+            itemid char(10) not null,
+            productid char(10) not null,
+            constraint pk_item primary key (itemid),
+              constraint fk_item_1 foreign key (productid)
+              references product (productid)
+          )
+
+  - record_key: CAT-ENTITY-0002
+    kind: entity
+    capability_key: catalog-browsing
+    requirement: >
+      The system SHALL maintain item_details records with mandatory fields listprice and
+      unitcost (both DECIMAL(10,2), NOT NULL). Each item_details record maps exactly one
+      item to one locale, with composite primary key (itemid, locale).
+    confidence: high
+    confidence_basis: >
+      DDL explicitly declares NOT NULL constraints and composite primary key. Used consistently
+      in SQL queries for catalog retrieval (CatalogDAOSQL.xml). Two dialects match exactly on
+      this constraint.
+    risk_class: financial
+    basis: >
+      PopulateSQL.xml item_details table (lines 146-161) declares listprice and unitcost as
+      NOT NULL DECIMAL(10,2). These are the canonical price fields used in cart calculations.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/populate/PopulateSQL.xml
+        line_start: 146
+        line_end: 161
+        excerpt: |
+          create table item_details (
+            itemid char(10) not null,
+            listprice decimal(10,2) not null,
+            unitcost decimal(10,2) not null,
+            locale char(10) not null,
+            image char(255) not null,
+            descn varchar(255) not null,
+            attr1 varchar(80) null,
+            attr2 varchar(80) null,
+            attr3 varchar(80) null,
+            attr4 varchar(80) null,
+            attr5 varchar(80) null,
+            constraint pk_item_details primary key (itemid, locale),
+                constraint fk_item_details_1 foreign key (itemid)
+                references item (itemid)
+          )
+
+  - record_key: CAT-ENTITY-0003
+    kind: entity
+    capability_key: internationalization
+    requirement: >
+      The system SHALL support multi-locale product information, with each product, category,
+      and item maintaining locale-specific name, description, and image fields. Locales are
+      stored as char(10) values (e.g. en_US, ja_JP, zh_CN). Locale is part of the primary
+      key for *_details tables.
+    confidence: high
+    confidence_basis: >
+      DDL declares locale as composite primary key on category_details (line 69), product_details
+      (line 110), and item_details (line 158). Catalog queries (CatalogDAOSQL.xml) filter
+      consistently by locale parameter. Frontend specifies en_US, ja_JP, zh_CN (web.xml line 110).
+    risk_class: operational
+    basis: >
+      PopulateSQL.xml defines three *_details tables, each with (id, locale) composite primary key
+      and NOT NULL locale field. CatalogDAOSQL.xml all queries include "where locale = ?" parameter.
+      Web.xml TemplateServlet configures supported locales.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/populate/PopulateSQL.xml
+        line_start: 66
+        line_end: 72
+        excerpt: |
+          create table category_details (catid char(10) not null,
+            name varchar(80) not null, image varchar(255) null,
+            descn varchar(255) null, locale char(10) not null,
+            constraint pk_category_details primary key (catid, locale),
+              constraint fk_category_details_1 foreign key (catid)
+              references category (catid))
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/WEB-INF/web.xml
+        line_start: 109
+        line_end: 115
+        excerpt: |
+          <init-param>
+            <param-name>locales</param-name>
+            <param-value>en_US,ja_JP,zh_CN</param-value>
+          </init-param>
+
+  - record_key: CAT-REQUIREMENT-0001
+    kind: requirement
+    capability_key: catalog-browsing
+    requirement: >
+      The system SHALL support search across item catalog by name, category ID, and description,
+      allowing partial string matching on any of these fields (case-insensitive). Search terms
+      may be combined with OR logic across multiple items.
+    confidence: medium
+    confidence_basis: >
+      CatalogDAOSQL.xml defines SEARCH_ITEMS statement with variable-occurrence SQLFragments
+      (lines 112-127) building dynamic OR clauses. However, searchability across attribute
+      fields (attr1-attr5) is present in schema but not demonstrated in the SQL. No declarative
+      search configuration file found to confirm this is the only search scope.
+    risk_class: presentational
+    basis: >
+      CatalogDAOSQL.xml SEARCH_ITEMS method (lines 112-127) builds parameterized queries with
+      "lower(name) like ?" and "lower(catid) like ?" and "lower(b.descn) like ?" with
+      VARIABLE occurrence fragments for dynamic OR chains.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/CatalogDAOSQL.xml
+        line_start: 112
+        line_end: 127
+        excerpt: |
+          <SQLStatement method="SEARCH_ITEMS">
+            <SQLFragment parameterNb="4">
+              select catid, a.productid, name, a.itemid, b.image, b.descn, attr1,
+                      attr2, attr3, attr4, attr5, listprice, unitcost
+                  from (((item a join item_details b on a.itemid=b.itemid)
+                      join product_details c on a.productid=c.productid)
+                      join product d on d.productid=c.productid and b.locale = c.locale)
+                  where b.locale = ? and ((lower(name) like ? or lower(catid) like ? or lower(b.descn) like ?)
+            </SQLFragment>
+            <SQLFragment parameterNb="3" occurrence="VARIABLE">
+              or (lower(name) like ? or lower(catid) like ? or lower(b.descn) like ?)
+            </SQLFragment>
+
+  - record_key: CART-REQUIREMENT-0001
+    kind: requirement
+    capability_key: shopping-cart
+    requirement: >
+      The system SHALL allow a customer to add items to their shopping cart, specifying a
+      quantity for each item (minimum quantity is 1). A single item ID may appear in the cart
+      once, with quantity representing the number of that item ordered.
+    confidence: high
+    confidence_basis: >
+      ShoppingCartLocalEJB.addItem methods (lines 111-117) accept itemID and optional qty
+      parameter, storing in HashMap. updateItemQuantity (line 123-127) validates newQty > 0
+      and removes item if qty <= 0. No upper limit on quantity found in code.
+    risk_class: operational
+    basis: >
+      ShoppingCartLocalEJB implements addItem(itemID) and addItem(itemID, qty), plus
+      updateItemQuantity(itemID, newQty) with guard "if (newQty > 0)". Cart stored in HashMap
+      with itemID as key and Integer qty as value.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/cart/src/com/sun/j2ee/blueprints/cart/ejb/ShoppingCartLocalEJB.java
+        line_start: 111
+        line_end: 127
+        excerpt: |
+          public void addItem (String itemID) {
+              cart.put(itemID, new Integer(1));
+          }
+          public void addItem (String itemID,int qty) {
+              cart.put(itemID, new Integer(qty));
+          }
+          public void updateItemQuantity (String itemID, int newQty) {
+              cart.remove(itemID);
+              if (newQty > 0) cart.put(itemID, new Integer(newQty));
+          }
+
+  - record_key: CART-REQUIREMENT-0002
+    kind: requirement
+    capability_key: shopping-cart
+    requirement: >
+      The system SHALL calculate the shopping cart subtotal as the sum of (unitCost * quantity)
+      for all items in the cart. Cart subtotal is stored as a Double and includes all items
+      currently in the cart.
+    confidence: high
+    confidence_basis: >
+      ShoppingCartLocalEJB.getSubTotal() (lines 133-144) iterates items and sums
+      (i.getUnitCost() * i.getQuantity()). This logic is used to display cart totals in cart.jsp
+      (line 97). The calculation is straightforward without surcharges or discounts.
+    risk_class: financial
+    basis: >
+      ShoppingCartLocalEJB.getSubTotal() method retrieves all cart items, iterates them,
+      multiplies unitCost by quantity, and sums to double. cart.jsp displays this as currency.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/cart/src/com/sun/j2ee/blueprints/cart/ejb/ShoppingCartLocalEJB.java
+        line_start: 133
+        line_end: 144
+        excerpt: |
+          public Double getSubTotal() {
+              Collection items = getItems();
+              if (items == null) return null;
+              double ret = 0.0d;
+              for (Iterator it =items.iterator(); it.hasNext(); ) {
+                  CartItem i = (CartItem) it.next();
+                  ret += (i.getUnitCost() * i.getQuantity()) ;
+              }
+              return new Double(ret);
+          }
+
+  - record_key: CART-REQUIREMENT-0003
+    kind: requirement
+    capability_key: shopping-cart
+    requirement: >
+      The system SHALL allow a customer to remove an item from the shopping cart entirely.
+      Removing an item removes it from the customer's current cart and makes it unavailable
+      for purchase in that transaction.
+    confidence: high
+    confidence_basis: >
+      ShoppingCartLocalEJB.deleteItem() (line 119) removes item from HashMap. cart.jsp
+      provides a "Remove" link (line 75-77) for each cart item. No soft-delete or archive
+      logic found; removal is immediate.
+    risk_class: operational
+    basis: >
+      ShoppingCartLocalEJB exposes deleteItem(itemID) which calls cart.remove(). cart.jsp
+      provides user-facing "Remove" link per line item.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/cart/src/com/sun/j2ee/blueprints/cart/ejb/ShoppingCartLocalEJB.java
+        line_start: 119
+        line_end: 121
+        excerpt: |
+          public void deleteItem (String itemID) {
+              cart.remove(itemID);
+          }
+
+  - record_key: ORDER-REQUIREMENT-0001
+    kind: requirement
+    capability_key: order-placement
+    requirement: >
+      The system SHALL require that a shopping cart contain at least one item before an order
+      can be placed. An order attempt with an empty cart SHALL result in a ShoppingCartEmptyOrderException
+      being thrown.
+    confidence: high
+    confidence_basis: >
+      OrderEJBAction.perform() (line 130-132) explicitly checks items.size() == 0 and throws
+      ShoppingCartEmptyOrderException. Exception is declared in mappings.xml (line 110) and
+      has its own error screen. No documented way to bypass this check.
+    risk_class: operational
+    basis: >
+      OrderEJBAction checks cart size before order creation: "if (items.size() == 0) {
+      throw new ShoppingCartEmptyOrderException(...)". mappings.xml maps this exception
+      to cart_empty_order_error.screen.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/ejb/actions/OrderEJBAction.java
+        line_start: 128
+        line_end: 132
+        excerpt: |
+          // if the cart is empty throw an exception saying so
+          if (items.size() == 0) {
+            throw new ShoppingCartEmptyOrderException("Shopping cart is empty");
+          }
+
+  - record_key: ORDER-REQUIREMENT-0002
+    kind: requirement
+    capability_key: order-placement
+    requirement: >
+      The system SHALL set the order date to the current system date/time at the moment the
+      order is placed. The order date is immutable once set and is used to timestamp when
+      the order entered the system.
+    confidence: high
+    confidence_basis: >
+      OrderEJBAction.perform() (line 118) calls purchaseOrder.setOrderDate(new Date()).
+      OrderStatusNames shows order progresses through states but no order date modification
+      logic found. Order date is likely immutable database constraint (not seen in DDL).
+    risk_class: operational
+    basis: >
+      OrderEJBAction line 118 sets order date with new Date() immediately before submitting
+      order to AsyncSender. No date modification code found in order processing.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/ejb/actions/OrderEJBAction.java
+        line_start: 115
+        line_end: 121
+        excerpt: |
+          purchaseOrder.setOrderId(orderIdString);
+          purchaseOrder.setUserId(userId);
+          purchaseOrder.setEmailId(billTo.getEmail());
+          purchaseOrder.setOrderDate(new Date());
+          purchaseOrder.setShippingInfo(shipTo);
+          purchaseOrder.setBillingInfo(billTo);
+
+  - record_key: ORDER-REQUIREMENT-0003
+    kind: requirement
+    capability_key: order-placement
+    requirement: >
+      The system SHALL calculate the order total as the sum of (unitPrice * quantity) for
+      each line item in the cart. Order total is a float calculated before order submission
+      and stored in the purchase order record.
+    confidence: high
+    confidence_basis: >
+      OrderEJBAction (lines 122-145) iterates cart items, calculates cost * quantity for each,
+      and sums to totalCost. This totalCost is set on purchaseOrder (line 146). Matches cart
+      subtotal logic but performed at order time, not cart time.
+    risk_class: financial
+    basis: >
+      OrderEJBAction iterates through cart items, multiplies item.getUnitCost() by item.getQuantity(),
+      sums to totalCost float, and sets on purchaseOrder via setTotalPrice().
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/ejb/actions/OrderEJBAction.java
+        line_start: 122
+        line_end: 146
+        excerpt: |
+          int lineItemCount = 0;
+          float totalCost = 0;
+          ShoppingCartLocal cart = scf.getShoppingCart();
+          Locale locale = (Locale)machine.getAttribute(PetstoreKeys.LOCALE);
+          purchaseOrder.setLocale(locale);
+          Collection items = cart.getItems();
+          Iterator it = items.iterator();
+          while (it.hasNext()) {
+            CartItem item = (CartItem)it.next();
+            float cost = new Float(item.getUnitCost()).floatValue();
+            totalCost += (cost*item.getQuantity());
+            purchaseOrder.addLineItem(new LineItem(item.getCategory(),
+                                                   item.getProductId(),
+                                                   item.getItemId(),
+                                                   (lineItemCount++) + "",
+                                                   item.getQuantity(),
+                                                   cost));
+          }
+          purchaseOrder.setTotalPrice(totalCost);
+
+  - record_key: ORDER-REQUIREMENT-0004
+    kind: requirement
+    capability_key: order-placement
+    requirement: >
+      The system SHALL clear (empty) the customer's shopping cart immediately after a successful
+      order placement. The cart MUST be empty before the order confirmation response is returned
+      to the customer.
+    confidence: high
+    confidence_basis: >
+      OrderEJBAction (line 167) calls cart.empty() after order submission to AsyncSender,
+      and BEFORE returning OrderEventResponse. ShoppingCartLocalEJB.empty() (line 147)
+      calls cart.clear(). This is enforced in code, no configuration option to skip.
+    risk_class: operational
+    basis: >
+      OrderEJBAction line 167 calls cart.empty() before returning OrderEventResponse to caller.
+      ShoppingCartLocalEJB.empty() directly clears the HashMap.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/ejb/actions/OrderEJBAction.java
+        line_start: 165
+        line_end: 169
+        excerpt: |
+          } catch (CreateException ce) {
+            //throw new AdminBDException(ce.getMessage());
+          }
+
+          // empty the shopping cart
+          cart.empty();
+          return new OrderEventResponse(billTo.getEmail(), orderIdString);
+
+  - record_key: PAY-ENTITY-0001
+    kind: entity
+    capability_key: payment-processing
+    requirement: >
+      The system SHALL store credit card information with fields cardNumber (String),
+      cardType (String), and expiryDate (String). The expiryDate field is stored as a
+      slash-separated string in MM/YYYY format.
+    confidence: medium
+    confidence_basis: >
+      CreditCardEJB (lines 50-58) defines getter/setter for cardNumber, cardType, expiryDate.
+      getExpiryMonth() and getExpiryYear() (lines 88-107) parse expiryDate by finding "/" delimiter.
+      No validation or format enforcement found in Java code; format is inferred from parsing logic.
+    risk_class: financial
+    basis: >
+      CreditCardEJB declares three abstract properties: cardNumber, cardType, expiryDate.
+      getExpiryMonth() searches for "/" and returns text before it; getExpiryYear() returns
+      text after it. Default month "01" and year "2010" returned if "/" not found.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+        line_start: 50
+        line_end: 58
+        excerpt: |
+          public abstract String getCardNumber();
+          public abstract void setCardNumber(String cardNumber);
+
+          public abstract String getCardType();
+          public abstract void setCardType(String cardType);
+
+          public abstract String getExpiryDate();
+          public abstract void setExpiryDate(String expiryDate);
+      - path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+        line_start: 88
+        line_end: 107
+        excerpt: |
+          public String getExpiryMonth() {
+            String dateString = getExpiryDate();
+            if (dateString != null) {
+              int slashStart = dateString.indexOf("/");
+              if (slashStart != -1) return dateString.substring(0,slashStart);
+            }
+            return "01";
+          }
+
+          public String getExpiryYear() {
+            String dateString = getExpiryDate();
+            if (dateString != null) {
+              int slashStart = dateString.indexOf("/");
+              if (slashStart != -1) return dateString.substring(slashStart +1, dateString.length());
+            }
+            return "2010";
+          }
+
+  - record_key: ORDER-REQUIREMENT-0005
+    kind: requirement
+    capability_key: order-placement
+    requirement: >
+      The system SHALL assign each order a unique identifier (orderIdString) generated by the
+      UniqueIdGenerator EJB with seed "1001". This order ID is immutable and serves as the
+      primary identifier for the order throughout its lifecycle.
+    confidence: high
+    confidence_basis: >
+      OrderEJBAction (lines 98-110) explicitly calls uidgen.getUniqueId("1001") and stores
+      result in orderIdString. This is set on purchaseOrder before submission. No order ID
+      modification logic found. Seed "1001" is hard-coded.
+    risk_class: operational
+    basis: >
+      OrderEJBAction retrieves UniqueIdGeneratorLocal via service locator and calls
+      getUniqueId("1001"), storing result in orderIdString. This is set as purchaseOrder.setOrderId().
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/ejb/actions/OrderEJBAction.java
+        line_start: 98
+        line_end: 116
+        excerpt: |
+          UniqueIdGeneratorLocal uidgen = null;
+          try {
+            ServiceLocator sl = new ServiceLocator();
+            UniqueIdGeneratorLocalHome home =
+              (UniqueIdGeneratorLocalHome)sl.getLocalHome(JNDINames.UIDG_EJBHOME);
+            uidgen = home.create();
+          } catch (javax.ejb.CreateException cx) {
+            cx.printStackTrace();
+          } catch (ServiceLocatorException slx) {
+            slx.printStackTrace();
+          }
+          orderIdString = uidgen.getUniqueId("1001");
+          ShoppingClientFacadeLocal scf = null;
+          scf = (ShoppingClientFacadeLocal)machine.getAttribute(PetstoreKeys.SHOPPING_CLIENT_FACADE);
+          String userId = scf.getUserId();
+          purchaseOrder.setOrderId(orderIdString);
+
+  - record_key: APP-WORKFLOW-0001
+    kind: workflow
+    capability_key: order-approval
+    requirement: >
+      GIVEN an order in PENDING state, WHEN an approval message is received containing the
+      order ID and new status (APPROVED or DENIED), THEN the system SHALL transition the
+      order to the specified status and prevent any further status transitions. WHEN the new
+      status is APPROVED, THEN the system SHALL create a supplier purchase order and queue it
+      for fulfillment. In both cases (APPROVED or DENIED), the system SHALL queue an approval
+      notification for customer relations to send to the customer.
+    confidence: high
+    confidence_basis: >
+      OrderApprovalMDB.onMessage() (lines 146-165) and doWork() (lines 185-228) implement this
+      workflow. Line 205 checks "if(!curStatus.equals(OrderStatusNames.PENDING)) continue"
+      preventing re-processing. Line 216 calls processManager.updateStatus(). Lines 218-223
+      conditionally create supplier PO for APPROVED orders. Lines 212 and 226 add to mail list
+      for both outcomes. No automatic approval criteria found; all approvals are external decisions.
+    risk_class: operational
+    basis: >
+      OrderApprovalMDB processes JMS TextMessages containing OrderApproval XML. For each
+      ChangedOrder in the message, checks current status is PENDING, updates status via
+      ProcessManager, and routes to appropriate queues based on new status.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+        line_start: 199
+        line_end: 224
+        excerpt: |
+          while(it!= null && it.hasNext()) {
+            ChangedOrder co = (ChangedOrder) it.next();
+            // only PENDING orders can be updated
+            //if order alreay APPROVED or DENIED or COMPLETED, then order
+            //already processed so dont process again
+            String curStatus = processManager.getStatus(co.getOrderId());
+            if(!curStatus.equals(OrderStatusNames.PENDING)) {
+              continue;
+            }
+            oaMailList.addOrder(co);
+            processManager.updateStatus(co.getOrderId(), co.getOrderStatus());
+            //for all approved orders, send a PO to supplier
+            if(co.getOrderStatus().equals(OrderStatusNames.APPROVED)) {
+              po = poHome.findByPrimaryKey(co.getOrderId());
+              String xmlPO = getXmlPO(po, supplierOrderXDE);
+              supplierPoList.add(xmlPO);
+            }
+          }
+
+  - record_key: APP-REQUIREMENT-0001
+    kind: business-rule
+    capability_key: order-approval
+    requirement: >
+      An order in APPROVED state SHALL remain approved. An order in DENIED state SHALL remain
+      denied. An order in COMPLETED state SHALL remain completed. No transition back from these
+      terminal states to PENDING is allowed, and no status change is permitted for any order
+      not in PENDING state.
+    confidence: high
+    confidence_basis: >
+      OrderApprovalMDB (lines 204-207) implements this as a guard: any order not in PENDING
+      state is skipped (continue) without updating. OrderStatusNames defines states but no
+      transition table; the guard check is the enforcement mechanism. No documented way to
+      override or re-open an order.
+    risk_class: operational
+    basis: >
+      OrderApprovalMDB explicitly checks processManager.getStatus(orderId) and only processes
+      if status equals PENDING. Implicitly, APPROVED/DENIED/COMPLETED are terminal states.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+        line_start: 199
+        line_end: 207
+        excerpt: |
+          while(it!= null && it.hasNext()) {
+            ChangedOrder co = (ChangedOrder) it.next();
+            // only PENDING orders can be updated
+            //if order alreay APPROVED or DENIED or COMPLETED, then order
+            //already processed so dont process again
+            String curStatus = processManager.getStatus(co.getOrderId());
+            if(!curStatus.equals(OrderStatusNames.PENDING)) {
+              continue;
+            }
+
+  - record_key: NOTIF-REQUIREMENT-0001
+    kind: requirement
+    capability_key: notifications
+    requirement: >
+      The system SHALL notify the customer by email when an order is approved or denied.
+      Notifications are batched and sent asynchronously via the customer relations department
+      mail queue. Each order approval/denial generates one notification message queued for
+      delivery.
+    confidence: medium
+    confidence_basis: >
+      OrderApprovalMDB (lines 237-240) calls doTransition with xmlMailOrderApprovals.
+      OrderApprovalTD.sendMail() (lines 116-118) sends to mailQueue. OrderApprovalMDB adds
+      all processed orders (both approved and denied) to oaMailList (line 212). No explicit
+      guarantee of delivery or retry logic found in code; notification is JMS-based.
+    risk_class: operational
+    basis: >
+      OrderApprovalMDB.doWork() creates an OrderApproval XML with all processed orders
+      (line 194) and adds each (approved or denied) via oaMailList.addOrder(co) (line 212).
+      This is passed to doTransition() which sends to customer relations queue via OrderApprovalTD.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+        line_start: 185
+        line_end: 227
+        excerpt: |
+          OrderApproval oaMailList = new OrderApproval();
+          String xmlMailOrderApprovals = null;
+          Collection coll = approval.getOrdersList();
+          Iterator it = coll.iterator();
+
+          while(it!= null && it.hasNext()) {
+            ChangedOrder co = (ChangedOrder) it.next();
+            String curStatus = processManager.getStatus(co.getOrderId());
+            if(!curStatus.equals(OrderStatusNames.PENDING)) {
+              continue;
+            }
+            oaMailList.addOrder(co);
+            processManager.updateStatus(co.getOrderId(), co.getOrderStatus());
+            if(co.getOrderStatus().equals(OrderStatusNames.APPROVED)) {
+              po = poHome.findByPrimaryKey(co.getOrderId());
+              String xmlPO = getXmlPO(po, supplierOrderXDE);
+              supplierPoList.add(xmlPO);
+            }
+          }
+
+  - record_key: NOTIF-REQUIREMENT-0002
+    kind: requirement
+    capability_key: notifications
+    requirement: >
+      The system SHALL send a notification to customers when their order is placed, containing
+      the order ID and customer email address. Order placement notifications are sent asynchronously
+      via the AsyncSender component before the order confirmation response is returned.
+    confidence: medium
+    confidence_basis: >
+      OrderEJBAction (lines 147-164) calls AsyncSender.sendAMessage(purchaseOrder.toXML())
+      after creating the order but before emptying the cart. Exception handling shows errors
+      are logged but do not block order completion. AsyncSender appears to be fire-and-forget;
+      no confirmation or retry mechanism visible in the code.
+    risk_class: operational
+    basis: >
+      OrderEJBAction retrieves AsyncSenderLocalHome, creates sender, and calls
+      sendAMessage(purchaseOrder.toXML()). Exceptions are caught and printed but order
+      still completes.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/ejb/actions/OrderEJBAction.java
+        line_start: 147
+        line_end: 164
+        excerpt: |
+          try {
+            ServiceLocator sl = new ServiceLocator();
+            AsyncSenderLocalHome home = (AsyncSenderLocalHome)
+              sl.getLocalHome(JNDINames.ASYNCSENDER_LOCAL_EJB_HOME);
+
+            AsyncSender  sender= home.create();
+            sender.sendAMessage(purchaseOrder.toXML());
+
+          } catch (ServiceLocatorException sle) {
+            sle.printStackTrace();
+          } catch (XMLDocumentException xde) {
+            xde.printStackTrace();
+            System.err.println(xde.getRootCause().getMessage());
+          }  catch (CreateException ce) {
+          }
+
+  - record_key: ACCT-REQUIREMENT-0001
+    kind: requirement
+    capability_key: account-management
+    requirement: >
+      The system SHALL support customer account creation with CreateUserEvent. Customer accounts
+      link to profiles and contact information (name, address, email, phone). Account data is
+      persistent and retrieved on login.
+    confidence: low
+    confidence_basis: >
+      mappings.xml (lines 86-95) defines createuser.do and createcustomer.do URLs mapped to
+      CreateUserEJBAction and CreateUserHTMLAction. Customer and Profile EJB classes exist.
+      However, no actual account creation logic was examined; field validation, uniqueness
+      constraints, and storage mechanisms are inferred from class existence only.
+    risk_class: operational
+    basis: >
+      mappings.xml shows CreateUserEvent -> CreateUserEJBAction route. WebUI has create_customer.screen.
+      Customer, Profile, ContactInfo, and Address EJB classes exist in components/customer/.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/WEB-INF/mappings.xml
+        line_start: 86
+        line_end: 95
+        excerpt: |
+          <url-mapping url="createuser.do" screen="create_customer.screen" >
+            <web-action-class>com.sun.j2ee.blueprints.petstore.controller.web.actions.CreateUserHTMLAction</web-action-class>
+          </url-mapping>
+
+          <url-mapping url="createcustomer.do" useFlowHandler="true" >
+            <web-action-class>com.sun.j2ee.blueprints.petstore.controller.web.actions.CustomerHTMLAction</web-action-class>
+            <flow-handler class="com.sun.j2ee.blueprints.petstore.controller.web.flow.handlers.CreateUserFlowHandler">
+               <handler-result result="MAIN_SCREEN" screen="main.screen"/>
+            </flow-handler>
+          </url-mapping>
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/creditcard/src/com/sun/j2ee/blueprints/creditcard/ejb/CreditCardEJB.java
+    description: >
+      CreditCardEJB has hardcoded default expiryYear value of "2010" returned when parsing
+      expiryDate fails. This appears to be placeholder test data. Whether this is used in
+      production or if card validation occurs elsewhere (in a decorator or validator) is
+      unclear from code inspection. The payment-processing capability list mentions
+      "card type acceptance rules" but no type validation found.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/populate/PopulateSQL.xml
+    description: >
+      The capabilities list mentions "card-expiry-validation" but CreditCardEJB does not
+      enforce expiry date format, does not check whether a date is in the past, and does not
+      validate the date as reachable. The system stores expiryDate as a string and parses it
+      opportunistically; validation rules (if any) are not evident in the Java code examined.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/apps/opc/src/com/sun/j2ee/blueprints/opc/ejb/OrderApprovalMDB.java
+    description: >
+      OrderApprovalMDB references a TransitionDelegate that is loaded dynamically via
+      TransitionDelegateFactory (lines 122-125). The actual approval decision logic (what
+      criteria determine if an order is APPROVED vs DENIED) is not in OrderApprovalMDB; it
+      arrives in the JMS message as a ChangedOrder.getOrderStatus(). The system appears to
+      delegate approval decisions to an external system (possibly the admin client), but the
+      approval request/response protocol and triggering system are not visible in petstore app code.
