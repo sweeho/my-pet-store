@@ -1,0 +1,656 @@
+records:
+  # Customer Entity
+  - record_key: acctmgmt-entity-0001
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL maintain Customer entities identified by a unique userId (primary key).
+      Each Customer MUST be associated with exactly one Account and one Profile.
+    confidence: high
+    confidence_basis: >
+      Both passes can verify userId as primary key from CMP field declarations in ejb-jar.xml
+      and the one-to-one relationship declarations. CustomerLocal interface confirms the
+      public API.
+    risk_class: operational
+    basis: >
+      CustomerEJB is declared as entity bean (lines 46-89 of ejb-jar.xml) with CMP field
+      userId (line 59) and primary key (line 61). CMR relationships to Account (line 273-284)
+      and Profile (line 309-326) are both 1:1 from Customer side. CustomerEJB.java ejbPostCreate
+      creates Account and Profile on customer creation.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 46
+        line_end: 89
+        excerpt: |
+          <entity>
+            <display-name>CustomerEB</display-name>
+            <ejb-name>CustomerEJB</ejb-name>
+            <cmp-field>
+              <field-name>userId</field-name>
+            </cmp-field>
+            <primkey-field>userId</primkey-field>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/Profile</ejb-ref-name>
+            </ejb-local-ref>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/Account</ejb-ref-name>
+            </ejb-local-ref>
+          </entity>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 264
+        line_end: 327
+        excerpt: |
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CustomerEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>account</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AccountEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CustomerEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>profile</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>ProfileEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+    stack_metadata:
+      ejb.bean: CustomerEJB
+      ejb.transaction: Required
+
+  # Account Entity
+  - record_key: acctmgmt-entity-0002
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL maintain Account entities with a status field that tracks
+      the account state. Each Account MUST be associated with one Customer (cascading
+      delete when Customer is removed), one CreditCard, and one ContactInfo.
+    confidence: high
+    confidence_basis: >
+      Status field is an explicit CMP field (line 242 ejb-jar.xml). The 1:1 relationship
+      with ContactInfo and CreditCard is declared with cascade-delete. AccountEJB getStatus
+      and setStatus confirm read/write capability.
+    risk_class: operational
+    basis: >
+      AccountEJB is declared as entity bean (lines 230-262 of ejb-jar.xml) with CMP field
+      status (lines 240-243). Relationships to CreditCard (lines 349-369), ContactInfo
+      (lines 328-348), and Customer (lines 264-285) with cascade-delete on Account side
+      are declared.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 230
+        line_end: 262
+        excerpt: |
+          <entity>
+            <display-name>AccountEB</display-name>
+            <ejb-name>AccountEJB</ejb-name>
+            <cmp-field>
+              <field-name>status</field-name>
+            </cmp-field>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/CreditCard</ejb-ref-name>
+            </ejb-local-ref>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/ContactInfo</ejb-ref-name>
+            </ejb-local-ref>
+          </entity>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/account/ejb/AccountLocal.java
+        line_start: 44
+        line_end: 54
+        excerpt: |
+          public interface AccountLocal extends javax.ejb.EJBLocalObject {
+            public String getStatus();
+            public void setStatus(String status);
+            public CreditCardLocal getCreditCard();
+            public void setCreditCard(CreditCardLocal card);
+            public ContactInfoLocal getContactInfo();
+            public void setContactInfo(ContactInfoLocal contactInfo);
+          }
+    stack_metadata:
+      ejb.bean: AccountEJB
+      ejb.transaction: Required
+
+  # Profile Entity
+  - record_key: acctmgmt-entity-0003
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL maintain Profile entities with customer preference fields:
+      preferredLanguage, favoriteCategory, myListPreference (boolean), and bannerPreference (boolean).
+      Each Profile MUST be associated with one Customer (cascading delete).
+    confidence: high
+    confidence_basis: >
+      All four CMP fields are declared (lines 103-116 ejb-jar.xml). Default values are
+      explicitly set in ProfileLocalHome interface (lines 44-47). Both passes can verify
+      the schema from declarations.
+    risk_class: operational
+    basis: >
+      ProfileEJB is declared as entity bean (lines 91-121 of ejb-jar.xml) with CMP fields
+      for preferredLanguage, myListPreference, favoriteCategory, and bannerPreference.
+      ProfileLocalHome defines default values as public static constants (lines 44-47 of
+      ProfileLocalHome.java).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 91
+        line_end: 121
+        excerpt: |
+          <entity>
+            <display-name>ProfileEB</display-name>
+            <ejb-name>ProfileEJB</ejb-name>
+            <cmp-field>
+              <field-name>preferredLanguage</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>myListPreference</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>favoriteCategory</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>bannerPreference</field-name>
+            </cmp-field>
+          </entity>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/profile/ejb/ProfileLocalHome.java
+        line_start: 44
+        line_end: 47
+        excerpt: |
+          public static final String DefaultPreferredLanguage = "en_US";
+          public static final String DefaultFavoriteCategory = null;
+          public static final boolean DefaultMyListPreference = true;
+          public static final boolean DefaultBannerPreference = true;
+    stack_metadata:
+      ejb.bean: ProfileEJB
+      ejb.transaction: Required
+
+  # CreditCard Entity
+  - record_key: acctmgmt-entity-0004
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL maintain CreditCard entities with cardType, cardNumber, and expiryDate fields.
+      Each CreditCard MUST be associated with one Account (cascading delete).
+    confidence: high
+    confidence_basis: >
+      CMP fields are declared in ejb-jar.xml (lines 135-144). CreditCardEJB provides getter/setter
+      methods for all three fields visible in ejb-jar.xml method permissions (lines 490-560).
+    risk_class: financial
+    basis: >
+      CreditCardEJB is declared as entity bean (lines 123-149 of ejb-jar.xml) with three CMP fields:
+      cardType, expiryDate, cardNumber. Relationship to Account shows cascade-delete on CreditCard
+      side (lines 349-369).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 123
+        line_end: 149
+        excerpt: |
+          <entity>
+            <display-name>CreditCardEB</display-name>
+            <ejb-name>CreditCardEJB</ejb-name>
+            <cmp-field>
+              <field-name>cardType</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>expiryDate</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>cardNumber</field-name>
+            </cmp-field>
+          </entity>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 349
+        line_end: 369
+        excerpt: |
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AccountEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>creditCard</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CreditCardEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+    stack_metadata:
+      ejb.bean: CreditCardEJB
+      ejb.transaction: Required
+
+  # ContactInfo Entity
+  - record_key: acctmgmt-entity-0005
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL maintain ContactInfo entities with givenName, familyName, telephone,
+      and email fields. Each ContactInfo MUST be associated with one Account (cascading delete)
+      and one Address (cascading delete).
+    confidence: high
+    confidence_basis: >
+      All four CMP fields are declared (lines 161-176 ejb-jar.xml). Relationships with
+      cascade-delete constraints are explicit. Both passes can verify the schema.
+    risk_class: operational
+    basis: >
+      ContactInfoEJB is declared as entity bean (lines 151-188 of ejb-jar.xml) with four CMP fields:
+      familyName, telephone, givenName, email. Relationships to Address (lines 328-348) and Account
+      (lines 328-348) both show cascade-delete.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 151
+        line_end: 188
+        excerpt: |
+          <entity>
+            <display-name>ContactInfoEB</display-name>
+            <ejb-name>ContactInfoEJB</ejb-name>
+            <cmp-field>
+              <field-name>familyName</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>telephone</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>givenName</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>email</field-name>
+            </cmp-field>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/Address</ejb-ref-name>
+            </ejb-local-ref>
+          </entity>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 328
+        line_end: 348
+        excerpt: |
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>ContactInfoEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>address</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AddressEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+    stack_metadata:
+      ejb.bean: ContactInfoEJB
+      ejb.transaction: Required
+
+  # Address Entity
+  - record_key: acctmgmt-entity-0006
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL maintain Address entities with streetName1, streetName2, city, state,
+      zipCode, and country fields. Each Address MUST be associated with one ContactInfo
+      (cascading delete).
+    confidence: high
+    confidence_basis: >
+      All six CMP fields are declared (lines 200-223 ejb-jar.xml) with one-to-one cascade-delete
+      relationship to ContactInfo. Schema is verifiable.
+    risk_class: operational
+    basis: >
+      AddressEJB is declared as entity bean (lines 190-228 of ejb-jar.xml) with six CMP fields
+      for address components. Cascade-delete relationship with ContactInfo is declared (lines
+      307-326).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 190
+        line_end: 228
+        excerpt: |
+          <entity>
+            <display-name>AddressEB</display-name>
+            <ejb-name>AddressEJB</ejb-name>
+            <cmp-field>
+              <field-name>zipCode</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>state</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>streetName2</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>streetName1</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>country</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>city</field-name>
+            </cmp-field>
+          </entity>
+    stack_metadata:
+      ejb.bean: AddressEJB
+      ejb.transaction: Required
+
+  # Business Rule: Auto-create Account on Customer creation
+  - record_key: acctmgmt-rule-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      When a Customer is created, the system SHALL automatically create an associated Account
+      with status "Active".
+    confidence: high
+    confidence_basis: >
+      The ejbPostCreate method in CustomerEJB.java explicitly creates an Account with
+      AccountLocalHome.Active status (line 78). This is an invariant enforced at entity creation time.
+    risk_class: operational
+    basis: >
+      CustomerEJB.ejbPostCreate (lines 74-89) performs InitialContext lookup for
+      "java:comp/env/ejb/Account", calls alh.create(AccountLocalHome.Active), and
+      setAccount(account). The Active constant is implicitly defined in AccountLocalHome.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/ejb/CustomerEJB.java
+        line_start: 74
+        line_end: 89
+        excerpt: |
+          public void ejbPostCreate(String userId) throws CreateException {
+            try {
+            InitialContext ic = new InitialContext();
+            AccountLocalHome alh = (AccountLocalHome) ic.lookup("java:comp/env/ejb/Account");
+            AccountLocal account = alh.create(AccountLocalHome.Active);
+            setAccount(account);
+            ...
+            } catch (NamingException ne) {
+                throw new CreateException ("could not lookup ejb. Exception is " + ne.getMessage());
+            }
+          }
+    stack_metadata:
+      ejb.bean: CustomerEJB
+      ejb.transaction: Required
+
+  # Business Rule: Auto-create Profile with defaults on Customer creation
+  - record_key: acctmgmt-rule-0002
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      When a Customer is created, the system SHALL automatically create an associated Profile
+      with default values: preferredLanguage="en_US", favoriteCategory=null, myListPreference=true,
+      bannerPreference=true.
+    confidence: high
+    confidence_basis: >
+      CustomerEJB.ejbPostCreate explicitly calls plh.create() with four constants from
+      ProfileLocalHome (lines 82-84). ProfileLocalHome.java defines these constants (lines 44-47)
+      with exact values.
+    risk_class: operational
+    basis: >
+      CustomerEJB.ejbPostCreate (lines 81-85) performs InitialContext lookup for
+      "java:comp/env/ejb/Profile" and calls create() with four arguments from ProfileLocalHome
+      constants: DefaultPreferredLanguage, DefaultFavoriteCategory, DefaultMyListPreference,
+      DefaultBannerPreference. ProfileLocalHome interface defines these as public static finals.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/ejb/CustomerEJB.java
+        line_start: 81
+        line_end: 85
+        excerpt: |
+          ProfileLocalHome plh = (ProfileLocalHome) ic.lookup("java:comp/env/ejb/Profile");
+          ProfileLocal profile = plh.create(ProfileLocalHome.DefaultPreferredLanguage,
+          ProfileLocalHome.DefaultFavoriteCategory, ProfileLocalHome.DefaultMyListPreference,
+          ProfileLocalHome.DefaultBannerPreference);
+          setProfile(profile);
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/profile/ejb/ProfileLocalHome.java
+        line_start: 44
+        line_end: 47
+        excerpt: |
+          public static final String DefaultPreferredLanguage = "en_US";
+          public static final String DefaultFavoriteCategory = null;
+          public static final boolean DefaultMyListPreference = true;
+          public static final boolean DefaultBannerPreference = true;
+    stack_metadata:
+      ejb.bean: CustomerEJB
+      ejb.transaction: Required
+
+  # Business Rule: Auto-create ContactInfo and CreditCard on Account creation
+  - record_key: acctmgmt-rule-0003
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      When an Account is created with only a status parameter, the system SHALL automatically
+      create associated ContactInfo and CreditCard entities.
+    confidence: high
+    confidence_basis: >
+      AccountEJB has two create signatures (lines 70 and 75). When created with single status
+      parameter, ejbPostCreate (lines 80-94) explicitly creates both ContactInfo and CreditCard
+      via lookup and create() calls.
+    risk_class: operational
+    basis: >
+      AccountEJB.ejbPostCreate (lines 80-94) performs JNDI lookups for "java:comp/env/ejb/ContactInfo"
+      and "java:comp/env/ejb/CreditCard", calling create() on each and setting them via setters.
+      The two ejbCreate variants (lines 70 and 75-78) allow creation with just status OR with
+      pre-created ContactInfo and CreditCard.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/account/ejb/AccountEJB.java
+        line_start: 70
+        line_end: 94
+        excerpt: |
+          public Object ejbCreate(String status, ContactInfoLocal contactInfo, CreditCardLocal creditCard) throws CreateException {
+            setStatus(status);
+            return null;
+          }
+
+          public Object ejbCreate(String status) throws CreateException {
+            setStatus(status);
+            return null;
+          }
+
+          public void ejbPostCreate(String status) throws CreateException {
+            setStatus(status);
+            try {
+              InitialContext ic = new InitialContext();
+              ContactInfoLocalHome cih = (ContactInfoLocalHome) ic.lookup("java:comp/env/ejb/ContactInfo");
+              ContactInfoLocal contactInfo = cih.create();
+              setContactInfo(contactInfo);
+              CreditCardLocalHome cch = (CreditCardLocalHome) ic.lookup("java:comp/env/ejb/CreditCard");
+              CreditCardLocal creditCard = cch.create();
+              setCreditCard(creditCard);
+            } catch (javax.naming.NamingException ne) {
+              throw new CreateException("ContactInfoEJB error: naming exception looking up contact info or credit card");
+            }
+          }
+    stack_metadata:
+      ejb.bean: AccountEJB
+      ejb.transaction: Required
+
+  # Workflow: Cascade Delete on Customer removal
+  - record_key: acctmgmt-workflow-0001
+    kind: workflow
+    capability_key: account-management
+    requirement: >
+      When a Customer is deleted, the system SHALL cascade-delete its associated Account
+      and Profile entities.
+    confidence: high
+    confidence_basis: >
+      Cascade-delete constraints are explicitly declared in ejb-jar.xml relationships
+      (lines 280 and 322) on Account and Profile entity declarations when related to Customer.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares relationships with cascade-delete tags (line 280 for Account,
+      line 322 for Profile). Container-managed relationships enforce the cascade behavior
+      at the persistence layer.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 264
+        line_end: 327
+        excerpt: |
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CustomerEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <relationship-role-source>
+                <ejb-name>CustomerEJB</ejb-name>
+              </relationship-role-source>
+              <cmr-field>
+                <cmr-field-name>account</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AccountEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+              <relationship-role-source>
+                <ejb-name>AccountEJB</ejb-name>
+              </relationship-role-source>
+            </ejb-relationship-role>
+          </ejb-relation>
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CustomerEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>profile</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>ProfileEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+    stack_metadata:
+      ejb.bean: CustomerEJB
+      ejb.transaction: Required
+
+  # Workflow: Cascade Delete on Account removal
+  - record_key: acctmgmt-workflow-0002
+    kind: workflow
+    capability_key: account-management
+    requirement: >
+      When an Account is deleted, the system SHALL cascade-delete its associated CreditCard
+      and ContactInfo entities (which in turn cascade-delete their Address entities).
+    confidence: high
+    confidence_basis: >
+      Cascade-delete constraints are explicitly declared for both relationships in ejb-jar.xml
+      (lines 280 and 301 for CreditCard and ContactInfo respectively).
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares cascade-delete on CreditCard relationship (line 364) and
+      ContactInfo relationship (line 343). Each of these entities may have their own
+      cascade-delete to child entities (Address is cascade-deleted by ContactInfo).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 328
+        line_end: 369
+        excerpt: |
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AccountEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>contactInfo</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>ContactInfoEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AccountEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>creditCard</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CreditCardEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+            </ejb-relationship-role>
+          </ejb-relation>
+    stack_metadata:
+      ejb.bean: AccountEJB
+      ejb.transaction: Required
+
+  # Internationalization: Language support
+  - record_key: intl-rule-0001
+    kind: business-rule
+    capability_key: internationalization
+    requirement: >
+      The system SHALL support customer language preferences via Profile.preferredLanguage field,
+      defaulting to "en_US" for new customers.
+    confidence: high
+    confidence_basis: >
+      Default is explicitly stated as public static constant in ProfileLocalHome.java (line 44).
+      Both passes can verify the string literal and default-assignment logic in CustomerEJB.
+    risk_class: operational
+    basis: >
+      ProfileLocalHome.java declares DefaultPreferredLanguage = "en_US" (line 44).
+      CustomerEJB.ejbPostCreate assigns this default when creating Profile (line 82).
+      ProfileEJB provides setPreferredLanguage and getPreferredLanguage methods (CMP field).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/profile/ejb/ProfileLocalHome.java
+        line_start: 44
+        line_end: 44
+        excerpt: |
+          public static final String DefaultPreferredLanguage = "en_US";
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/ejb/CustomerEJB.java
+        line_start: 82
+        line_end: 82
+        excerpt: |
+          ProfileLocalHome.DefaultPreferredLanguage,
+    stack_metadata:
+      ejb.bean: ProfileEJB
+      ejb.transaction: Required
+
+  # User identification
+  - record_key: auth-entity-0001
+    kind: entity
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL identify customers uniquely by userId, which serves as the primary key
+      for the Customer entity.
+    confidence: high
+    confidence_basis: >
+      userId is declared as the only CMP field and primary key in ejb-jar.xml (lines 59, 61).
+      CustomerLocal interface exposes getUserId() as the only identity accessor.
+    risk_class: operational
+    basis: >
+      CustomerEJB CMP field declaration (line 59) and primkey-field (line 61) in ejb-jar.xml
+      establish userId as the sole identifier. CustomerLocal.getUserId() (line 45 in interface)
+      confirms it is public API.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 59
+        line_end: 61
+        excerpt: |
+          <cmp-field>
+            <field-name>userId</field-name>
+          </cmp-field>
+          <primkey-field>userId</primkey-field>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/ejb/CustomerLocal.java
+        line_start: 44
+        line_end: 49
+        excerpt: |
+          public interface CustomerLocal extends javax.ejb.EJBLocalObject {
+            public String getUserId();
+            public AccountLocal getAccount();
+            public ProfileLocal getProfile();
+          }
+    stack_metadata:
+      ejb.bean: CustomerEJB
+      ejb.transaction: Required
+
+findings: []
