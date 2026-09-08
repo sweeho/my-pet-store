@@ -1,0 +1,411 @@
+records:
+  - record_key: order-approval-workflow-0001
+    kind: workflow
+    capability_key: order-approval
+    requirement: >
+      The system SHALL manage order workflow state transitions through
+      a lifecycle of: PENDING → APPROVED → SHIPPED_PART/COMPLETED, or
+      PENDING → DENIED. The workflow tracks which status an order is in
+      at any point.
+    confidence: high
+    confidence_basis: >
+      Workflow states are explicitly documented in OrderStatusNames class
+      with clear documentation of the state machine. The ManagerEJB entity
+      bean persists the status, and multiple callers (PurchaseOrderMDB,
+      OrderApprovalMDB, InvoiceMDB, OPCAdminFacadeEJB) independently use
+      these transitions in the order processing flow, proving high consistency.
+    risk_class: operational
+    basis: >
+      OrderStatusNames.java defines five static constants (PENDING, APPROVED,
+      DENIED, SHIPPED_PART, COMPLETED) with comments explicitly documenting
+      the state transitions. ProcessManagerEJB methods updateStatus(),
+      getStatus(), and createManager() implement the state management.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/OrderStatusNames.java
+        line_start: 44
+        line_end: 66
+        excerpt: |
+          /**
+           * This class is the central location to store the names of the
+           * status that an order can be in.
+           * The states an order goes through are:
+           * pending->approved->shippedPart(shipped part of order)->completed(whole order shipped)  or
+           * pending->denied
+           */
+          public class OrderStatusNames {
+
+              /** for orders that have been placed but not yet approved */
+              public static final String PENDING = "PENDING";
+
+              /** for orders that have been approved */
+              public  static final String APPROVED = "APPROVED";
+
+              /** for orders that have been denied */
+              public  static final String DENIED = "DENIED";
+
+
+              /** for orders that have been partially completed*/
+              public  static final String SHIPPED_PART = "SHIPPED_PART";
+
+
+              /** for orders that have been completed*/
+              public  static final String COMPLETED = "COMPLETED";
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 56
+        line_end: 65
+        excerpt: |
+          <cmp-field>
+            <description>no description</description>
+            <field-name>status</field-name>
+          </cmp-field>
+          <cmp-field>
+            <description>no description</description>
+            <field-name>orderId</field-name>
+          </cmp-field>
+          <primkey-field>orderId</primkey-field>
+    stack_metadata:
+      ejb.bean: ManagerEJB (CMP Entity)
+      ejb.transaction: Required
+      ejb.bean_type: EntityBean
+
+  - record_key: order-approval-creation-0001
+    kind: requirement
+    capability_key: order-approval
+    requirement: >
+      The system SHALL create a workflow tracking record when a new purchase
+      order is received. This operation initializes the order in PENDING status.
+    confidence: high
+    confidence_basis: >
+      The createManager() operation is called directly from PurchaseOrderMDB
+      during purchase order processing. Its contract is simple and directly
+      verifiable from the call site and method implementation. No ambiguity
+      found in the cross-component usage.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.createManager(orderId, status) creates a new Manager
+      entity with the given order ID and initial status. PurchaseOrderMDB
+      calls this immediately after creating a PurchaseOrder entity, passing
+      OrderStatusNames.PENDING as the initial status.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 62
+        line_end: 68
+        excerpt: |
+          /**
+           * Business method used for when new purchase orders are recieved
+           * and want to start the workflow process to fullfil the order
+           */
+          public void createManager(String orderId, String status) throws CreateException {
+            ManagerLocal manager = mlh.create(orderId, status);
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 345
+        line_end: 356
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>ProcessManagerEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>createManager</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (Stateless Session)
+      ejb.transaction: Required
+
+  - record_key: order-approval-statusupdate-0001
+    kind: requirement
+    capability_key: order-approval
+    requirement: >
+      The system SHALL support updating an order's workflow status by order ID.
+      This operation is called during approval decisions, shipment events, and
+      order completion to advance the order through its lifecycle.
+    confidence: high
+    confidence_basis: >
+      updateStatus() is called from three independent message-driven beans
+      (OrderApprovalMDB, InvoiceMDB, OPCAdminFacadeEJB), each in different
+      parts of the workflow (approval, fulfillment, admin). Consistent
+      calling pattern proves the requirement is enforced and correct.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.updateStatus(orderId, status) retrieves the Manager
+      entity by order ID and updates its status field. OrderApprovalMDB calls
+      it with APPROVED when approval succeeds. InvoiceMDB calls it with either
+      SHIPPED_PART (partial delivery) or COMPLETED (full delivery) based on
+      invoice processing.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 70
+        line_end: 76
+        excerpt: |
+          /**
+           * Business method used to keep track of an order in the workflow process
+           */
+          public void updateStatus(String orderId, String status) throws FinderException {
+            ManagerLocal manager = mlh.findByPrimaryKey(orderId);
+            manager.setStatus(status);
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 357
+        line_end: 368
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>ProcessManagerEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>updateStatus</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (Stateless Session)
+      ejb.transaction: Required
+
+  - record_key: order-approval-statusquery-0001
+    kind: requirement
+    capability_key: order-approval
+    requirement: >
+      The system SHALL provide a query operation to retrieve the current
+      status of an order by its order ID.
+    confidence: high
+    confidence_basis: >
+      getStatus() is a simple read operation with a direct implementation
+      that retrieves and returns the status field. No ambiguity in contract
+      or usage. Two implementations exist (in ProcessManagerEJB and accessible
+      through ManagerLocal).
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.getStatus(orderId) retrieves the Manager entity by
+      order ID and returns its status field. The method is transactional and
+      publicly available through the local interface.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 78
+        line_end: 84
+        excerpt: |
+          /**
+           * Business method used to keep track of an order in the workflow process
+           */
+          public String getStatus(String orderId) throws FinderException {
+            ManagerLocal manager = mlh.findByPrimaryKey(orderId);
+            return manager.getStatus();
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 369
+        line_end: 379
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>ProcessManagerEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>getStatus</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (Stateless Session)
+      ejb.transaction: Required
+
+  - record_key: admin-operations-orderlookup-0001
+    kind: requirement
+    capability_key: admin-operations
+    requirement: >
+      The system SHALL provide an operation to retrieve all orders that are
+      in a given status. This is used by the admin interface to display
+      orders at specific workflow stages for administrative action.
+    confidence: high
+    confidence_basis: >
+      getOrdersByStatus() is called from OPCAdminFacadeEJB.getOrdersByStatus(),
+      which explicitly documents the admin use case. The operation uses a CMP
+      query declared in ejb-jar.xml, proving it is a persistent, queryable
+      feature rather than a transient calculation.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.getOrdersByStatus(status) retrieves all Manager
+      entities with a specific status by delegating to ManagerLocalHome.
+      findOrdersByStatus(). The query is defined using EJB QL in ejb-jar.xml
+      to find all Manager entities where status matches the parameter.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 86
+        line_end: 91
+        excerpt: |
+          /**
+           * Business method to get all orders of given status for the admin
+           */
+          public Collection getOrdersByStatus(String status) throws FinderException {
+              return mlh.findOrdersByStatus(status);
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 70
+        line_end: 79
+        excerpt: |
+          <query>
+            <description></description>
+            <query-method>
+              <method-name>findOrdersByStatus</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </query-method>
+            <ejb-ql>SELECT DISTINCT OBJECT(a) FROM Manager a WHERE a.status = ?1</ejb-ql>
+          </query>
+    stack_metadata:
+      ejb.bean: ProcessManagerEJB (Stateless Session), ManagerEJB (CMP Entity)
+      ejb.transaction: Required
+
+  - record_key: order-approval-data-0001
+    kind: entity
+    capability_key: order-approval
+    requirement: >
+      The system SHALL persist order workflow state as an entity with
+      order ID as the primary key and status as a mutable field. The
+      entity is stored in container-managed persistence (CMP).
+    confidence: high
+    confidence_basis: >
+      The ManagerEJB is defined in ejb-jar.xml as a CMP entity bean with
+      explicit field declarations. Multiple callers depend on its persistence,
+      and the schema configuration is complete and unambiguous.
+    risk_class: operational
+    basis: >
+      ManagerEJB is defined as an abstract entity bean with two CMP fields:
+      orderId (primary key) and status. The persistence type is "Container"
+      with CMP version 2.x. All operations that read or update this state
+      go through the entity bean's accessor methods.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 46
+        line_end: 80
+        excerpt: |
+          <entity>
+            <display-name>ManagerEB</display-name>
+            <ejb-name>ManagerEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerEJB</ejb-class>
+            <persistence-type>Container</persistence-type>
+            <prim-key-class>java.lang.String</prim-key-class>
+            <reentrant>False</reentrant>
+            <cmp-version>2.x</cmp-version>
+            <abstract-schema-name>Manager</abstract-schema-name>
+            <cmp-field>
+              <description>no description</description>
+              <field-name>status</field-name>
+            </cmp-field>
+            <cmp-field>
+              <description>no description</description>
+              <field-name>orderId</field-name>
+            </cmp-field>
+            <primkey-field>orderId</primkey-field>
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/manager/ejb/ManagerEJB.java
+        line_start: 49
+        line_end: 68
+        excerpt: |
+          public abstract class ManagerEJB implements EntityBean {
+
+              private EntityContext context = null;
+
+              // CMP fields
+              public abstract String getOrderId();
+              public abstract void setOrderId(String orderId);
+
+              public abstract String getStatus();
+              public abstract void setStatus(String status);
+
+              // EJB create methods
+              public String ejbCreate(String orderId, String status) throws CreateException {
+                  setOrderId(orderId);
+                  setStatus(status);
+                  return null;
+              }
+    stack_metadata:
+      ejb.bean: ManagerEJB (CMP Entity)
+      cmp.version: "2.x"
+      cmp.primary_key_class: java.lang.String
+
+  - record_key: order-approval-transitions-0001
+    kind: requirement
+    capability_key: order-approval
+    requirement: >
+      The system SHALL support transition delegates that can execute
+      workflow transitions triggered by order events. Each transition
+      may be associated with custom logic defined in a delegate class.
+    confidence: medium
+    confidence_basis: >
+      TransitionDelegate interface and TransitionDelegateFactory are
+      present and referenced in order processing MDBs (e.g., PurchaseOrderMDB
+      instantiates PurchaseOrderTD). However, the actual implementation
+      details of specific transitions are not visible in this component —
+      the factory uses reflection to load delegate classes dynamically.
+      This proves the capability exists but leaves the full transition
+      logic in other components. Marked medium because the framework is
+      clear but the business logic implementation is external.
+    risk_class: operational
+    basis: >
+      TransitionDelegate is an interface with setup() and doTransition()
+      methods. TransitionDelegateFactory uses reflection to instantiate
+      delegate classes by name. PurchaseOrderMDB creates an instance of
+      PurchaseOrderTD (which implements TransitionDelegate) during
+      initialization. The actual transition business logic is not in
+      this component.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions/TransitionDelegate.java
+        line_start: 40
+        line_end: 50
+        excerpt: |
+          /**
+            * This is the interface that all transition delegates must implement
+            */
+          public interface TransitionDelegate {
+
+             public void setup() throws TransitionException;
+
+             public void doTransition(TransitionInfo info) throws TransitionException;
+
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions/TransitionDelegateFactory.java
+        line_start: 43
+        line_end: 57
+        excerpt: |
+          public class TransitionDelegateFactory {
+
+            public TransitionDelegateFactory() { }
+
+            public TransitionDelegate getTransitionDelegate(String className) throws TransitionException {
+              TransitionDelegate td = null;
+              try {
+                td = (TransitionDelegate)Class.forName(className).newInstance();
+              } catch(Exception e) {
+                throw new TransitionException(e);
+              }
+              return td;
+            }
+
+          }
+    stack_metadata:
+      ejb.bean: not applicable (interface/factory)
+      design_pattern: Strategy (TransitionDelegate)
+
+findings:
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions/TransitionInfo.java
+    description: >
+      TransitionInfo encapsulates either a single XML message or a batch of
+      XML messages passed to transition delegates, but the actual schema and
+      structure of these XML messages is not defined or documented in this
+      component. The XML structure is implied to come from external order
+      processing components but cannot be fully specified from this code alone.
+      A human should verify what XML schemas or message formats are expected.
