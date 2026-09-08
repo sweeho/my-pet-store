@@ -1,0 +1,170 @@
+# EXTRACTED FROM LEGACY SOURCE — evidence of what exists, not a build target. Where this disagrees with a capability delta spec, the delta spec wins.
+
+openapi: 3.0.0
+info:
+  title: Petstore E-Commerce API
+  version: 1.0.0
+  description: REST API for the Java Pet Store e-commerce application
+paths:
+  /signon:
+    post:
+      summary: User authentication
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                j_username:
+                  type: string
+                j_password:
+                  type: string
+      responses:
+        '302':
+          description: Redirect to original URL or home page
+        '200':
+          description: Sign-on error page displayed
+  /cart:
+    get:
+      summary: Display shopping cart
+      tags:
+        - Shopping Cart
+      responses:
+        '200':
+          description: Shopping cart page
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Update cart (add, remove, update quantities)
+      tags:
+        - Shopping Cart
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [add, remove, update]
+      responses:
+        '200':
+          description: Cart updated and displayed
+  /catalog:
+    get:
+      summary: Browse product catalog by category
+      tags:
+        - Catalog
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: locale
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category page with items
+  /order:
+    post:
+      summary: Place order
+      tags:
+        - Order
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                given_name_a:
+                  type: string
+                family_name_a:
+                  type: string
+                address_1_a:
+                  type: string
+                city_a:
+                  type: string
+                state_a:
+                  type: string
+                postal_code_a:
+                  type: string
+      responses:
+        '200':
+          description: Order confirmation page
+        '302':
+          description: Redirect to confirmation
+  /customer:
+    get:
+      summary: View customer profile
+      tags:
+        - Account
+      responses:
+        '200':
+          description: Customer profile page
+    post:
+      summary: Update customer profile
+      tags:
+        - Account
+      responses:
+        '200':
+          description: Profile updated
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+        password:
+          type: string
+    ShoppingCart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal:
+          type: number
+    CartItem:
+      type: object
+      properties:
+        itemId:
+          type: string
+        quantity:
+          type: integer
+        unitCost:
+          type: number
+        lineTotal:
+          type: number
+    PurchaseOrder:
+      type: object
+      properties:
+        poId:
+          type: string
+        poDate:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PENDING, APPROVED, DENIED, COMPLETED]
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+    LineItem:
+      type: object
+      properties:
+        itemId:
+          type: string
+        quantity:
+          type: integer
+        quantityShipped:
+          type: integer
+        unitPrice:
+          type: number

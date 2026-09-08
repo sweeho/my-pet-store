@@ -1,0 +1,125 @@
+%% EXTRACTED FROM LEGACY SOURCE — evidence of what exists, not a build target. Where this disagrees with a capability delta spec, the delta spec wins.
+
+erDiagram
+    CUSTOMER ||--|| ACCOUNT : has
+    CUSTOMER ||--|| PROFILE : has
+    ACCOUNT ||--|| CONTACTINFO : has
+    ACCOUNT ||--|| CREDITCARD : has
+    CONTACTINFO ||--|| ADDRESS : has
+    CUSTOMER ||--o{ PURCHASEORDER : places
+    PURCHASEORDER ||--o{ LINEITEM : contains
+    LINEITEM }o--|| ITEM : references
+    ITEM }o--|| PRODUCT : "part of"
+    PRODUCT }o--|| CATEGORY : "belongs to"
+    CATEGORY ||--o{ LOCALE_CONTENT : "has translations"
+    SUPPLIER }o--|| PURCHASEORDER : "receives as PO"
+    PURCHASEORDER ||--o{ INVOICE : "receives"
+
+    CUSTOMER {
+        string userId PK
+        string password
+        string locale
+    }
+
+    ACCOUNT {
+        string accountId PK
+        string customerId FK
+        string status
+    }
+
+    PROFILE {
+        string profileId PK
+        string customerId FK
+        string preferredLanguage
+        string favoriteCategory
+        boolean myListPreference
+        boolean bannerPreference
+    }
+
+    CONTACTINFO {
+        string contactInfoId PK
+        string accountId FK
+        string givenName
+        string familyName
+        string telephone
+        string email
+    }
+
+    ADDRESS {
+        string addressId PK
+        string contactInfoId FK
+        string streetName1
+        string streetName2
+        string city
+        string state
+        string zipCode
+        string country
+    }
+
+    CREDITCARD {
+        string cardId PK
+        string accountId FK
+        string cardNumber
+        string cardType
+        string expiryDate
+    }
+
+    PURCHASEORDER {
+        string poId PK
+        string customerId FK
+        date poDate
+        decimal totalPrice
+        string status
+    }
+
+    LINEITEM {
+        string lineId PK
+        string poId FK
+        string itemId FK
+        integer lineNumber
+        integer quantity
+        integer quantityShipped
+        decimal unitPrice
+    }
+
+    ITEM {
+        string itemId PK
+        string productId FK
+        string categoryId FK
+        decimal price
+    }
+
+    PRODUCT {
+        string productId PK
+        string categoryId FK
+        string name
+    }
+
+    CATEGORY {
+        string categoryId PK
+        string name
+    }
+
+    LOCALE_CONTENT {
+        string contentId PK
+        string categoryId FK
+        string locale
+        string name
+        string description
+    }
+
+    INVENTORY {
+        string itemId PK
+        integer quantity
+    }
+
+    SUPPLIER {
+        string supplierId PK
+        string name
+    }
+
+    INVOICE {
+        string invoiceId PK
+        string poId FK
+        date invoiceDate
+    }
