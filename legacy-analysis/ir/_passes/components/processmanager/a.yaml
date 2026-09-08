@@ -1,0 +1,299 @@
+records:
+  - record_key: fulfillment-management-workflow-0001
+    kind: workflow
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL track order lifecycle status through a state machine with the following valid states:
+      PENDING -> APPROVED or DENIED; APPROVED -> SHIPPED_PART; SHIPPED_PART -> COMPLETED.
+    confidence: high
+    confidence_basis: >
+      Order states are documented in OrderStatusNames.java with explicit comments describing
+      state transitions (pending->approved->shippedPart->completed or pending->denied).
+      EJB-jar.xml declaratively enforces required transactions on all state transitions.
+      Both source code and declarative configuration align on the same state set.
+    risk_class: operational
+    basis: >
+      OrderStatusNames.java lines 44-66 enumerate and document the five valid order statuses
+      and their intended transitions. The workflow states are enforced through the Manager entity
+      bean status field, persisted as CMP 2.x container-managed persistence.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/OrderStatusNames.java
+        line_start: 44
+        line_end: 66
+        excerpt: |
+          The states an order goes through are:
+          pending->approved->shippedPart(shipped part of order)->completed(whole order shipped)  or
+          pending->denied
+
+  - record_key: fulfillment-management-entity-0001
+    kind: entity
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL maintain a Manager entity representing an order in the workflow process,
+      identified by orderId (primary key) and holding a current status field.
+    confidence: high
+    confidence_basis: >
+      Manager is declared as a CMP 2.x entity bean in ejb-jar.xml with explicit persistence
+      configuration (persistence-type: Container, abstract-schema-name: Manager, prim-key-class: String).
+      CMP fields orderId and status are declared with primkey-field identifying orderId as the primary key.
+      ManagerEJB.java implements the entity with abstract getters/setters, confirming
+      container-managed persistence.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml lines 46-80 define the Manager CMP entity with two CMP fields (status, orderId)
+      and primary key specification. ManagerEJB.java lines 49-88 show abstract CMP accessor methods
+      for orderId and status.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 46
+        line_end: 80
+        excerpt: |
+          <entity>
+            <display-name>ManagerEB</display-name>
+            <ejb-name>ManagerEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.processmanager.manager.ejb.ManagerEJB</ejb-class>
+            <persistence-type>Container</persistence-type>
+            <prim-key-class>java.lang.String</prim-key-class>
+            <cmp-version>2.x</cmp-version>
+            <abstract-schema-name>Manager</abstract-schema-name>
+            <cmp-field>
+              <field-name>status</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>orderId</field-name>
+            </cmp-field>
+            <primkey-field>orderId</primkey-field>
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/manager/ejb/ManagerEJB.java
+        line_start: 49
+        line_end: 65
+        excerpt: |
+          public abstract class ManagerEJB implements EntityBean {
+            public abstract String getOrderId();
+            public abstract void setOrderId(String orderId);
+            public abstract String getStatus();
+            public abstract void setStatus(String status);
+            public String ejbCreate(String orderId, String status) throws CreateException {
+              setOrderId(orderId);
+              setStatus(status);
+              return null;
+            }
+
+  - record_key: fulfillment-management-requirement-0001
+    kind: requirement
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL create a new workflow manager entry for each order placed,
+      initializing it with the order ID and PENDING status.
+    confidence: high
+    confidence_basis: >
+      ProcessManagerEJB.createManager() method is documented as creating the manager entry
+      for new orders entering the workflow process. EJB-jar.xml declares this method with
+      trans-attribute: Required, confirming transactional integrity. The method signature
+      and implementation match the ManagerLocalHome.create(orderId, status) contract which
+      initializes both fields.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.java lines 63-68 show the createManager business method that invokes
+      mlh.create(orderId, status) to instantiate the workflow manager. The javadoc comment
+      explicitly states this is used "when new purchase orders are received and want to start
+      the workflow process to fulfill the order".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 62
+        line_end: 68
+        excerpt: |
+          /**
+           * Business method used for when new purchase orders are recieved
+           * and want to start the workflow process to fullfil the order
+           */
+          public void createManager(String orderId, String status) throws CreateException {
+            ManagerLocal manager = mlh.create(orderId, status);
+          }
+
+  - record_key: fulfillment-management-requirement-0002
+    kind: requirement
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL allow updating the status of an existing order workflow entry
+      by order ID and transition it to a new valid status.
+    confidence: high
+    confidence_basis: >
+      ProcessManagerEJB.updateStatus() is declared as a business method with trans-attribute: Required
+      in ejb-jar.xml. The implementation retrieves the Manager by orderId and updates its status
+      via setStatus(). Both the session bean and entity bean methods are transactionally protected.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.java lines 70-76 define updateStatus(orderId, status) which retrieves
+      the Manager entity by primary key and calls setStatus(). EJB-jar.xml lines 357-368 declare
+      this method as Required transaction context.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 70
+        line_end: 76
+        excerpt: |
+          /**
+           * Business method used to keep track of an order in the workflow process
+           */
+          public void updateStatus(String orderId, String status) throws FinderException {
+            ManagerLocal manager = mlh.findByPrimaryKey(orderId);
+            manager.setStatus(status);
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 357
+        line_end: 368
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>ProcessManagerEJB</ejb-name>
+              <method-intf>Local</method-intf>
+              <method-name>updateStatus</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+
+  - record_key: fulfillment-management-requirement-0003
+    kind: requirement
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL retrieve the current status of an order workflow entry by order ID.
+    confidence: high
+    confidence_basis: >
+      ProcessManagerEJB.getStatus(orderId) is declared as a business method with trans-attribute:
+      Required. The implementation retrieves the Manager by primary key and returns its status field.
+      Declarative and programmatic sources align.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.java lines 78-84 define getStatus(orderId) which retrieves the Manager
+      entity and returns its status. EJB-jar.xml lines 369-379 declare this method with Required
+      transaction context.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 78
+        line_end: 84
+        excerpt: |
+          /**
+           * Business method used to keep track of an order in the workflow process
+           */
+          public String getStatus(String orderId) throws FinderException {
+            ManagerLocal manager = mlh.findByPrimaryKey(orderId);
+            return manager.getStatus();
+          }
+
+  - record_key: admin-operations-requirement-0001
+    kind: requirement
+    capability_key: admin-operations
+    requirement: >
+      The system SHALL provide administrators with the ability to query all orders
+      currently in a specific workflow status.
+    confidence: high
+    confidence_basis: >
+      ProcessManagerEJB.getOrdersByStatus() is documented as a business method for admin access
+      to query orders by status. EJB-jar.xml declares this method with trans-attribute: Required.
+      The ManagerLocalHome.findOrdersByStatus(status) is an EJB-QL query declared in ejb-jar.xml
+      that retrieves all Manager entities matching the status value.
+    risk_class: operational
+    basis: >
+      ProcessManagerEJB.java lines 86-91 document getOrdersByStatus(status) as "used to get all
+      orders of given status for the admin". EJB-jar.xml lines 70-79 declare the EJB-QL query
+      "SELECT DISTINCT OBJECT(a) FROM Manager a WHERE a.status = ?1" for the findOrdersByStatus
+      finder method.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/ejb/ProcessManagerEJB.java
+        line_start: 86
+        line_end: 91
+        excerpt: |
+          /**
+           * Business method to get all orders of given status for the admin
+           */
+          public Collection getOrdersByStatus(String status) throws FinderException {
+              return mlh.findOrdersByStatus(status);
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/ejb-jar.xml
+        line_start: 70
+        line_end: 79
+        excerpt: |
+          <query>
+            <description></description>
+            <query-method>
+              <method-name>findOrdersByStatus</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+              </method-params>
+            </query-method>
+            <ejb-ql>SELECT DISTINCT OBJECT(a) FROM Manager a WHERE a.status = ?1</ejb-ql>
+          </query>
+
+  - record_key: fulfillment-management-workflow-0002
+    kind: workflow
+    capability_key: fulfillment-management
+    requirement: >
+      The system SHALL support pluggable transition handlers via the TransitionDelegate
+      interface to customize workflow state transition logic and side effects.
+    confidence: medium
+    confidence_basis: >
+      TransitionDelegate interface and TransitionDelegateFactory are present in the codebase,
+      indicating a designed extension point for workflow transitions. However, no concrete
+      implementations of TransitionDelegate are found in the processmanager component itself,
+      and no configuration declaring which delegates are used for which transitions was located.
+      This suggests the framework is defined but possibly implemented in calling components
+      or external configuration.
+    risk_class: operational
+    basis: >
+      TransitionDelegate.java lines 41-50 define the interface with setup() and doTransition(TransitionInfo)
+      methods. TransitionDelegateFactory.java lines 41-57 provides dynamic instantiation by class name.
+      No concrete implementations or configuration specifying usage were found in this component.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions/TransitionDelegate.java
+        line_start: 41
+        line_end: 50
+        excerpt: |
+          /**
+            * This is the interface that all transition delegates must implement
+            */
+          public interface TransitionDelegate {
+             public void setup() throws TransitionException;
+             public void doTransition(TransitionInfo info) throws TransitionException;
+          }
+      - path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions/TransitionDelegateFactory.java
+        line_start: 41
+        line_end: 57
+        excerpt: |
+          /**
+           * Used to get the required type of TransitionDelegate
+           */
+          public class TransitionDelegateFactory {
+            public TransitionDelegateFactory() { }
+            public TransitionDelegate getTransitionDelegate(String className) throws TransitionException {
+              TransitionDelegate td = null;
+              try {
+                td = (TransitionDelegate)Class.forName(className).newInstance();
+              } catch(Exception e) {
+                throw new TransitionException(e);
+              }
+              return td;
+            }
+          }
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions
+    description: >
+      The TransitionDelegate interface and factory are declared in the processmanager component
+      but no concrete implementations exist within this component. It is unclear which concrete
+      transition delegates are wired to which state transitions, or whether this framework is
+      actually used by the order workflow. No configuration file declaring transition delegates
+      or state machine definitions was found. A human review is needed to determine if this
+      is an active extension point or legacy/unused framework code.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/processmanager/src/com/sun/j2ee/blueprints/processmanager/transitions/TransitionException.java
+    description: >
+      TransitionException.java exists but was not examined in detail. Its purpose and usage
+      context in relation to workflow transitions could not be fully determined from the
+      discovered call sites. Recommend review for exception hierarchy and error handling patterns.
