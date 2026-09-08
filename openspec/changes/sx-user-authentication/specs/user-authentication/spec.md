@@ -44,10 +44,18 @@ The sign-in form SHALL display a username text input field and a password input 
 - **WHEN** the signon.jsp page is displayed
 - **THEN** the form SHALL show: username (text), password (password field), "Remember My User Name" checkbox, and submit button
 
-#### Scenario: Username field pre-populates from cookie
+### Requirement: Sign-in form pre-populates username from cookie
+The sign-in form SHALL pre-populate the username input field with the value from the "bp_signon" cookie when that cookie exists in the browser.
+
+#### Scenario: Username field pre-populates from existing cookie
 - **GIVEN** a browser with bp_signon cookie containing "alice"
 - **WHEN** the sign-in form is displayed
 - **THEN** the username field SHALL be pre-populated with "alice"
+
+#### Scenario: Username field defaults to empty without cookie
+- **GIVEN** a browser without bp_signon cookie
+- **WHEN** the sign-in form is displayed
+- **THEN** the username field SHALL be empty (or contain default value)
 
 ### Requirement: Sign-up form displays registration fields
 The sign-up form SHALL display username, password, and password confirmation input fields, along with a submit button.
