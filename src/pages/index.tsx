@@ -1,6 +1,8 @@
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
+import { STORE_NAME } from "@/constants";
+
 const navigation = [
   { name: "Features", href: "#" },
   { name: "Tech Stack", href: "#" },
@@ -8,17 +10,7 @@ const navigation = [
   { name: "GitHub", href: "#" },
 ];
 
-const techStack = [
-  "React 19",
-  "TypeScript",
-  "Vite 8",
-  "Tailwind CSS v4",
-  "React Router 8",
-  "Nitro",
-  "SQLite",
-  "Drizzle ORM",
-  "ESLint 9",
-];
+const highlights = ["Free shipping", "Vet-approved", "Curated brands", "Local pickup"];
 
 const Home = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,7 +21,7 @@ const Home = () => {
         <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">Vortex</span>
+              <span className="sr-only">{STORE_NAME}</span>
               <img
                 alt=""
                 src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
@@ -65,7 +57,7 @@ const Home = () => {
           <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-gray-900 p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-100/10">
             <div className="flex items-center justify-between">
               <a href="#" className="-m-1.5 p-1.5">
-                <span className="sr-only">Vortex</span>
+                <span className="sr-only">{STORE_NAME}</span>
                 <img
                   alt=""
                   src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
@@ -124,7 +116,7 @@ const Home = () => {
         <div className="mx-auto max-w-2xl">
           <div className="hidden sm:mb-8 sm:flex sm:justify-center">
             <div className="relative rounded-full px-3 py-1 text-sm/6 text-gray-400 ring-1 ring-white/10 hover:ring-white/20">
-              The boilerplate behind Vortex.{" "}
+              Now open for the neighborhood.{" "}
               <a href="#" className="font-semibold text-indigo-400">
                 <span aria-hidden="true" className="absolute inset-0" />
                 See how it works <span aria-hidden="true">&rarr;</span>
@@ -133,11 +125,11 @@ const Home = () => {
           </div>
           <div className="text-center">
             <h1 className="text-5xl font-semibold tracking-tight text-balance text-white sm:text-7xl">
-              Vortex: the AI-driven autonomous software factory
+              {STORE_NAME}
             </h1>
             <p className="mt-8 text-lg font-medium text-pretty text-gray-400 sm:text-xl/8">
-              This is the production-ready boilerplate powering Vortex &mdash; fully typed, blazing
-              fast, and pre-wired with everything a modern web app needs to ship on day one.
+              Food, toys, and supplies for every dog, cat, and small pet in the family &mdash;
+              curated by people who actually own them.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
@@ -151,12 +143,12 @@ const Home = () => {
               </a>
             </div>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-              {techStack.map((tech) => (
+              {highlights.map((highlight) => (
                 <span
-                  key={tech}
+                  key={highlight}
                   className="rounded-full bg-white/5 px-3 py-1 text-xs font-medium text-gray-300 ring-1 ring-white/10"
                 >
-                  {tech}
+                  {highlight}
                 </span>
               ))}
             </div>
