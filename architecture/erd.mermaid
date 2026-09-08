@@ -1,0 +1,129 @@
+%% EXTRACTED FROM LEGACY SOURCE — evidence of what exists, not a build target. Where this disagrees with a capability delta spec, the delta spec wins.
+
+erDiagram
+    CATEGORY ||--o{ CATEGORY_DETAILS : has
+    CATEGORY ||--o{ PRODUCT : contains
+    PRODUCT ||--o{ PRODUCT_DETAILS : has
+    PRODUCT ||--o{ ITEM : contains
+    ITEM ||--o{ ITEM_DETAILS : has
+    ITEM ||--o{ LINE_ITEM : appears_in
+    USER ||--o{ CUSTOMER : creates
+    CUSTOMER ||--o{ CONTACT_INFO : has
+    CUSTOMER ||--o{ ADDRESS : has
+    CUSTOMER ||--o{ PROFILE : has
+    CUSTOMER ||--o{ CREDIT_CARD : has
+    PURCHASE_ORDER ||--o{ LINE_ITEM : contains
+    PURCHASE_ORDER ||--o{ CONTACT_INFO : bill_to
+    PURCHASE_ORDER ||--o{ CONTACT_INFO : ship_to
+    PURCHASE_ORDER ||--o{ CREDIT_CARD : payment
+    SUPPLIER_ORDER ||--o{ LINE_ITEM : contains
+    PURCHASE_ORDER ||--o{ SUPPLIER_ORDER : generates
+
+    CATEGORY {
+        string catid PK "max 10"
+    }
+
+    CATEGORY_DETAILS {
+        string catid FK
+        string locale FK
+        string name
+        string description
+        string image
+    }
+
+    PRODUCT {
+        string productid PK "max 10"
+        string catid FK
+    }
+
+    PRODUCT_DETAILS {
+        string productid FK
+        string locale FK
+        string name
+        string description
+        string image
+    }
+
+    ITEM {
+        string itemid PK "max 10"
+        string productid FK
+    }
+
+    ITEM_DETAILS {
+        string itemid FK
+        string locale FK
+        decimal listprice "NOT NULL"
+        decimal unitcost "NOT NULL"
+        string description
+        string image
+    }
+
+    USER {
+        string userName PK "max 25"
+        string password
+    }
+
+    CUSTOMER {
+        string userId PK
+        string userName FK
+        string email
+    }
+
+    CONTACT_INFO {
+        string contactId PK
+        string givenName
+        string familyName
+        string email
+        string phone
+    }
+
+    ADDRESS {
+        string addressId PK
+        string street1
+        string street2
+        string city
+        string state
+        string postalCode
+        string country
+    }
+
+    PROFILE {
+        string userId FK
+        string preferredLanguage
+        string favoriteCategory
+        string myListPreference
+        string bannerPreference
+    }
+
+    CREDIT_CARD {
+        string cardId PK
+        string cardNumber
+        string cardType
+        string expiryDate
+    }
+
+    PURCHASE_ORDER {
+        string orderId PK
+        string userId FK
+        string emailId
+        datetime orderDate
+        decimal totalPrice
+    }
+
+    LINE_ITEM {
+        string lineItemId PK
+        string orderId FK
+        string categoryId
+        string productId
+        string itemId
+        string lineNumber
+        integer quantity
+        decimal unitPrice
+        integer quantityShipped
+    }
+
+    SUPPLIER_ORDER {
+        string supplierId PK
+        string purchaseOrderId FK
+        datetime orderDate
+    }
