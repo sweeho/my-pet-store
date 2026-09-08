@@ -1,34 +1,37 @@
-# Fulfillment Management Capability — Proposal
+# Order Fulfillment & Shipment Management Capability — Proposal
 
 ## Summary
 
-Fulfillment Management handles supplier order creation, shipment tracking, and invoice processing to complete customer orders. It bridges order approval and supplier fulfillment.
+Fulfillment management enables the supplier system to receive purchase orders, verify inventory availability, process fulfillment, track shipments, and generate invoices. The system manages line item quantities, tracks ordered versus shipped amounts, and detects order completion when all items are fulfilled.
 
 ## Scope
 
-- Purchase orders with line items and shipping information
-- Supplier PO generation from approved orders
-- Invoice reception and shipment tracking
-- Order completion detection when fully shipped
-- Line item quantity tracking (ordered vs shipped)
+- Purchase order reception via JMS message queue
+- Line item inventory availability verification
+- Inventory quantity tracking and reduction
+- Shipment quantity tracking per line item
+- Invoice generation for fulfilled items
+- Order status tracking (PENDING → COMPLETED)
+- Inventory management UI with update forms
+- Supplier home page with navigation
 
-## Key Entities
+## Key Features
 
-- **PurchaseOrder**: Root order entity with orderID, customer contact/address, line items, status
-- **LineItem**: Ordered product quantity with tracking of shipped quantity
-- **SupplierOrder**: Supplier PO containing shipping address and line items
-- **Invoice**: Shipment notification with line item quantities shipped
-
-## Workflow
-
-1. Approved order → Generate supplier PO
-2. Send supplier PO to supplier queue
-3. Receive invoice with shipment quantities
-4. Track quantityShipped per line item
-5. Mark order COMPLETED when all items fully shipped
+- Receive purchase orders asynchronously via message queue from Order Processing Center
+- Check inventory availability for each line item before fulfillment
+- Deduct ordered quantities from inventory upon successful fulfillment
+- Track line item quantities (ordered vs. shipped)
+- Skip already-shipped line items during re-processing
+- Mark orders COMPLETED when all items are fulfilled
+- Generate XML invoices with fulfilled item details
+- Display inventory update screen showing items, quantities, and checkboxes
+- Support batch inventory quantity updates
+- Track partial and complete shipments
 
 ## Risk
 
-- **Data Risk**: Partial shipments must be tracked accurately
-- **Operational**: Order completion detection must be reliable
-- **Financial**: Quantity mismatches could affect billing
+- Inventory quantity reductions occur without persistence check — race conditions possible
+- PO processing is asynchronous with no explicit retry mechanism if partial fulfillment occurs
+- Invoice generation occurs only when items are available — no invoice for partial shipments visible in the system
+- Line item state transitions depend on implicit business logic in OrderFulfillmentFacadeEJB
+
