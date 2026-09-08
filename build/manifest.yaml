@@ -336,7 +336,7 @@ capabilities:
       techStack: []
       affectedCode: []
     evidence:
-      irRefs: [APP-WORKFLOW-0001, APP-REQUIREMENT-0001]
+      irRefs: [OPC-APPROVAL-0001, OPC-APPROVAL-0002, OPC-AUTO-APPROVAL-0001, OPC-APPROVAL-INTAKE-0001, OPC-STATUS-GUARD-0001, OPC-SUPPLIER-PO-GEN-0001, OPC-APPROVAL-NOTIFICATION-0001, OPC-WORKFLOW-0001, OPC-WORKFLOW-STATES-0001, ORDERAPP-SCREEN-0001, ORDERAPP-SCREEN-0002, ORDERAPP-BR-0001, ORDERAPP-WF-0001, order-approval-statusquery-0001, order-approval-statusupdate-0001, order-approval-transitions-0001, order-approval-workflow-0001, order-approval-creation-0001]
       reviewedBy: null
       reviewedAt: null
 
