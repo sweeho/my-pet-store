@@ -1,30 +1,38 @@
-# Shopping Cart Capability — Proposal
+# Shopping Cart Management Capability — Proposal
 
 ## Summary
 
-Shopping cart functionality enables customers to add items to a cart, manage quantities, view cart contents with pricing, and prepare for order placement. The cart maintains items as line items with product references and quantities.
+Shopping cart provides a temporary container for customers to accumulate items before checkout. The system supports adding items, updating quantities, removing items, and calculating cart totals. Cart operations are session-scoped and cleared upon order placement.
 
 ## Scope
 
-- Item addition and removal from shopping cart
-- Quantity management and updates
-- Cart display with subtotal calculation
-- Line item entity support
-- XML serialization of cart line items
-- XML validation constraints on quantities
+- Add items to cart with default or specified quantity
+- Remove individual items from cart
+- Update item quantities with removal when quantity becomes 0 or negative
+- Calculate cart subtotal as sum of (unitCost × quantity)
+- Display cart contents with items, quantities, costs, and line totals
+- Persist cart in session during shopping
+- Clear cart after order placement
+- Show empty cart message when no items present
 
 ## Key Features
 
-- Add items by item ID with optional quantity parameter
-- Remove items from cart
-- Update item quantities with validation (minimum 1)
-- Display cart contents with unit costs and quantities
-- Calculate cart subtotal as sum of (unitCost × quantity)
-- Store line items with category, product, and item identifiers
-- Support XML serialization conforming to DTD schema
+- In-memory session-based cart (no database persistence across sessions)
+- Item addition with optional quantity parameter
+- Quantity updates with automatic removal on zero/negative
+- Line-item total calculation (unitCost × quantity)
+- Cart subtotal calculation
+- Update Cart button for bulk quantity changes
+- Remove links for per-item deletion
+- Empty cart message display
+- Cart item count tracking
 
 ## Risk
 
-- Quantity validation must enforce minimum of 1 item per line
-- Cart subtotal calculation must account for all items
-- Line number constraints (>= 0) and quantity constraints (> 0) enforced via XSD
+- Cart data lost on session timeout or browser close
+- No cart persistence or recovery mechanism
+- No abandoned cart recovery
+- Cart sharing not supported
+- No maximum cart size enforced
+- No minimum order validation before checkout
+

@@ -1,66 +1,109 @@
 # Shopping Cart — Design Document
 
+## Cart Data Model
+
+**ShoppingCart (Session-Scoped)**
+- cartItems: Collection<CartItem>
+- count: int (item count)
+- subtotal: double (sum of line totals)
+
+**CartItem**
+- itemId: String (item identifier)
+- quantity: int (ordered quantity)
+- unitCost: double (price per unit)
+- lineTotal: double (quantity × unitCost)
+
 ## Cart Operations
 
-The shopping cart is implemented as an in-memory map stored in the ShoppingCartLocal EJB session bean. Operations include:
+### Add Item
+- addItem(itemId, quantity)
+- If itemId already in cart: increment quantity
+- If quantity not specified: default to 1
+- Recalculate subtotal
+- Increment count
 
-- `addItem(itemID)` — adds item with default quantity 1
-- `addItem(itemID, qty)` — adds item with specified quantity
-- `updateItemQuantity(itemID, newQty)` — updates quantity, removes item if qty <= 0
-- `deleteItem(itemID)` — removes item from cart
-- `getSubTotal()` — returns sum of (unitCost × quantity) for all items
-- `empty()` — clears all items from cart
+### Remove Item
+- removeItem(itemId)
+- Remove CartItem from collection
+- If item exists: decrement count
+- Recalculate subtotal
 
-## Data Model
+### Update Quantities
+- updateItem(itemId, newQuantity)
+- If newQuantity <= 0: remove item
+- If newQuantity > 0: update quantity
+- Recalculate line total and subtotal
+- Update count as needed
 
-**CartItem** — represents an item in the shopping cart with:
-- itemID (String, key)
-- categoryId (String)
-- productId (String)
-- itemId (String)
-- quantity (int, > 0)
-- unitCost (float)
+### Clear Cart
+- clearCart()
+- Remove all CartItems
+- Set count = 0
+- Set subtotal = 0.00
 
-**LineItem** — persistent entity for line items in orders/documents:
-- categoryId (String)
-- productId (String)
-- itemId (String)
-- lineNumber (String, >= 0)
-- quantity (int, > 0)
-- unitPrice (float)
-- quantityShipped (int, >= 0) — fulfillment tracking
+## Calculation Logic
 
-## Line Item XML Format
+**Line Total**
+- lineTotal = unitCost × quantity
+- Applied when item added or quantity updated
 
-LineItem elements serialize to XML conforming to LineItem.dtd:
-```xml
-<LineItem>
-  <CategoryId>...</CategoryId>
-  <ProductId>...</ProductId>
-  <ItemId>...</ItemId>
-  <LineNum>...</LineNum>
-  <Quantity>...</Quantity>
-  <UnitPrice>...</UnitPrice>
-</LineItem>
-```
+**Cart Subtotal**
+- subtotal = SUM(all lineTotal values)
+- Recalculated on any add/remove/update operation
 
-XSD constraints enforce:
-- lineNo: xsd:nonNegativeInteger (>= 0)
-- quantity: xsd:positiveInteger (> 0)
-- unitPrice: positiveDecimal (>= 0.0)
+## Cart Display (cart.jsp)
 
-## Transactions
+**Empty Cart Display**
+- When cart.count == 0:
+  - Show message: "Your Shopping Cart is Empty."
+  - No table display
+  - Link to continue shopping
 
-All shopping cart EJB methods execute with container-managed transaction attribute "Required".
+**Populated Cart Display**
+- Table showing:
+  - Item Name
+  - Unit Cost
+  - Quantity (editable input)
+  - Line Total
+- Per-item remove link
+- "Update Cart" button for batch quantity updates
+- Cart Subtotal display
 
-## User Interface
+## Session Management
 
-Cart display shows:
-- Item name and attribute
-- Quantity field (user input)
-- Unit cost (formatted as currency)
-- Remove link per item
-- Update Cart button to commit quantity changes
-- Cart subtotal displayed at bottom
+**Cart Storage**
+- Stored in HttpSession as session.cart
+- Persists across page navigation within session
+- Lost on session timeout or logout
 
-No screen records were extracted for this capability; its detailed user interface design is unspecified.
+**Cart Scope**
+- Session-wide: accessible from any page during authenticated session
+- Customer-specific: each customer has own cart instance
+- Not shared between customers
+
+## Form Actions
+
+**Update Cart**
+- POST to cart.do with updated quantities
+- Quantity parameters by item ID
+- Clears removed items (quantity = 0)
+- Redirects back to cart display
+
+**Remove Item**
+- POST to cart.do with itemId and remove action
+- Removes single item
+- Redirects back to cart display
+
+**Checkout**
+- POST to order.do (order placement)
+- Includes all current cart items as line items
+- Clears cart after order creation
+
+## XML Serialization (for integration)
+
+**Cart XML Representation** (XMLDOC-ENTITY-0005)
+- Shopping cart can be serialized to XML
+- Format includes cartItems collection
+- Used for data persistence or transmission
+- Schema includes quantity and unitPrice per item
+

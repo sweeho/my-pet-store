@@ -203,7 +203,7 @@ capabilities:
       screens:
         - "Shopping cart display: shows each item with name, quantity input, unit cost, total per line; displays cart subtotal; provides Update and Remove controls per item"
     evidence:
-      irRefs: [CART-REQUIREMENT-0001, CART-REQUIREMENT-0002, CART-REQUIREMENT-0003, XMLDOC-ENTITY-0005]
+      irRefs: [CART-REQUIREMENT-0001, CART-REQUIREMENT-0002, CART-REQUIREMENT-0003, XMLDOC-ENTITY-0005, screen-cart-001, shopping-cart-workflow-001, shopping-cart-req-001, shopping-cart-req-002, shopping-cart-req-003, shopping-cart-calc-001, shopping-cart-persist-001]
       reviewedBy: null
       reviewedAt: null
 
