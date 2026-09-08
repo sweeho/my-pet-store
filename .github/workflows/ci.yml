@@ -1,4 +1,4 @@
-# CI for the boilerplate ITSELF.
+# CI for My Pet Store.
 #
 # This template ships four test tiers but, until this workflow existed, ran
 # none of them — so a defect in the harness could sit here indefinitely and be

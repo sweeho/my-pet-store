@@ -16,17 +16,15 @@ describe("Home page", () => {
   it("renders the hero heading and primary CTA", () => {
     render(<Home />);
 
-    expect(
-      screen.getByRole("heading", { level: 1, name: /Vortex: the AI-driven autonomous/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "My Pet Store" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Get started" })).toBeInTheDocument();
   });
 
-  it("lists the tech stack", () => {
+  it("lists the store highlights", () => {
     render(<Home />);
 
-    for (const tech of ["React 19", "TypeScript", "Vite 8", "Tailwind CSS v4"]) {
-      expect(screen.getByText(tech)).toBeInTheDocument();
+    for (const highlight of ["Free shipping", "Vet-approved", "Curated brands", "Local pickup"]) {
+      expect(screen.getByText(highlight)).toBeInTheDocument();
     }
   });
 
