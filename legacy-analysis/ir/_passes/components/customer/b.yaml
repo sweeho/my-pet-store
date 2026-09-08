@@ -1,0 +1,565 @@
+records:
+  - record_key: account-mgmt-entity-0001
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL store customer account information as a persistent entity with a
+      unique account status field. An account entity has a status value that is set at
+      creation time and may be updated, with a default status value of "Active".
+    confidence: high
+    confidence_basis: >
+      The Account EJB is declared in ejb-jar.xml as a CMP entity with a persistent
+      status field (line 242). The ejbCreate methods show status is set at creation
+      time (lines 70-77). The default "Active" status is hardcoded in CustomerEJB
+      (line 78).
+    risk_class: operational
+    basis: >
+      ejb-jar.xml declares AccountEJB as entity with cmp-field status (lines 230-262).
+      AccountEJB.java shows two ejbCreate methods with status parameter (lines 70-78).
+      CustomerEJB.ejbPostCreate uses AccountLocalHome.Active constant (line 78).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 230
+        line_end: 262
+        excerpt: |
+          <entity>
+            <display-name>AccountEB</display-name>
+            <ejb-name>AccountEJB</ejb-name>
+            ...
+            <cmp-field>
+              <description>no description</description>
+              <field-name>status</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/account/ejb/AccountEJB.java
+        line_start: 70
+        line_end: 78
+        excerpt: |
+          public Object ejbCreate(String status, ContactInfoLocal contactInfo, CreditCardLocal creditCard) throws CreateException {
+              setStatus(status);
+              return null;
+          }
+          public Object ejbCreate(String status) throws CreateException {
+              setStatus(status);
+              return null;
+          }
+
+  - record_key: account-mgmt-relationship-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL enforce a one-to-one relationship between a Customer and an
+      Account. When a customer is created, a new account SHALL be automatically created
+      and linked to the customer. When a customer is deleted, the account SHALL be
+      cascade-deleted.
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml explicitly declares the one-to-one relationship with cascade-delete
+      semantics (lines 265-285). The CustomerEJB.ejbPostCreate method creates an Account
+      automatically via AccountLocalHome.create (lines 77-79). Two independent sources
+      (declarative and programmatic) confirm this rule.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines the CMR relationship with cascade-delete semantic.
+      CustomerEJB programmatically enforces the creation of the account link.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 265
+        line_end: 285
+        excerpt: |
+          <ejb-relation>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>CustomerEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cmr-field>
+                <cmr-field-name>account</cmr-field-name>
+              </cmr-field>
+            </ejb-relationship-role>
+            <ejb-relationship-role>
+              <ejb-relationship-role-name>AccountEJB</ejb-relationship-role-name>
+              <multiplicity>One</multiplicity>
+              <cascade-delete />
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/ejb/CustomerEJB.java
+        line_start: 74
+        line_end: 89
+        excerpt: |
+          public void ejbPostCreate(String userId) throws CreateException {
+              InitialContext ic = new InitialContext();
+              AccountLocalHome alh = (AccountLocalHome) ic.lookup("java:comp/env/ejb/Account");
+              AccountLocal account = alh.create(AccountLocalHome.Active);
+              setAccount(account);
+
+  - record_key: account-mgmt-contact-0001
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL store contact information for an account as a persistent entity
+      with fields for given name, family name, email, telephone number, and an associated address.
+    confidence: high
+    confidence_basis: >
+      ContactInfoEJB is declared as a CMP entity with all four name/contact fields defined
+      (ejb-jar.xml lines 161-176). The relationship with Address is also declared (lines
+      178-183). This is confirmed by the create JSP collecting all these fields (lines 54-123).
+    risk_class: operational
+    basis: >
+      ejb-jar.xml ContactInfo entity defines all required fields. The create_customer.jsp
+      form collects all corresponding fields in the Contact Information section.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 150
+        line_end: 188
+        excerpt: |
+          <entity>
+            <display-name>ContactInfoEB</display-name>
+            <ejb-name>ContactInfoEJB</ejb-name>
+            ...
+            <cmp-field>
+              <field-name>familyName</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>telephone</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>givenName</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>email</field-name>
+            </cmp-field>
+            <ejb-local-ref>
+              <ejb-ref-name>ejb/Address</ejb-ref-name>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 50
+        line_end: 124
+        excerpt: |
+          <tr><td colspan="3"><p class="petstore_title">Contact Information</p></td></tr>
+          <tr><td>First Name</td><td><input name="given_name_a" ... /></td></tr>
+          <tr><td>Last Name</td><td><input name="family_name_a" ... /></td></tr>
+          <tr><td>Telephone Number</td><td><input name="telephone_number_a" ... /></td></tr>
+          <tr><td>E-Mail</td><td><input name="email_a" ... /></td></tr>
+
+  - record_key: account-mgmt-address-0001
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL store address information for a contact as a persistent entity
+      with fields for street address (two lines), city, state/province, postal code,
+      and country. Address entities are cascade-deleted when their associated contact
+      information is removed.
+    confidence: high
+    confidence_basis: >
+      AddressEJB is declared as a CMP entity with all six address fields (ejb-jar.xml
+      lines 199-228). The create_customer.jsp collects all fields (lines 67-109).
+      The cascade-delete relationship is explicitly declared (line 301).
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines Address entity with required fields. JSP form demonstrates
+      all fields are collected from users.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 189
+        line_end: 228
+        excerpt: |
+          <entity>
+            <display-name>AddressEB</display-name>
+            <cmp-field>
+              <field-name>zipCode</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>state</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>streetName2</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>streetName1</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>country</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>city</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 67
+        line_end: 109
+        excerpt: |
+          <tr><td>Street Address</td><td><input name="address_1_a" ... /></td></tr>
+          <tr><td></td><td><input name="address_2_a" ... /></td></tr>
+          <tr><td>City</td><td><input name="city_a" ... /></td></tr>
+          <tr><td>State/Province</td><td><select name="state_or_province_a"> ... </select></td></tr>
+          <tr><td>Postal Code</td><td><input name="postal_code_a" ... /></td></tr>
+          <tr><td>Country</td><td><select name="country_a"> ... </select></td></tr>
+
+  - record_key: account-mgmt-profile-0001
+    kind: entity
+    capability_key: account-management
+    requirement: >
+      The system SHALL store customer profile preferences as a persistent entity with
+      fields for preferred language, favorite product category, MyList feature toggle,
+      and banner preference toggle. Each profile is created automatically with default
+      values when a customer is created.
+    confidence: high
+    confidence_basis: >
+      ProfileEJB is declared as a CMP entity with all four fields (ejb-jar.xml lines
+      100-116). CustomerEJB.ejbPostCreate creates Profile with constants for defaults
+      (lines 81-85). The create_customer.jsp collects all profile fields (lines 177-222).
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines Profile entity. CustomerEJB creates it automatically.
+      create_customer.jsp collects language, favorite_category, mylist_on, banners_on.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 90
+        line_end: 121
+        excerpt: |
+          <entity>
+            <display-name>ProfileEB</display-name>
+            <ejb-name>ProfileEJB</ejb-name>
+            ...
+            <cmp-field>
+              <field-name>preferredLanguage</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>myListPreference</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>favoriteCategory</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>bannerPreference</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 177
+        line_end: 222
+        excerpt: |
+          <tr><td colspan="3"><p class="petstore_title">Profile Information</p></td></tr>
+          <tr><td>I want MyPetStore to be in <select name="language" ...></select></td></tr>
+          <tr><td>My favorite category is <select name="favorite_category" ...></select></td></tr>
+          <tr><td><input type=checkbox name="mylist_on"></td><td>Yes, I want to enable the MyList feature</td></tr>
+          <tr><td><input type=checkbox name="banners_on"></td><td>Yes, I want to enable the pet tips banners</td></tr>
+
+  - record_key: payment-proc-creditcard-0001
+    kind: entity
+    capability_key: payment-processing
+    requirement: >
+      The system SHALL store credit card information as a persistent entity with
+      fields for card number, card type, and expiry date. Credit card entities are
+      cascade-deleted when their associated account is removed.
+    confidence: high
+    confidence_basis: >
+      CreditCardEJB is declared as a CMP entity with cardNumber, cardType, and
+      expiryDate fields (ejb-jar.xml lines 133-144). The relationship with Account
+      has cascade-delete semantics (line 364). The create_customer.jsp collects
+      card number, type, and expiry month/year (lines 127-175).
+    risk_class: financial
+    basis: >
+      ejb-jar.xml defines CreditCard entity with all required fields and declares
+      cascade-delete relationship. JSP form collects the card information.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/ejb-jar.xml
+        line_start: 122
+        line_end: 149
+        excerpt: |
+          <entity>
+            <display-name>CreditCardEB</display-name>
+            <cmp-field>
+              <field-name>cardType</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>expiryDate</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>cardNumber</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 127
+        line_end: 175
+        excerpt: |
+          <tr><td colspan="3"><p class="petstore_title">Credit Card Information</p></td></tr>
+          <tr><td>Credit Card Number</td><td><input name="credit_card_number" ... /></td></tr>
+          <tr><td>Card Type</td><td><select name="credit_card_type"> ... </select></td></tr>
+          <tr><td>Expiry Date</td><td>Month: <select name="credit_card_expiry_month"> ... </select>
+                                        Year: <select name="credit_card_expiry_year"> ... </select></td></tr>
+
+  - record_key: account-mgmt-customer-creation-0001
+    kind: workflow
+    capability_key: account-management
+    requirement: >
+      The system SHALL support customer account creation. GIVEN a user submits a form with
+      contact information, credit card details, and profile preferences, WHEN the system
+      processes the create request, THEN the system SHALL create a Customer entity,
+      automatically create an associated Account entity, and automatically create an
+      associated Profile entity, linking all entities correctly.
+    confidence: high
+    confidence_basis: >
+      The CustomerHTMLAction.perform() method handles "create" action (lines 94-99).
+      The CustomerEvent is created with CREATE type. The CustomerEJB.ejbPostCreate
+      creates Account and Profile automatically (lines 74-89). The JSP form posts to
+      createcustomer.do (line 46).
+    risk_class: operational
+    basis: >
+      CustomerHTMLAction.java implements the extraction and validation of all form fields
+      for creation. CustomerEJB.ejbPostCreate demonstrates automatic creation of related
+      entities. The JSP form collects all required data.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/web/actions/CustomerHTMLAction.java
+        line_start: 94
+        line_end: 99
+        excerpt: |
+          if (actionType.equals("create")) {
+              ContactInfo info = extractContactInfo(request, "_a");
+              CreditCard creditCard = extractCreditCard(request);
+              ProfileInfo profileInfo  = extractProfileInfo(request);
+              event = new CustomerEvent(CustomerEvent.CREATE, info, profileInfo, creditCard);
+      - path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/ejb/CustomerEJB.java
+        line_start: 74
+        line_end: 89
+        excerpt: |
+          public void ejbPostCreate(String userId) throws CreateException {
+              InitialContext ic = new InitialContext();
+              AccountLocalHome alh = (AccountLocalHome) ic.lookup("java:comp/env/ejb/Account");
+              AccountLocal account = alh.create(AccountLocalHome.Active);
+              setAccount(account);
+              ProfileLocalHome plh = (ProfileLocalHome) ic.lookup("java:comp/env/ejb/Profile");
+              ProfileLocal profile = plh.create(ProfileLocalHome.DefaultPreferredLanguage,
+                                            ProfileLocalHome.DefaultFavoriteCategory...);
+              setProfile(profile);
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 44
+        line_end: 47
+        excerpt: |
+          <form method="POST" action="createcustomer.do">
+          <input type="hidden" name="action" value="create"/>
+
+  - record_key: account-mgmt-customer-update-0001
+    kind: workflow
+    capability_key: account-management
+    requirement: >
+      The system SHALL support customer account updates. GIVEN a customer with an
+      existing account submits a form with updated contact information, credit card,
+      or profile preferences, WHEN the system processes the update request, THEN the
+      system SHALL update the customer's account data accordingly.
+    confidence: medium
+    confidence_basis: >
+      CustomerHTMLAction.perform() handles "update" action (lines 100-105), extracting
+      the same fields as create. The edit_customer.jsp exists (line 39), suggesting
+      update capability. However, the implementation details of how updates are processed
+      at the EJB level are not visible in the code reviewed.
+    risk_class: operational
+    basis: >
+      CustomerHTMLAction.java shows update action processing with field extraction.
+      The edit_customer.jsp exists and references the customer.do action.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/web/actions/CustomerHTMLAction.java
+        line_start: 100
+        line_end: 105
+        excerpt: |
+          } else if (actionType.equals("update")) {
+              ContactInfo info = extractContactInfo(request, "_a");
+              CreditCard creditCard = extractCreditCard(request);
+              ProfileInfo profileInfo  = extractProfileInfo(request);
+              event = new CustomerEvent(CustomerEvent.UPDATE, info, profileInfo, creditCard);
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/edit_customer.jsp
+        line_start: 44
+        line_end: 50
+        excerpt: |
+          <waf:form method="POST" action="customer.do" name="customerform">
+           <input type="hidden" name="action" value="update"/>
+
+  - record_key: account-mgmt-contact-validation-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL validate that required contact fields are not empty. Required
+      fields are: given name, family name, street address (line 1), city, state/province,
+      postal code, and telephone number. Email is optional.
+    confidence: high
+    confidence_basis: >
+      ContactInfo extraction logic explicitly checks each required field for empty
+      string (lines 185-238). Email is treated differently - it checks for null and
+      then trims (lines 241-244), allowing it to be optional. MissingFormDataException
+      is raised if any required field is missing (lines 245-248).
+    risk_class: operational
+    basis: >
+      CustomerHTMLAction.extractContactInfo shows field-by-field validation logic.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/web/actions/CustomerHTMLAction.java
+        line_start: 182
+        line_end: 253
+        excerpt: |
+          private ContactInfo extractContactInfo(HttpServletRequest request, String suffix) {
+              ArrayList missingFields = null;
+              String familyName =  request.getParameter("family_name" +suffix).trim();
+              if (familyName.equals("")) { missingFields.add("Last Name"); }
+              String givenName =  request.getParameter("given_name" +suffix).trim();
+              if (givenName.equals("")) { missingFields.add("First Name"); }
+              String address1 = request.getParameter("address_1" +suffix).trim();
+              if (address1.equals("")){ missingFields.add("Street Address"); }
+              String city =   request.getParameter("city"  +suffix).trim();
+              if (city.equals("")){ missingFields.add("City"); }
+              String stateOrProvince = request.getParameter("state_or_province" +suffix).trim();
+              if (stateOrProvince.equals("")) { missingFields.add("State or Province"); }
+              String postalCode = request.getParameter("postal_code" +suffix).trim();
+              if (postalCode.equals("")){ missingFields.add("Postal Code"); }
+              String telephone = request.getParameter("telephone_number" +suffix).trim();
+              if (telephone.equals("")){ missingFields.add("Telephone Number"); }
+              String email = null;
+              if (request.getParameter("email"  +suffix) != null) {
+                  email = request.getParameter("email" +suffix).trim();
+              }
+              if (missingFields != null) {
+                  MissingFormDataException ex = new MissingFormDataException("Missing Address Data", missingFields);
+                  request.setAttribute(PetstoreKeys.MISSING_FORM_DATA_EXCEPTION_KEY, ex);
+                  return null;
+              }
+
+  - record_key: account-mgmt-creditcard-required-0001
+    kind: business-rule
+    capability_key: payment-processing
+    requirement: >
+      The system SHALL validate that credit card number, card type, and expiry date
+      fields are not empty when processing account creation or update.
+    confidence: low
+    confidence_basis: >
+      The extractCreditCard method checks for empty creditCardNumber and logs missing
+      fields (lines 143-150). However, there is a bug in the code: lines 152, 160, and
+      168 check creditCardNumber instead of creditCardType and expiry fields, so the
+      validation for type and expiry date is not actually enforced. The intent is clear
+      but the implementation is defective.
+    risk_class: financial
+    basis: >
+      extractCreditCard() shows validation intention but contains logic errors.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/web/actions/CustomerHTMLAction.java
+        line_start: 140
+        line_end: 179
+        excerpt: |
+          private CreditCard extractCreditCard(HttpServletRequest request) {
+              ArrayList missingFields = null;
+              String creditCardNumber =  request.getParameter("credit_card_number").trim();
+              if (creditCardNumber.equals("")) { missingFields.add("Credit Card"); }
+              String creditCardType =  request.getParameter("credit_card_type").trim();
+              if (creditCardNumber.equals("")) { // BUG: should check creditCardType
+                  missingFields.add("Credit Card Type");
+              }
+              String creditCardExpiryMonth =  request.getParameter("credit_card_expiry_month").trim();
+              if (creditCardNumber.equals("")) { // BUG: should check creditCardExpiryMonth
+                  missingFields.add("Credit Card Expiry Month");
+              }
+              String creditCardExpiryYear =  request.getParameter("credit_card_expiry_year").trim();
+              if (creditCardNumber.equals("")) { // BUG: should check creditCardExpiryYear
+                  missingFields.add("Credit Card Expiry Month");
+              }
+
+  - record_key: account-mgmt-profile-language-options-0001
+    kind: business-rule
+    capability_key: internationalization
+    requirement: >
+      The system SHALL support language preferences with at least three options:
+      English (en_US), Japanese (ja_JP), and Chinese (zh_CN).
+    confidence: high
+    confidence_basis: >
+      The create_customer.jsp explicitly lists these three language options (lines 185-187).
+      The Profile EJB has a preferredLanguage field. The language parameter is validated
+      in extractProfileInfo (line 112).
+    risk_class: operational
+    basis: >
+      JSP form declares the available language options.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 183
+        line_end: 189
+        excerpt: |
+          I want MyPetStore to be in
+          <select name="language" size="1">
+           <option value="en_US" selected>English</option>
+           <option value="ja_JP">Japanese</option>
+           <option value="zh_CN">Chinese</option>
+          </select>
+
+  - record_key: account-mgmt-profile-category-options-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support favorite product category preferences with at least
+      five categories: Birds, Cats, Dogs, Fish, and Reptiles.
+    confidence: high
+    confidence_basis: >
+      The create_customer.jsp explicitly lists these five category options (lines 195-202).
+      The Profile EJB has a favoriteCategory field. These values are used to customize
+      the user experience.
+    risk_class: operational
+    basis: >
+      JSP form declares the available favorite categories.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 195
+        line_end: 203
+        excerpt: |
+          My favorite category is
+          <select name="favorite_category" size="1">
+           <option value="BIRDS" selected>Birds</option>
+           <option value="CATS">Cats</option>
+           <option value="DOGS">Dogs</option>
+           <option value="FISH">Fish</option>
+           <option value="REPTILES">Reptiles</option>
+          </select>
+
+  - record_key: account-mgmt-profile-features-0001
+    kind: business-rule
+    capability_key: account-management
+    requirement: >
+      The system SHALL support MyList and banner preference toggles. These are
+      independent boolean preferences that default to OFF (unchecked). When checked,
+      MyList makes favorite items and categories more prominent. Banner preference
+      enables display of pet tips based on user preferences.
+    confidence: high
+    confidence_basis: >
+      The create_customer.jsp uses checkbox inputs for both features (lines 207-221).
+      The Profile EJB stores both as boolean fields. The extraction logic treats
+      missing checkbox parameters as false (lines 126-132 of CustomerHTMLAction).
+    risk_class: operational
+    basis: >
+      JSP form defines checkboxes for mylist_on and banners_on. ProfileEJB has boolean
+      fields. Extraction logic treats unchecked=false.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+        line_start: 206
+        line_end: 222
+        excerpt: |
+          <tr>
+          <td class="petstore_form" align="right"><input type=checkbox name="mylist_on"></td>
+          <td class="petstore_form" colspan="2">Yes, I want to enable the MyList feature.</td>
+          </tr>
+          <tr>
+          <td class="petstore_form" align="right"><input type=checkbox name="banners_on"></td>
+          <td class="petstore_form" colspan="2">Yes, I want to enable the pet tips banners.</td>
+          </tr>
+
+findings:
+  - kind: conflict
+    path: legacy-source/petstore1.3.2/src/apps/petstore/src/com/sun/j2ee/blueprints/petstore/controller/web/actions/CustomerHTMLAction.java
+    description: >
+      The extractCreditCard method (lines 140-179) has a logic error. Lines 152, 160,
+      and 168 all check creditCardNumber instead of their respective fields
+      (creditCardType, creditCardExpiryMonth, creditCardExpiryYear), meaning validation
+      for card type and expiry date is not actually performed even though the intent
+      is evident. This means cards with missing type or expiry can be accepted. This
+      must be fixed - the condition variables should match their respective fields.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/customer/src/com/sun/j2ee/blueprints/customer/account/ejb/AccountEJB.java
+    description: >
+      The AccountEJB has two ejbCreate overloads (lines 70-78): one with all three
+      parameters (status, contactInfo, creditCard) and one with just status. The
+      second ejbPostCreate (lines 96-99) handles the full-parameter version, but
+      the code structure and usage is unclear. It's not evident which overload is
+      used when or if both are actually invoked. CustomerEJB uses the single-status
+      form, but it's unclear if the three-parameter form is ever used.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/apps/petstore/src/docroot/create_customer.jsp
+    description: >
+      The JSP file references localized versions (zh and ja subdirectories) with
+      identical form structure, but the actual handling of multi-language form
+      submission and validation is not visible in the provided code. The flow from
+      language selection to form processing in different locales is not clear.
