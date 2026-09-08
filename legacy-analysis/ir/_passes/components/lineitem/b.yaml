@@ -1,0 +1,586 @@
+records:
+  # Entity definitions
+  - record_key: order-placement-entity-0001
+    kind: entity
+    capability_key: order-placement
+    requirement: >
+      The system SHALL represent line items as persistent entities with identifier, product references
+      (category ID, product ID, item ID), line number, quantity ordered, unit price, and quantity shipped.
+      Each line item belongs to exactly one order and tracks both ordered and fulfilled quantities.
+    confidence: high
+    confidence_basis: >
+      The LineItemEJB CMP entity bean declares all fields explicitly in ejb-jar.xml with corresponding
+      abstract accessor methods. The Container-Managed Persistence (CMP 2.x) enforces schema mapping.
+      The LineItem.java transfer object mirrors the entity fields, confirming the data structure is
+      persistent and accessed consistently.
+    risk_class: operational
+    basis: >
+      LineItemEJB abstract entity bean (lines 50-136 in LineItemEJB.java) declares abstract accessor
+      methods for all persistent fields: categoryId, productId, itemId, lineNumber, quantity, unitPrice,
+      quantityShipped. ejb-jar.xml (lines 57-78) declares CMP fields matching these accessors.
+      LineItem.java (lines 63-68) defines the transfer object with identical field structure.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+        line_start: 46
+        line_end: 83
+        excerpt: |
+          <entity>
+            <description>LineItem CMP EJB</description>
+            <display-name>LineItemEB</display-name>
+            <ejb-name>LineItemEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.lineitem.ejb.LineItemLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.lineitem.ejb.LineItemLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.lineitem.ejb.LineItemEJB</ejb-class>
+            <persistence-type>Container</persistence-type>
+            <cmp-version>2.x</cmp-version>
+            <abstract-schema-name>LineItem</abstract-schema-name>
+            <cmp-field>
+              <field-name>categoryId</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>productId</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>itemId</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>lineNumber</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>quantity</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>unitPrice</field-name>
+            </cmp-field>
+            <cmp-field>
+              <field-name>quantityShipped</field-name>
+            </cmp-field>
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemEJB.java
+        line_start: 50
+        line_end: 136
+        excerpt: |
+          public abstract class LineItemEJB implements EntityBean {
+            public abstract String getCategoryId();
+            public abstract void setCategoryId(String id);
+            public abstract String getProductId();
+            public abstract void setProductId(String id);
+            public abstract String getItemId();
+            public abstract void setItemId(String id);
+            public abstract String getLineNumber();
+            public abstract void setLineNumber(String num);
+            public abstract int getQuantity();
+            public abstract void setQuantity(int qty);
+            public abstract float getUnitPrice();
+            public abstract void setUnitPrice(float price);
+            public abstract int getQuantityShipped();
+            public abstract void setQuantityShipped(int qty);
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      persistence_type: Container
+      cmp_version: 2.x
+      db.object: LineItem
+
+  - record_key: order-placement-entity-0002
+    kind: entity
+    capability_key: order-placement
+    requirement: >
+      Each line item SHALL include category ID, product ID, and item ID that reference the
+      product catalog. Line number is a string identifier distinguishing items within an order.
+      Unit price is stored as a float value representing the price at order time (not dynamic).
+    confidence: high
+    confidence_basis: >
+      All reference fields are present in the entity definition and transfer object.
+      The ejb-jar.xml declares these as CMP fields, making them persistent and enforced
+      by container management. String and float types are explicitly declared in both
+      the local interface and EJB class.
+    risk_class: operational
+    basis: >
+      LineItemLocal interface (lines 50-52) declares getter methods for categoryId, productId,
+      itemId as String returns. LineItemEJB abstract methods (lines 58-88) confirm String type
+      for all three ID fields. unitPrice declared as float (line 118).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemLocal.java
+        line_start: 50
+        line_end: 59
+        excerpt: |
+          public interface LineItemLocal extends EJBLocalObject{
+            public String getCategoryId();
+            public String getProductId();
+            public String getItemId();
+            public String getLineNumber();
+            public int getQuantity();
+            public float getUnitPrice();
+            public int getQuantityShipped();
+            public void setQuantityShipped(int qty);
+            public LineItem getData();
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemEJB.java
+        line_start: 58
+        line_end: 124
+        excerpt: |
+          public abstract String getCategoryId();
+          public abstract void setCategoryId(String id);
+          public abstract String getProductId();
+          public abstract void setProductId(String id);
+          public abstract String getItemId();
+          public abstract void setItemId(String id);
+          public abstract String getLineNumber();
+          public abstract void setLineNumber(String num);
+          public abstract int getQuantity();
+          public abstract void setQuantity(int qty);
+          public abstract float getUnitPrice();
+          public abstract void setUnitPrice(float price);
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      field_types: String, int, float
+
+  # Business rules for creation
+  - record_key: fulfillment-management-rule-0001
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      A line item SHALL be created with category ID, product ID, item ID, line number,
+      ordered quantity, unit price, and an initial shipped quantity. The shipped quantity
+      tracks fulfilled items and can be independently updated as fulfillment occurs.
+    confidence: high
+    confidence_basis: >
+      The ejbCreate method (lines 141-152) takes all seven parameters and sets them during
+      creation. The setQuantityShipped method is explicitly declared as updatable in both
+      the local interface and ejb-jar.xml container-transaction declarations. The fact that
+      shipped quantity can be set at creation time and later updated independently confirms
+      it is a managed fulfillment state, not derived.
+    risk_class: operational
+    basis: >
+      LineItemEJB.ejbCreate method (lines 141-156) shows creation with all seven parameters
+      including qtyShipped. LocalHome interface create method (lines 53-55 in LineItemLocalHome.java)
+      declares this signature. Container-transaction in ejb-jar.xml (lines 156-166) shows
+      setQuantityShipped has its own transaction boundary, indicating it is called independently.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemEJB.java
+        line_start: 141
+        line_end: 169
+        excerpt: |
+          public Object ejbCreate(String catId, String prodId, String itemId,
+                                  String lineNo, int qty, float price, int qtyShipped)
+            throws CreateException {
+              setCategoryId(catId);
+              setProductId(prodId);
+              setItemId(itemId);
+              setLineNumber(lineNo);
+              setQuantity(qty);
+              setUnitPrice(price);
+              setQuantityShipped(qtyShipped);
+              return null;
+          }
+
+          public void ejbPostCreate(String catId, String prodId, String itemId,
+                                    String lineNo, int qty, float price, int qtyShipped)
+                throws CreateException{}
+
+          public Object ejbCreate(LineItem lineItem, int qty) throws CreateException {
+            setCategoryId(lineItem.getCategoryId());
+            setProductId(lineItem.getProductId());
+            setItemId(lineItem.getItemId());
+            setLineNumber(lineItem.getLineNumber());
+            setQuantity(lineItem.getQuantity());
+            setUnitPrice(lineItem.getUnitPrice());
+            setQuantityShipped(qty);
+            return null;
+          }
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+        line_start: 156
+        line_end: 166
+        excerpt: |
+          <container-transaction>
+           <method>
+             <ejb-name>LineItemEJB</ejb-name>
+             <method-intf>Local</method-intf>
+             <method-name>setQuantityShipped</method-name>
+             <method-params>
+               <method-param>int</method-param>
+             </method-params>
+           </method>
+           <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      ejb.transaction: Required
+      fulfillment_tracking: quantityShipped
+
+  - record_key: fulfillment-management-rule-0002
+    kind: business-rule
+    capability_key: fulfillment-management
+    requirement: >
+      A line item MAY be created from a LineItem data transfer object paired with an initial
+      shipped quantity value. This creation method copies all fields from the transfer object
+      (category ID, product ID, item ID, line number, ordered quantity, unit price) and sets
+      the given shipped quantity.
+    confidence: high
+    confidence_basis: >
+      The second ejbCreate overload (lines 158-167) explicitly accepts a LineItem object and
+      an int qty parameter, then copies all six fields from the object and sets the shipped
+      quantity. This is a distinct creation path visible in both the EJB implementation and
+      the LocalHome interface.
+    risk_class: operational
+    basis: >
+      LineItemEJB has two ejbCreate methods: one with seven primitive parameters, one with
+      LineItem object and int. LocalHome interface (lines 57 in LineItemLocalHome.java)
+      declares both signatures. The second variant constructs the entity from an existing
+      LineItem object, suggesting reuse of already-parsed data.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemEJB.java
+        line_start: 158
+        line_end: 170
+        excerpt: |
+          public Object ejbCreate(LineItem lineItem, int qty) throws CreateException {
+            setCategoryId(lineItem.getCategoryId());
+            setProductId(lineItem.getProductId());
+            setItemId(lineItem.getItemId());
+            setLineNumber(lineItem.getLineNumber());
+            setQuantity(lineItem.getQuantity());
+            setUnitPrice(lineItem.getUnitPrice());
+            setQuantityShipped(qty);
+            return null;
+          }
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemLocalHome.java
+        line_start: 51
+        line_end: 60
+        excerpt: |
+          public interface LineItemLocalHome extends EJBLocalHome{
+            LineItemLocal create(String catId, String prodId, String itemId,
+                                 String lineNo, int qty, float price, int qtyShipped)
+              throws CreateException;
+
+            LineItemLocal create(LineItem lineItem, int qty) throws CreateException;
+
+            public LineItemLocal findByPrimaryKey(Object key) throws FinderException;
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      ejb.transaction: Required
+
+  # Access control and interface rules
+  - record_key: order-placement-rule-0001
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      All LineItem EJB methods SHALL be accessible without role-based authorization checks.
+      Access is unrestricted and authenticated only by the EJB container.
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml assembly-descriptor declares <unchecked /> method permissions for all
+      methods on LineItemEJB, indicating no role-based access control is enforced at the
+      container level. This is a declarative authorization statement.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml method-permission element (lines 86-92) shows <unchecked /> for all methods
+      with method-name="*" on LineItemEJB, meaning no specific roles are required.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+        line_start: 85
+        line_end: 93
+        excerpt: |
+          <assembly-descriptor>
+            <method-permission>
+              <unchecked />
+              <method>
+                <ejb-name>LineItemEJB</ejb-name>
+                <method-name>*</method-name>
+              </method>
+            </method-permission>
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      security.method_permission: unchecked
+
+  - record_key: order-placement-rule-0002
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      LineItem SHALL be accessed only through local EJB interfaces (LocalHome and Local).
+      No remote interface is provided. All callers must be co-located in the same EJB container.
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml entity element declares only <local-home> and <local> interfaces.
+      No <home> or <remote> interfaces are declared. The interfaces are defined in separate
+      files and do not extend EJBObject (remote), only EJBLocalObject.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml (lines 50-51) declares LineItemLocalHome and LineItemLocal.
+      No remote interfaces are configured. LineItemLocal interface (line 48) extends
+      EJBLocalObject, confirming local-only access.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+        line_start: 46
+        line_end: 53
+        excerpt: |
+          <entity>
+            <description>LineItem CMP EJB</description>
+            <display-name>LineItemEB</display-name>
+            <ejb-name>LineItemEJB</ejb-name>
+            <local-home>com.sun.j2ee.blueprints.lineitem.ejb.LineItemLocalHome</local-home>
+            <local>com.sun.j2ee.blueprints.lineitem.ejb.LineItemLocal</local>
+            <ejb-class>com.sun.j2ee.blueprints.lineitem.ejb.LineItemEJB</ejb-class>
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemLocal.java
+        line_start: 48
+        line_end: 59
+        excerpt: |
+          public interface LineItemLocal extends EJBLocalObject{
+            public String getCategoryId();
+            public String getProductId();
+            public String getItemId();
+            public String getLineNumber();
+            public int getQuantity();
+            public float getUnitPrice();
+            public int getQuantityShipped();
+            public void setQuantityShipped(int qty);
+            public LineItem getData();
+    stack_metadata:
+      interface_type: local-only
+      ejb.bean: LineItemEJB
+
+  # Transaction requirements
+  - record_key: order-placement-rule-0003
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      All LineItem getter methods (getCategoryId, getProductId, getItemId, getLineNumber,
+      getQuantity, getUnitPrice, getQuantityShipped) and the getData() method SHALL execute
+      within a container-managed transaction with attribute "Required". The setQuantityShipped
+      method SHALL also execute with transaction attribute "Required".
+    confidence: high
+    confidence_basis: >
+      The ejb-jar.xml container-transaction elements (lines 93-205) explicitly declare
+      transaction attributes for each method. Every declared method has trans-attribute
+      set to "Required", indicating the container must create a transaction if none exists.
+      This is declarative and enforced by the EJB container.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml defines container-transaction elements for getCategoryId (line 100),
+      getProductId (line 109), getItemId (line 118), getLineNumber (line 127),
+      getQuantity (line 136), getUnitPrice (line 145), getQuantityShipped (line 154),
+      setQuantityShipped (line 165), and getData (line 203), all with trans-attribute "Required".
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+        line_start: 93
+        line_end: 205
+        excerpt: |
+          <assembly-descriptor>
+            <container-transaction>
+             <method>
+               <ejb-name>LineItemEJB</ejb-name>
+               <method-intf>Local</method-intf>
+               <method-name>getCategoryId</method-name>
+               <method-params />
+             </method>
+             <trans-attribute>Required</trans-attribute>
+            </container-transaction>
+            ...
+            <container-transaction>
+             <method>
+               <ejb-name>LineItemEJB</ejb-name>
+               <method-intf>Local</method-intf>
+               <method-name>setQuantityShipped</method-name>
+               <method-params>
+                 <method-param>int</method-param>
+               </method-params>
+             </method>
+             <trans-attribute>Required</trans-attribute>
+            </container-transaction>
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      ejb.transaction: Required
+      declarative_txn: container-managed
+
+  - record_key: order-placement-rule-0004
+    kind: business-rule
+    capability_key: order-placement
+    requirement: >
+      The LineItem ejbCreate methods with signatures (String, String, String, String, int, float, int)
+      and (LineItem, int) SHALL execute with container-managed transaction attribute "Required".
+    confidence: high
+    confidence_basis: >
+      ejb-jar.xml container-transaction declarations for both create signatures are explicitly
+      present (lines 167-195). Both list trans-attribute as "Required". This ensures entity
+      creation is atomic.
+    risk_class: operational
+    basis: >
+      ejb-jar.xml (lines 167-183) declares the first create(String...) method with Required.
+      Lines 184-195 declare the second create(LineItem, int) method with Required.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+        line_start: 167
+        line_end: 195
+        excerpt: |
+          <container-transaction>
+            <method>
+              <ejb-name>LineItemEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>create</method-name>
+              <method-params>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+                <method-param>java.lang.String</method-param>
+                <method-param>int</method-param>
+                <method-param>float</method-param>
+                <method-param>int</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+          <container-transaction>
+            <method>
+              <ejb-name>LineItemEJB</ejb-name>
+              <method-intf>LocalHome</method-intf>
+              <method-name>create</method-name>
+              <method-params>
+                <method-param>com.sun.j2ee.blueprints.lineitem.ejb.LineItem</method-param>
+                <method-param>int</method-param>
+              </method-params>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+          </container-transaction>
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      ejb.transaction: Required
+
+  # Data serialization and XML support
+  - record_key: shopping-cart-rule-0001
+    kind: requirement
+    capability_key: shopping-cart
+    requirement: >
+      A LineItem SHALL be serializable to and from XML format. The XML representation SHALL
+      include all core fields: CategoryId, ProductId, ItemId, LineNum, Quantity, and UnitPrice.
+      The XML structure SHALL conform to a DTD that defines the element order and content types.
+    confidence: high
+    confidence_basis: >
+      The LineItem.java class includes toDOM() and fromDOM() methods that explicitly
+      serialize and deserialize all six core fields to/from XML. The schema file LineItem.dtd
+      defines the XML structure and element ordering. The methods directly implement the
+      DTD-defined structure.
+    risk_class: operational
+    basis: >
+      LineItem.java toDOM method (lines 137-146) creates elements for all six fields
+      in the order: CategoryId, ProductId, ItemId, LineNum, Quantity, UnitPrice.
+      fromDOM method (lines 148-162) parses them in the same order.
+      LineItem.dtd (line 38) defines the element sequence exactly.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItem.java
+        line_start: 137
+        line_end: 162
+        excerpt: |
+          public Node toDOM(Document document) {
+            Element root = document.createElement(XML_LINEITEM);
+            XMLDocumentUtils.appendChild(document, root, XML_CATEGORYID, categoryId);
+            XMLDocumentUtils.appendChild(document, root, XML_PRODUCTID, productId);
+            XMLDocumentUtils.appendChild(document, root, XML_ITEMID, itemId);
+            XMLDocumentUtils.appendChild(document, root, XML_LINENUM, lineNumber);
+            XMLDocumentUtils.appendChild(document, root, XML_QUANTITY, quantity);
+            XMLDocumentUtils.appendChild(document, root, XML_UNITPRICE, unitPrice);
+            return root;
+          }
+
+          public static LineItem fromDOM(Node node) throws XMLDocumentException {
+            Element element;
+            if (node.getNodeType() == Node.ELEMENT_NODE && (element = ((Element) node)).getTagName().equals(XML_LINEITEM)) {
+              Element child;
+              LineItem lineItem = new LineItem();
+              lineItem.categoryId = XMLDocumentUtils.getContentAsString(child = XMLDocumentUtils.getFirstChild(element, XML_CATEGORYID, false), false);
+              lineItem.productId = XMLDocumentUtils.getContentAsString(child = XMLDocumentUtils.getNextSibling(child, XML_PRODUCTID, false), false);
+              lineItem.itemId = XMLDocumentUtils.getContentAsString(child = XMLDocumentUtils.getNextSibling(child, XML_ITEMID, false), false);
+              lineItem.lineNumber = XMLDocumentUtils.getContentAsString(child = XMLDocumentUtils.getNextSibling(child, XML_LINENUM, false), false);
+              lineItem.quantity = XMLDocumentUtils.getContentAsInt(child = XMLDocumentUtils.getNextSibling(child, XML_QUANTITY, false), false);
+              lineItem.unitPrice = XMLDocumentUtils.getContentAsFloat(child = XMLDocumentUtils.getNextSibling(child, XML_UNITPRICE, false), false);
+              return lineItem;
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/rsrc/schemas/LineItem.dtd
+        line_start: 38
+        line_end: 50
+        excerpt: |
+          <!ELEMENT LineItem (CategoryId, ProductId, ItemId, LineNum, Quantity, UnitPrice)>
+
+          <!ELEMENT CategoryId (#PCDATA)>
+
+          <!ELEMENT ProductId (#PCDATA)>
+
+          <!ELEMENT ItemId (#PCDATA)>
+
+          <!ELEMENT LineNum (#PCDATA)>
+
+          <!ELEMENT Quantity (#PCDATA)>
+
+          <!ELEMENT UnitPrice (#PCDATA)>
+    stack_metadata:
+      serialization: XML
+      xml.dtd: LineItem.dtd
+
+  - record_key: shopping-cart-rule-0002
+    kind: requirement
+    capability_key: shopping-cart
+    requirement: >
+      The LineItem data transfer object SHALL provide a getData() method that extracts the
+      entity's six core fields (category ID, product ID, item ID, line number, quantity, unit price)
+      into a new LineItem object. The quantityShipped field is NOT included in this extraction.
+    confidence: high
+    confidence_basis: >
+      The LineItemLocal interface declares the getData() method (line 58), and LineItemEJB
+      implements it (lines 171-180). The method constructs a new LineItem and copies only
+      the six core fields, deliberately excluding quantityShipped.
+    risk_class: operational
+    basis: >
+      LineItemEJB.getData (lines 171-180) creates a new LineItem object and sets only
+      categoryId, productId, itemId, lineNumber, quantity, and unitPrice. It does not
+      set quantityShipped, indicating this field is internal to the EJB and not exposed
+      in the transfer object.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemEJB.java
+        line_start: 171
+        line_end: 180
+        excerpt: |
+          public LineItem getData() {
+            LineItem lineItem = new LineItem();
+            lineItem.setCategoryId(getCategoryId());
+            lineItem.setProductId(getProductId());
+            lineItem.setItemId(getItemId());
+            lineItem.setLineNumber(getLineNumber());
+            lineItem.setQuantity(getQuantity());
+            lineItem.setUnitPrice(getUnitPrice());
+            return lineItem;
+          }
+      - path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItemLocal.java
+        line_start: 58
+        line_end: 59
+        excerpt: |
+          public LineItem getData();
+    stack_metadata:
+      ejb.bean: LineItemEJB
+      transfer_object: LineItem
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/lineitem
+    description: >
+      The primary key for LineItem entity is not explicitly defined in the ejb-jar.xml.
+      The prim-key-class is declared as "java.lang.Object" (line 54), but no key field
+      is identified in either the CMP fields or any key-field declarations. The semantic
+      meaning of the primary key is unclear - it may be auto-generated, may be composite
+      across the ID fields, or may be derived. This affects how LineItem instances are
+      uniquely identified and retrieved.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/components/lineitem/src/com/sun/j2ee/blueprints/lineitem/ejb/LineItem.java
+    description: >
+      The LineItem transfer object class does not have an explicit toXML/fromXML contract
+      for how the quantityShipped field is handled. The transfer object stores quantity
+      (items ordered) but the EJB entity also stores quantityShipped (items fulfilled).
+      The getData() method extracts only the six core fields and omits quantityShipped.
+      It is unclear whether quantityShipped should ever be included in XML serialization
+      or if the transfer object's omission is intentional API design vs. an oversight.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/components/lineitem/src/ejb-jar.xml
+    description: >
+      The ejb-jar.xml does not declare any finder methods or query methods for LineItem
+      beyond the implicit findByPrimaryKey inherited from EJBLocalHome. No named queries
+      or find methods for attributes like "find by product ID" or "find by category" are
+      present. The document shows only creation and basic accessor declarations. It is
+      unclear whether LineItem entities are expected to be queried, how they are retrieved
+      in bulk (e.g., all items for an order), or if retrieval is the responsibility of
+      the Order component or a separate manager.
