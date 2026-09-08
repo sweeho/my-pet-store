@@ -1,0 +1,612 @@
+records:
+  - record_key: AUTH-REQ-0001
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL authenticate users via form-based login
+      using username and password credentials submitted to j_security_check.
+    confidence: high
+    confidence_basis: >
+      Declarative authentication mechanism specified in web.xml login-config
+      with form-login-page pointing to login.jsp. This is standard J2EE
+      form-based authentication, enforced at the servlet container level.
+    risk_class: operational
+    basis: >
+      web.xml lines 90-97 define the login configuration with login.jsp
+      as the form-login-page. login.jsp lines 52-82 implement the form
+      with j_security_check endpoint and j_username/j_password fields.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/docroot/WEB-INF/web.xml
+        line_start: 90
+        line_end: 97
+        excerpt: |
+          <login-config>
+            <auth-method>FORM</auth-method>
+            <realm-name>default</realm-name>
+            <form-login-config>
+              <form-login-page>/login.jsp</form-login-page>
+              <form-error-page>/error.jsp</form-error-page>
+            </form-login-config>
+          </login-config>
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/docroot/login.jsp
+        line_start: 52
+        line_end: 82
+        excerpt: |
+          <form action="j_security_check" method=post>
+          <table>
+          <tr>
+           <td align="center" >
+           <table border="0">
+           <tr>
+            <td><b>User ID:</b></td>
+            <td>
+              <input type="text" size="15" name="j_username" value="jps_admin">
+            </td>
+           </tr>
+           <tr>
+            <td><b>Password:</b></td>
+             <td>
+              <input type="password" size="15" name="j_password" value="admin">
+            </td>
+           </tr>
+
+  - record_key: AUTH-REQ-0002
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL restrict access to /AdminRequestProcessor
+      to users possessing the "administrator" role.
+    confidence: high
+    confidence_basis: >
+      Security constraint in web.xml explicitly defines role-based access
+      control at the declarative level. This is enforced by the J2EE
+      container at request time before any servlet code executes.
+    risk_class: operational
+    basis: >
+      web.xml lines 75-88 define a security-constraint limiting
+      /AdminRequestProcessor to the "administrator" role via auth-constraint.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/docroot/WEB-INF/web.xml
+        line_start: 75
+        line_end: 88
+        excerpt: |
+          <security-constraint>
+            <web-resource-collection>
+              <web-resource-name>MySecureBit0</web-resource-name>
+              <url-pattern>/AdminRequestProcessor</url-pattern>
+              <http-method>GET</http-method>
+              <http-method>POST</http-method>
+            </web-resource-collection>
+            <auth-constraint>
+              <role-name>administrator</role-name>
+            </auth-constraint>
+            <user-data-constraint>
+              <transport-guarantee>NONE</transport-guarantee>
+            </user-data-constraint>
+          </security-constraint>
+
+  - record_key: SESSION-REQ-0001
+    kind: requirement
+    capability_key: user-authentication
+    requirement: >
+      The system SHALL enforce a session timeout of 54 minutes
+      of inactivity.
+    confidence: high
+    confidence_basis: >
+      Session timeout value is explicitly declared in web.xml
+      session-config. This is enforced by the J2EE servlet container
+      at the HTTP session level.
+    risk_class: operational
+    basis: >
+      web.xml line 68 specifies session-timeout value of 54 minutes.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/docroot/WEB-INF/web.xml
+        line_start: 67
+        line_end: 69
+        excerpt: |
+          <session-config>
+            <session-timeout>54</session-timeout>
+          </session-config>
+
+  - record_key: JNLP-REQ-0001
+    kind: requirement
+    capability_key: admin-operations
+    requirement: >
+      The system SHALL generate and serve a dynamic JNLP file
+      to enable Java Web Start deployment of the rich client,
+      embedding the current HTTP session ID to maintain authentication
+      across the client/server boundary.
+    confidence: high
+    confidence_basis: >
+      Declarative endpoint configuration in web.xml with servlet mapping,
+      combined with explicit JNLP generation code in AdminRequestProcessor.
+      Session ID embedding is clearly coded in the buildJNLP method.
+    risk_class: operational
+    basis: >
+      AdminRequestProcessor.java lines 63-95 implement buildJNLP() method
+      which dynamically constructs JNLP XML and embeds req.getSession().getId()
+      at line 91. Servlet is mapped to /AdminRequestProcessor in web.xml lines 58-60.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/admin/com/sun/j2ee/blueprints/admin/web/AdminRequestProcessor.java
+        line_start: 63
+        line_end: 95
+        excerpt: |
+          protected String buildJNLP(HttpServletRequest req) throws ServletException {
+              String serverName = req.getServerName();
+              int serverPort = req.getServerPort();
+              StringBuffer jnlp = new StringBuffer();
+              jnlp.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+              // ... JNLP construction code ...
+              jnlp.append("<argument>").append(req.getSession().getId()).append("</argument>\n");
+              // ... more JNLP code ...
+              return(jnlp.toString());
+          }
+
+  - record_key: ORDER-STATUS-REQ-0001
+    kind: entity
+    capability_key: order-approval
+    requirement: >
+      An Order entity SHALL have the following statuses:
+      PENDING, APPROVED, DENIED, and COMPLETED.
+    confidence: high
+    confidence_basis: >
+      Order status values are defined as static constants in PetStoreProxy.Order
+      class and consistently used throughout the application in multiple
+      independent components (OrdersApprovePanel, DataSource, PetStoreProxy).
+      All four status values are referenced in the code, confirming all are
+      part of the operational model.
+    risk_class: operational
+    basis: >
+      PetStoreProxy.java lines 46-50 define four static status constants.
+      OrdersApprovePanel.java lines 82-84 lists the three user-selectable
+      statuses (PENDING, APPROVED, DENIED). DataSource.java lines 304-319
+      show all four statuses are used in the data model.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/PetStoreProxy.java
+        line_start: 46
+        line_end: 50
+        excerpt: |
+          public static class Order {
+              public final static String PENDING = "PENDING";
+              public final static String DENIED = "DENIED";
+              public final static String APPROVED = "APPROVED";
+              public final static String COMPLETED = "COMPLETED";
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/DataSource.java
+        line_start: 304
+        line_end: 310
+        excerpt: |
+          public OrdersViewTableModel() {
+              super();
+              setColumnIdentifiers(columns);
+              statusList = new String[] {PetStoreProxy.Order.APPROVED, PetStoreProxy.Order.COMPLETED, PetStoreProxy.Order.DENIED};
+          }
+
+  - record_key: ORDER-ENTITY-0001
+    kind: entity
+    capability_key: order-approval
+    requirement: >
+      An Order entity SHALL contain the following properties:
+      id (identifier), userId (customer identifier), date (order date),
+      amount (order total), and status (current approval status).
+    confidence: high
+    confidence_basis: >
+      Order properties are explicitly defined in PetStoreProxy.Order class
+      (lines 52-56) with getters for each property. These properties are
+      consistently referenced in the table model which displays them in
+      DataSource.java OrdersViewTableModel.getValueAt() method.
+    risk_class: operational
+    basis: >
+      PetStoreProxy.java lines 52-80 define Order class with five fields
+      and matching getter methods. DataSource.java lines 337-368 demonstrate
+      retrieval of each field from Order objects in table display.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/PetStoreProxy.java
+        line_start: 52
+        line_end: 80
+        excerpt: |
+          private String id;
+          private String userId;
+          private Date date;
+          private float amount;
+          private String status;
+
+          public Order(String id, String userId, Date date, float amount, String status) {
+              checkStatus(status);
+              this.id = id;
+              this.userId = userId;
+              this.date = date;
+              this.amount = amount;
+              this.status = status;
+          }
+          public String getId() {
+              return id;
+          }
+          public String getUserId() {
+              return userId;
+          }
+          public Date getDate() {
+              return date;
+          }
+          public float getAmount() {
+              return amount;
+          }
+          public String getStatus() {
+              return status;
+          }
+
+  - record_key: ORDERAPP-WF-0001
+    kind: workflow
+    capability_key: order-approval
+    requirement: >
+      GIVEN an administrator is viewing the Orders Approval screen,
+      WHEN the administrator selects one or more pending orders,
+      AND clicks the Approve button or Deny button to change their status,
+      THEN the status SHALL be updated in the UI immediately,
+      AND WHEN the administrator clicks the Commit button,
+      THEN all pending orders with changed status (APPROVED or DENIED)
+      SHALL be transmitted to the server as an atomic update,
+      AND the UI SHALL refresh with the server's current state.
+    confidence: high
+    confidence_basis: >
+      The complete workflow is implemented across multiple components:
+      OrdersApprovePanel defines the UI and buttons, DataSource implements
+      the commit logic with server communication, and the process is
+      observable in code paths that show local update followed by
+      batch server transmission.
+    risk_class: operational
+    basis: >
+      OrdersApprovePanel.java lines 92-138 define approve/deny/commit buttons
+      and their action listeners. Lines 100-108 show approve button updates
+      status column directly. Lines 127-136 show commit button calls
+      tableModel.commit(). DataSource.java lines 422-498 show OrdersApproveTableModel.commit()
+      method which collects approved and denied orders and sends them to
+      server via updateStatus() calls (lines 467-474).
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/OrdersApprovePanel.java
+        line_start: 100
+        line_end: 138
+        excerpt: |
+          approveButton.addActionListener(new ActionListener() {
+              public void actionPerformed(ActionEvent e) {
+                  int[] rows = orderTable.getSelectedRows();
+                  for (int i = 0; i < rows.length; i++) {
+                      sorter.setValueAt(PetStoreProxy.Order.APPROVED, rows[i], 4);
+                      orderTable.repaint();
+                  }
+              }
+          });
+          // ... similar for denyButton ...
+          commitButton.addActionListener(new ActionListener() {
+              public void actionPerformed(ActionEvent e) {
+                  tableModel.commit();
+              }
+          });
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/DataSource.java
+        line_start: 422
+        line_end: 474
+        excerpt: |
+          public void commit() {
+              Vector approvedRows = new Vector();
+              Vector deniedRows = new Vector();
+              for (int i = 0; i < getRowCount(); i++) {
+                  if (PetStoreProxy.Order.APPROVED.equals((String)getValueAt(i, 4))) {
+                      approvedRows.add(new Integer(i));
+                  } else if (PetStoreProxy.Order.DENIED.equals((String)getValueAt(i, 4))) {
+                      deniedRows.add(new Integer(i));
+                  }
+              }
+              // ...
+              ServerAction action = new ServerAction() {
+                  protected Object request(ActionEvent e) {
+                      if (approvedOrders.length > 0) {
+                          server.updateStatus(approvedOrders, PetStoreProxy.Order.APPROVED);
+                      }
+                      if (deniedOrders.length > 0) {
+                          server.updateStatus(deniedOrders, PetStoreProxy.Order.DENIED);
+                      }
+                      return getServerOrderData();
+                  }
+
+  - record_key: ORDERAPP-BR-0001
+    kind: business-rule
+    capability_key: order-approval
+    requirement: >
+      The system SHALL warn the user if they attempt to refresh order data
+      while uncommitted changes exist in the Orders Approval table
+      (orders with status changed from PENDING to APPROVED or DENIED
+      that have not yet been committed).
+    confidence: medium
+    confidence_basis: >
+      The warning logic is implemented in DataSource.RefreshAction.actionPerformed()
+      with explicit detection of uncommitted changes. However, the warning
+      is only shown when initiating a refresh; there is no persistent validation
+      preventing loss of uncommitted work through other means (e.g., closing
+      the application or switching tabs). This is a quality-of-life feature
+      rather than a hard constraint.
+    risk_class: operational
+    basis: >
+      DataSource.java lines 220-241 in RefreshAction.actionPerformed() check
+      ordersApproveTableModel for rows where status is not PENDING, and if
+      found, display a warning dialog asking the user to confirm before
+      proceeding with the refresh.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/DataSource.java
+        line_start: 220
+        line_end: 241
+        excerpt: |
+          public void actionPerformed(final ActionEvent action) {
+              boolean isUncommitted = false;
+              for (int i = 0; i < ordersApproveTableModel.getRowCount(); i++) {
+                  if (!PetStoreProxy.Order.PENDING.equals(
+                  ordersApproveTableModel.getValueAt(i, 4))) {
+                      isUncommitted = true;
+                      break;
+                  }
+              }
+              int result = JOptionPane.OK_OPTION;
+              if (isUncommitted) {
+                  result = JOptionPane.showConfirmDialog(parent,
+                  PetStoreAdminClient.getString("RefreshWarningDialog.message"),
+                  PetStoreAdminClient.getString("RefreshWarningDialog.title"),
+                  JOptionPane.OK_CANCEL_OPTION,
+                  JOptionPane.WARNING_MESSAGE);
+              }
+              if (result == JOptionPane.OK_OPTION) {
+                  pcs.firePropertyChange(DISABLE_ACTIONS, null, null);
+
+  - record_key: ORDERLIST-SCREEN-0001
+    kind: screen
+    capability_key: admin-operations
+    requirement: >
+      The Orders View screen SHALL display a read-only table of all approved,
+      completed, and denied orders, with columns for Order ID, User ID,
+      Order Date, Order Amount, and Status.
+    confidence: high
+    confidence_basis: >
+      The screen implementation is in OrdersViewPanel and its table model
+      in DataSource.OrdersViewTableModel. The table definition is explicit
+      and the isCellEditable() method returns false for all cells.
+    risk_class: presentational
+    basis: >
+      DataSource.java lines 301-305 define OrdersViewTableModel with columns
+      for id, userId, date, amount, status. Lines 405-407 show isCellEditable()
+      returns false, making the table read-only. Lines 337-368 show value
+      retrieval from each column.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/DataSource.java
+        line_start: 295
+        line_end: 407
+        excerpt: |
+          protected class OrdersViewTableModel extends DefaultTableModel {
+              // ...
+              public OrdersViewTableModel() {
+                  super();
+                  setColumnIdentifiers(columns);
+                  statusList = new String[] {PetStoreProxy.Order.APPROVED, PetStoreProxy.Order.COMPLETED, PetStoreProxy.Order.DENIED};
+              }
+              // ...
+              public boolean isCellEditable(int row, int column) {
+                  return false;
+              }
+
+  - record_key: ORDERAPP-SCREEN-0001
+    kind: screen
+    capability_key: order-approval
+    requirement: >
+      The Orders Approval screen SHALL display a table of pending orders
+      with columns for Order ID, User ID, Order Date, Order Amount, and Status.
+      The Status column SHALL be editable via a dropdown selector allowing
+      values PENDING, APPROVED, or DENIED. The screen SHALL provide three
+      buttons: Approve (sets selected rows to APPROVED), Deny (sets selected
+      rows to DENIED), and Commit (sends all changes to the server).
+    confidence: high
+    confidence_basis: >
+      The screen is fully implemented in OrdersApprovePanel with explicit
+      cell editors, button definitions, and action listeners. The UI
+      components are declaratively configured.
+    risk_class: presentational
+    basis: >
+      OrdersApprovePanel.java lines 79-89 set up the panel. Lines 82-84
+      define the combo box with the three status options. Lines 149-151
+      set the status column cell editor to the combo box. Lines 92-138
+      define and configure the three buttons with action listeners.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/OrdersApprovePanel.java
+        line_start: 79
+        line_end: 90
+        excerpt: |
+          private void createUI() {
+              cellOptions.addItem(PetStoreProxy.Order.PENDING);
+              cellOptions.addItem(PetStoreProxy.Order.APPROVED);
+              cellOptions.addItem(PetStoreProxy.Order.DENIED);
+              setLayout(new BorderLayout());
+              setBorder(new SoftBevelBorder(SoftBevelBorder.LOWERED));
+              add(createTable(), BorderLayout.CENTER);
+              add(createButtonPanel(), BorderLayout.SOUTH);
+          }
+
+  - record_key: ORDERAPP-SCREEN-0002
+    kind: screen
+    capability_key: order-approval
+    requirement: >
+      The Orders Approval screen status column cells SHALL be rendered
+      with background color coding: green for APPROVED status, red for
+      DENIED status, and yellow for PENDING status.
+    confidence: high
+    confidence_basis: >
+      The cell renderer is explicitly implemented with hardcoded color
+      logic for each status value.
+    risk_class: presentational
+    basis: >
+      OrdersApprovePanel.java lines 154-171 define the statusRenderer
+      with setValue() method that sets background colors based on status.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/OrdersApprovePanel.java
+        line_start: 154
+        line_end: 171
+        excerpt: |
+          statusRenderer = new DefaultTableCellRenderer() {
+              public void setValue(Object value) {
+                  String str = (String)value;
+                  if (PetStoreProxy.Order.APPROVED.equals(str)) {
+                      setBackground(Color.green);
+                      setText(str);
+                  } else if (PetStoreProxy.Order.DENIED.equals(str)) {
+                      setBackground(Color.red);
+                      setText(str);
+                  } else if (PetStoreProxy.Order.PENDING.equals(str)) {
+                      setBackground(Color.yellow);
+                      setText(str);
+
+  - record_key: CHARTDATA-REQ-0001
+    kind: requirement
+    capability_key: admin-operations
+    requirement: >
+      The system SHALL retrieve and display sales data in two chart formats:
+      revenue by category (pie chart) and order count by category (bar chart).
+      Each chart SHALL be filterable by a date range (start date and end date)
+      and by category.
+    confidence: high
+    confidence_basis: >
+      Chart models are explicitly implemented with date range and view mode
+      parameters. The data retrieval methods in the business delegate pass
+      these parameters to the server. Two distinct retrieval methods exist
+      for revenue vs. order count data.
+    risk_class: operational
+    basis: >
+      DataSource.java lines 522-649 define abstract ChartModel with startDate,
+      endDate, and viewMode properties. Lines 141-154 in AdminRequestBD.java
+      show getChartInfo() accepts request type (REVENUE or ORDER), start date,
+      end date, and category.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/DataSource.java
+        line_start: 522
+        line_end: 550
+        excerpt: |
+          public abstract class ChartModel {
+              private Date startDate = new Date("1/1/2001");
+              private Date endDate = new Date("12/31/2002");
+              private String viewMode = null;
+              // ...
+              public Date getStartDate() {
+                  return (Date)startDate.clone();
+              }
+              public Date getEndDate() {
+                  return (Date)endDate.clone();
+              }
+              public void setDates(Date startDate, Date endDate) {
+                  this.startDate = startDate;
+                  this.endDate = endDate;
+                  new RefreshChartAction(this).actionPerformed(null);
+              }
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/admin/com/sun/j2ee/blueprints/admin/web/AdminRequestBD.java
+        line_start: 141
+        line_end: 154
+        excerpt: |
+          public Map getChartInfo(String request, Date start, Date end,
+                                  String category)
+              throws AdminBDException {
+              try {
+                  return opcAdminEJB.getChartInfo(request, start, end, category);
+
+  - record_key: CHARTDATA-DEFAULT-0001
+    kind: business-rule
+    capability_key: admin-operations
+    requirement: >
+      The default date range for chart data display SHALL be from
+      1/1/2001 to 12/31/2002.
+    confidence: low
+    confidence_basis: >
+      Hardcoded default dates in ChartModel constructor. No configuration
+      file or external source defines these dates. Comment in code suggests
+      these were placeholder values for the demo application that were
+      never updated to use the present day as intended.
+    risk_class: operational
+    basis: >
+      DataSource.java lines 525-528 define hardcoded default dates in
+      ChartModel class. Line 523 contains a TODO comment noting this
+      should default to present day in released application but was
+      left as demo values.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/DataSource.java
+        line_start: 523
+        line_end: 528
+        excerpt: |
+          public abstract class ChartModel {
+              /** The default start date is 1/12/2001 for the demo. TODO In the
+               * released application this should default to the present day. */
+              private Date startDate = new Date("1/1/2001");
+              /** The default end date is the present day. */
+              private Date endDate = new Date("12/31/2002");
+
+  - record_key: CLIENTCOMM-INTEGRATION-0001
+    kind: integration
+    capability_key: admin-operations
+    requirement: >
+      The rich client SHALL communicate with the application server via
+      HTTP POST requests sending XML payloads and receiving XML responses.
+      HTTP session cookies (JSESSIONID) SHALL be used to maintain
+      authentication across requests.
+    confidence: high
+    confidence_basis: >
+      The HTTP communication protocol is explicitly implemented in
+      HttpPostPetStoreProxy.java with POST method, XML parsing, and
+      session ID handling in URL parameters and request properties.
+    risk_class: operational
+    basis: >
+      HttpPostPetStoreProxy.java lines 74-90 construct the service URL
+      with session ID as URL parameter (line 78). Lines 92-149 implement
+      doHttpPost() method using HttpURLConnection with POST method,
+      XML request/response parsing.
+    traces:
+      - path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/HttpPostPetStoreProxy.java
+        line_start: 74
+        line_end: 106
+        excerpt: |
+          public void setup(String host, String port, String sessionID) {
+              try {
+                  url = new URL("http://" + host + ":" + port
+                      + "/admin/ApplRequestProcessor;jsessionid=" + sessionID);
+              } catch(MalformedURLException e) {
+                  // ...
+              }
+          }
+          private Document doHttpPost(String request) {
+              // ...
+              uc = (HttpURLConnection)(url.openConnection());
+              uc.setRequestMethod("POST");
+              uc.setDoOutput(true);
+              uc.setUseCaches(false);
+              uc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+              uc.setRequestProperty("JSESSIONID", "HAHAHAHA");
+              uc.connect();
+
+findings:
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/PetStoreProxy.java
+    description: >
+      The checkStatus() method at lines 82-89 is declared but does not
+      throw an exception when an invalid status is provided. The comment
+      says "throw an illegal arg exception" but the code is empty.
+      It is unclear whether invalid status values should be silently
+      accepted or rejected. This affects validation of the order status.
+
+  - kind: ambiguity
+    path: legacy-source/petstore1.3.2/src/apps/admin/src/client/com/sun/j2ee/blueprints/admin/client/HttpPostPetStoreProxy.java
+    description: >
+      Line 105 sets JSESSIONID request property to the literal string
+      "HAHAHAHA" rather than the actual session ID. This appears to be
+      a placeholder or debug value that was never updated. The actual
+      session ID is embedded in the URL at construction time (line 78),
+      but the purpose of also setting a request property with a fake
+      value is unclear and suggests incomplete implementation.
+
+  - kind: unparseable
+    path: legacy-source/petstore1.3.2/src/apps/admin/src/admin/com/sun/j2ee/blueprints/admin/web/AdminRequestBD.java
+    description: >
+      Line 115-120 show order updates are sent via AsyncSender (asynchronous
+      messaging) but the nature of the OrderApproval object and how it
+      encodes the order changes is not visible in the admin application
+      code. The actual structure of the XML message transmitted and the
+      server-side processing of approvals is in the OPC (order processing)
+      module which is out of scope for the admin app analysis.
