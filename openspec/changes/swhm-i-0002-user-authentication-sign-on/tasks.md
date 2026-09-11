@@ -31,10 +31,10 @@
 
 ## 5. SignOn Filter
 
-- [ ] 5.1 Implement SignOnFilter servlet filter with doFilter() method (SWHM-T-0019)
-- [ ] 5.2 Check session j_signon attribute to determine signed-on status (SWHM-T-0019)
-- [ ] 5.3 Load protected resource patterns from signon-config.xml (SWHM-T-0019)
-- [ ] 5.4 Redirect unsigned-on users to sign-on page when accessing protected resources (SWHM-T-0019)
+- [x] 5.1 Implement SignOnFilter servlet filter with doFilter() method (SWHM-T-0019)
+- [x] 5.2 Check session j_signon attribute to determine signed-on status (SWHM-T-0019)
+- [x] 5.3 Load protected resource patterns from signon-config.xml (SWHM-T-0019)
+- [x] 5.4 Redirect unsigned-on users to sign-on page when accessing protected resources (SWHM-T-0019)
 
 ## 6. Cookie Persistence
 
