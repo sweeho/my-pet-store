@@ -104,8 +104,8 @@
 
 ## 12. Performance & Optimization
 
-- [ ] 12.1 Create database indexes on pagination cursor columns (SWHM-T-0057)
-- [ ] 12.2 Test search performance with large result sets (SWHM-T-0057)
-- [ ] 12.3 Consider caching for static catalog data (SWHM-T-0057)
-- [ ] 12.4 Profile pagination with ResultSet.absolute() for large result sets (SWHM-T-0057)
-- [ ] 12.5 Monitor and optimize locale-join performance (SWHM-T-0057)
+- [x] 12.1 Create database indexes on pagination cursor columns (SWHM-T-0057)
+- [x] 12.2 Test search performance with large result sets (SWHM-T-0057)
+- [x] 12.3 Consider caching for static catalog data (SWHM-T-0057)
+- [x] 12.4 Profile pagination with ResultSet.absolute() for large result sets (SWHM-T-0057)
+- [x] 12.5 Monitor and optimize locale-join performance (SWHM-T-0057)
