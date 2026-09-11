@@ -2,10 +2,10 @@
 
 ## 1. User Entity
 
-- [ ] 1.1 Define User CMP entity bean with userName and password fields (SWHM-T-0015)
-- [ ] 1.2 Set userName as primary key (max 25 characters) (SWHM-T-0015)
-- [ ] 1.3 Implement matchPassword(String) method for credential verification (SWHM-T-0015)
-- [ ] 1.4 Declare ejbCreate(userName, password) method with validation (SWHM-T-0015)
+- [x] 1.1 Define User CMP entity bean with userName and password fields (SWHM-T-0015)
+- [x] 1.2 Set userName as primary key (max 25 characters) (SWHM-T-0015)
+- [x] 1.3 Implement matchPassword(String) method for credential verification (SWHM-T-0015)
+- [x] 1.4 Declare ejbCreate(userName, password) method with validation (SWHM-T-0015)
 
 ## 2. User Creation Validation
 
