@@ -76,7 +76,7 @@ test.describe("Catalog browsing", () => {
   test("a signed-on customer's preferred language is used as the catalog locale", async ({
     page,
   }) => {
-    const username = uniqueUsername("catalog-locale");
+    const username = uniqueUsername("cat-locale");
     const password = "secret123";
 
     // page.request shares the page's own cookie jar, so the session this

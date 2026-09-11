@@ -53,7 +53,9 @@ $ bun run build    # extra check: four new file-based routes
 
 See `tdd-test-result.md` — `TDD-RESULT: 232 passed, 0 failed`.
 
-`bun run test:e2e` was not run: this container's Chromium is genuinely missing (`scripts/ensure-playwright-browser.mjs`), the same documented limitation six earlier tickets hit this sprint (`AGENTS.md`'s Notes from previous agents). `e2e/catalog.spec.ts` passed lint/typecheck/build and follows the exact patterns of the already-executed `e2e/signon.spec.ts` and `e2e/customer-profile.spec.ts`. CI installs Chromium and runs the full E2E suite before this branch can merge; INTEGRATION_QA runs it again.
+`bun run test:e2e` was not run locally: this container's Chromium is genuinely missing (`scripts/ensure-playwright-browser.mjs`), the same documented limitation six earlier tickets hit this sprint (`AGENTS.md`'s Notes from previous agents). CI (which has Chromium) ran it on the first push and found a real bug: `uniqueUsername("catalog-locale")` built a 28-character username against the 25-character limit, failing every attempt including both retries. Fixed by shortening the label to `"cat-locale"`; pushed, and CI went green on the second run — all 15 E2E specs (including all 3 in `e2e/catalog.spec.ts`) passed.
+
+A second, pre-existing failure surfaced in the same CI run: `e2e/customer-profile.spec.ts`'s "views, edits, saves, and keeps the language preference" test failed once (timed out waiting for the saved profile to render) and passed on Playwright's automatic retry — a flake in a file this ticket doesn't own or touch. Raised as a follow-up defect rather than fixed here.
 
 ## Notes
 
