@@ -21,12 +21,12 @@
 
 ## 3. Product Retrieval Service
 
-- [ ] 3.1 Implement CatalogEJB.getProduct(productID, locale) (SWHM-T-0052)
-- [ ] 3.2 Implement CatalogEJB.getProducts(categoryID, start, count, locale) with category filtering (SWHM-T-0052)
-- [ ] 3.3 Implement GenericCatalogDAO.getProduct() with locale-aware SQL (SWHM-T-0052)
-- [ ] 3.4 Implement GenericCatalogDAO.getProducts() with category filter and pagination (SWHM-T-0052)
-- [ ] 3.5 Ensure products ordered by name (SWHM-T-0052)
-- [ ] 3.6 Filter results to specified category (categoryID parameter) (SWHM-T-0052)
+- [x] 3.1 Implement CatalogEJB.getProduct(productID, locale) (SWHM-T-0052)
+- [x] 3.2 Implement CatalogEJB.getProducts(categoryID, start, count, locale) with category filtering (SWHM-T-0052)
+- [x] 3.3 Implement GenericCatalogDAO.getProduct() with locale-aware SQL (SWHM-T-0052)
+- [x] 3.4 Implement GenericCatalogDAO.getProducts() with category filter and pagination (SWHM-T-0052)
+- [x] 3.5 Ensure products ordered by name (SWHM-T-0052)
+- [x] 3.6 Filter results to specified category (categoryID parameter) (SWHM-T-0052)
 
 ## 4. Item Retrieval Service
 
