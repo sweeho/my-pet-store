@@ -50,12 +50,12 @@
 
 ## 6. Pagination & Navigation
 
-- [ ] 6.1 Implement ResultSet.absolute(start + 1) for position-based navigation (SWHM-T-0047)
-- [ ] 6.2 Implement hasNext detection without COUNT query (check for row after count) (SWHM-T-0047)
-- [ ] 6.3 Implement Page.EMPTY_PAGE for edge cases (SWHM-T-0047)
-- [ ] 6.4 Implement start position validation (negative values → EMPTY_PAGE) (SWHM-T-0047)
-- [ ] 6.5 Implement isPreviousPageAvailable() logic (start > 0) (SWHM-T-0047)
-- [ ] 6.6 Test pagination with various page sizes and result set sizes (SWHM-T-0047)
+- [x] 6.1 Implement ResultSet.absolute(start + 1) for position-based navigation (SWHM-T-0047)
+- [x] 6.2 Implement hasNext detection without COUNT query (check for row after count) (SWHM-T-0047)
+- [x] 6.3 Implement Page.EMPTY_PAGE for edge cases (SWHM-T-0047)
+- [x] 6.4 Implement start position validation (negative values → EMPTY_PAGE) (SWHM-T-0047)
+- [x] 6.5 Implement isPreviousPageAvailable() logic (start > 0) (SWHM-T-0047)
+- [x] 6.6 Test pagination with various page sizes and result set sizes (SWHM-T-0047)
 
 ## 7. Localization
 
