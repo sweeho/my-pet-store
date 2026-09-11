@@ -9,10 +9,10 @@
 
 ## 2. User Creation Validation
 
-- [ ] 2.1 Validate username does not exceed MAX_USERID_LENGTH (25 characters) (SWHM-T-0016)
-- [ ] 2.2 Validate username does not contain '%' or '\*' characters (SWHM-T-0016)
-- [ ] 2.3 Validate password does not exceed MAX_PASSWD_LENGTH (SWHM-T-0016)
-- [ ] 2.4 Throw CreateException on validation failures with descriptive messages (SWHM-T-0016)
+- [x] 2.1 Validate username does not exceed MAX_USERID_LENGTH (25 characters) (SWHM-T-0016)
+- [x] 2.2 Validate username does not contain '%' or '\*' characters (SWHM-T-0016)
+- [x] 2.3 Validate password does not exceed MAX_PASSWD_LENGTH (SWHM-T-0016)
+- [x] 2.4 Throw CreateException on validation failures with descriptive messages (SWHM-T-0016)
 
 ## 3. Authentication Service
 
