@@ -38,10 +38,10 @@
 
 ## 6. Cookie Persistence
 
-- [ ] 6.1 Create bp_signon cookie when "Remember My User Name" is checked (SWHM-T-0020)
-- [ ] 6.2 Set cookie maxAge to 2,678,400 seconds (31 days) (SWHM-T-0020)
-- [ ] 6.3 Remove bp_signon cookie when remember checkbox not selected (SWHM-T-0020)
-- [ ] 6.4 Pre-fill username field from bp_signon cookie in sign-in form (SWHM-T-0020)
+- [x] 6.1 Create bp_signon cookie when "Remember My User Name" is checked (SWHM-T-0020)
+- [x] 6.2 Set cookie maxAge to 2,678,400 seconds (31 days) (SWHM-T-0020)
+- [x] 6.3 Remove bp_signon cookie when remember checkbox not selected (SWHM-T-0020)
+- [x] 6.4 Pre-fill username field from bp_signon cookie in sign-in form (SWHM-T-0020)
 
 ## 7. Sign-In Workflow
 
