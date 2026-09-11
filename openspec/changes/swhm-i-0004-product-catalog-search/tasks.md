@@ -40,13 +40,13 @@
 
 ## 5. Search Service
 
-- [ ] 5.1 Implement CatalogEJB.searchItems(searchQuery, start, count, locale) (SWHM-T-0054)
-- [ ] 5.2 Implement GenericCatalogDAO.searchItems() with tokenized keyword search (SWHM-T-0054)
-- [ ] 5.3 Implement query tokenization by whitespace (StringTokenizer) (SWHM-T-0054)
-- [ ] 5.4 Implement SQL generation with OR conditions across name, description, category (SWHM-T-0054)
-- [ ] 5.5 Implement case-insensitive matching with LIKE and % wildcards (SWHM-T-0054)
-- [ ] 5.6 Implement pagination for search results (SWHM-T-0054)
-- [ ] 5.7 Ensure all keywords must match (AND across keywords, OR across fields) (SWHM-T-0054)
+- [x] 5.1 Implement CatalogEJB.searchItems(searchQuery, start, count, locale) (SWHM-T-0054)
+- [x] 5.2 Implement GenericCatalogDAO.searchItems() with tokenized keyword search (SWHM-T-0054)
+- [x] 5.3 Implement query tokenization by whitespace (StringTokenizer) (SWHM-T-0054)
+- [x] 5.4 Implement SQL generation with OR conditions across name, description, category (SWHM-T-0054)
+- [x] 5.5 Implement case-insensitive matching with LIKE and % wildcards (SWHM-T-0054)
+- [x] 5.6 Implement pagination for search results (SWHM-T-0054)
+- [x] 5.7 Ensure all keywords must match (AND across keywords, OR across fields) (SWHM-T-0054)
 
 ## 6. Pagination & Navigation
 
