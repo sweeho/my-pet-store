@@ -1,136 +1,92 @@
-# Rebuild Guidance — Petstore E-Commerce
+# Agent Guide
 
-This document provides guidance to the rebuild team for implementing the Petstore E-Commerce capabilities extracted from the legacy Java EE application.
+`CLAUDE.md` and `GEMINI.md` are symlinks to this file — one authored manual, whatever
+harness is reading it.
 
-## Stack Constraints
+**Vortex composes four of the sections below straight into every agent's prompt**:
+`## Build & run`, `## Test & validate`, `## Conventions` and `## Gotchas`. Everything
+else is named in the prompt and read from the file on demand. Put an instruction an
+agent must obey in one of those four; put reference material anywhere else.
 
-The rebuild is on a pinned stack:
-- **Frontend**: Vite React SPA (TypeScript, strict)
-- **Backend**: Nitro (H3) server
-- **Data**: SQLite via better-sqlite3 + Drizzle ORM
-- **Styling**: Tailwind CSS (CSS-first, no config.ts)
-- **Routing**: vite-plugin-pages (file-based) + react-router
-- **Tests**: Vitest + Testing Library (unit/integration), Playwright (E2E)
+Commands are NOT listed here. They are declared once, machine-readably, in
+`.vortex/config.yaml` under `commands:`, and reach every agent as a resolved table
+under `## Project commands`. This file explains the ones whose behaviour is not
+obvious; it does not restate them.
 
-Do NOT reach for Next.js, App Router, RSC, Prisma, or other frameworks. This stack is the project's identity.
+## Docs
 
-## Key Decisions from Legacy
+- [README.md](./README.md) — routing, API handlers, database, the full feature tour
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — stack, data flow, deployment
+- [DESIGN.md](./DESIGN.md) — tokens, theming, component pattern
+- [PRODUCT.md](./PRODUCT.md) — what this is; replace for a real product
+- [legacy-analysis/rebuild-guidance.md](./legacy-analysis/rebuild-guidance.md) — stack constraints and the decisions carried over from the legacy Java EE app
 
-### Authentication & Sessions
-- Session-based, not token-based (from J2EE HttpSession)
-- username cookie (bp_signon) persists on client for 30 days
-- Session timeout: 54 minutes (supplier app)
-- Form-based login with j_security_check endpoint (J2EE standard)
-- Session attributes track sign-on state (j_signon=boolean, j_signon_username=string)
+## Build & run
 
-### Order Management
-- Order ID generation: UniqueIdGenerator with seed 1001, sequential incrementing
-- Order status state machine: PENDING → APPROVED/DENIED → COMPLETED
-- Only PENDING orders eligible for approval/denial (status immutability enforced)
-- Auto-approval thresholds by locale: US < $500, Japan < ¥50,000
-- All other orders require manual approval by admin
+`install` then `start` — the dev server runs frontend and backend together on **:5000**.
+Playwright drives its own server on **:5178** with `--strictPort`, so a running dev
+server never collides with a test run and never silently absorbs one.
 
-### Shopping Cart
-- Session-scoped (not persisted)
-- In-memory collection, cleared on order placement
-- Line totals: quantity × unitCost
-- Cart subtotal: SUM of all line totals
+Everything runs under **bun**, including the test runners. `db/client.ts` imports the
+`bun:sqlite` builtin, so a script that reaches it under plain Node fails at import —
+which is why `test` is `bun --bun vitest run` and not `vitest`.
 
-### Inventory & Fulfillment
-- Inventory reduced at fulfillment time (not at order time)
-- Partial shipments supported (quantityShipped tracks separately)
-- Order completion detected when all line items fully shipped
-- Asynchronous invoice processing via message queue
+`auto-imports.d.ts` does not exist on a fresh clone. The `prebuild` and `pretypecheck`
+hooks generate it. Give any new tsc-only script the same hook or it fails on a clean
+checkout and nowhere else.
 
-### Internationalization
-- Supported locales: en_US, ja_JP, zh_CN
-- Per-locale content in LOCALE_CONTENT table
-- Customer profile stores preferredLanguage
-- Supported categories: BIRDS, CATS, DOGS, FISH, REPTILES
+## Test & validate
 
-### Data Constraints
-- Username max 25 characters, alphanumeric only (no '%' or '*')
-- Password max ~32 characters (configuration varies)
-- Address fields: names 30 chars, streets 70 chars
-- State/Province: CA, NY, TX (hardcoded dropdown)
-- Countries: USA, Canada, Japan, China
+Run the `verify-full` slot before finishing a change. It is `verify` plus the browser
+tier, and every environment this template targets — Vortex agent workspace containers,
+CI, local dev — ships a Chromium.
 
-## Implementation Notes
+`verify` alone is the browser-free core gate. It is the right fallback **only** when the
+E2E preflight tells you the browser is genuinely missing: say so in your summary and move
+on. Do not retry E2E, and do not try to install a browser.
 
-### Database Migrations
-All capability changes map to the Drizzle schema in `db/schema.ts`. Migrations in `drizzle/` are auto-generated from schema changes; do not hand-write SQL migration files.
+| You changed...                            | Add...                                      | Copy from                           |
+| ----------------------------------------- | ------------------------------------------- | ----------------------------------- |
+| A util (`src/utils`)                      | Unit test, `<name>.test.ts`                 | `src/utils/cn.test.ts`              |
+| A component                               | UI test, `<name>.test.tsx`                  | `src/components/ui/button.test.tsx` |
+| A page                                    | UI test, `<name>.test.tsx`                  | `src/pages/index.test.tsx`          |
+| An API route/middleware                   | Integration test, real `H3Event`, no server | `routes/api/hello.test.ts`          |
+| A cross-page/responsive/browser-only flow | Playwright spec in `e2e/`                   | `e2e/home.spec.ts`                  |
 
-### Entity Relationships
-- Customer → Account (1:1), Profile (1:1)
-- Account → ContactInfo (1:1) → Address (1:1)
-- Account → CreditCard (1:1)
-- Customer → PurchaseOrder (1:N)
-- PurchaseOrder → LineItem (1:N)
-- Item → Category (N:1), Product (N:1)
+Vitest runs as **two projects**, and which one a test lands in is decided by its path:
+`routes/**/*.test.ts` runs in the `server` project (`environment: "node"`), everything
+else in the `client` project (jsdom). A route test placed outside `routes/` runs in jsdom,
+where `bun:sqlite` cannot resolve at all.
 
-### API Layer
-All public endpoints are Nitro routes under `routes/`. File-based routing mirrors the OpenAPI contract, not legacy paths. The legacy paths (signon, cart.do, order.do) do NOT define the rebuild's API.
+A spec you have not executed is not a test. Never commit a `*.spec.ts` you have not run
+at least once.
 
-### Session Management
-Session is request-scoped via Nitro middleware. Customer-specific data (cart, orders, profile) is fetched from database per request, not stored in session. Sessions are used only for authentication state and temporary UI state.
+## Conventions
 
-### Notification System
-- Order placement: async email via message queue
-- Order approval/denial: async email via message queue
-- Implementation: use a job queue (e.g., Bull, RabbitMQ); email is fire-and-forget
+- **Routing is file-based, both sides.** A page is a file under `src/pages/`; an API
+  handler is a file under `routes/api/`. Neither is registered anywhere — creating the
+  file is the whole change. See README for dynamic, catch-all and method-specific shapes.
+- **Imports are auto-generated for React and router APIs** via `unplugin-auto-import`.
+  Do not add an explicit import for something already in `auto-imports.d.ts`; do not
+  hand-edit that file.
+- **Tailwind is CSS-first.** There is no `tailwind.config.js` and adding one is a defect.
+  Tokens and theming live in CSS — see DESIGN.md.
+- **Database access goes through drizzle**, never raw SQL strings. A schema change is not
+  done until `db-generate` has produced the migration in `drizzle/` and you have committed it.
+- **TypeScript is strict.** Complete annotations on exported functions; no `any` without a
+  justification comment on the line above it.
+- **Mirror the nearest existing file.** Before writing a page, a route, a component or a
+  test, open the closest existing one and copy its shape. The examples in the README show
+  the pattern; the real files are the contract.
 
-### Testing Strategy
-- Unit tests: Vitest + @testing-library for component logic
-- Integration tests: Vitest + database fixtures for order/inventory workflows
-- E2E tests: Playwright for user workflows (sign-up, add to cart, checkout)
-- No mocks for database; use real SQLite fixtures
+## Gotchas
 
-## Gotchas and Constraints
-
-1. **Order ID Generation**: Seed is 1001, sequence increments by 1. Do NOT use UUIDs; this is a required constraint from legacy.
-
-2. **Status Immutability**: Terminal states (APPROVED, DENIED, COMPLETED) are immutable. Re-processing an order in terminal state must silently skip it, not error.
-
-3. **Inventory Reduction Timing**: Inventory is reduced at fulfillment time (when invoice arrives), not when order is placed. This is different from many e-commerce systems.
-
-4. **Auto-Approval Thresholds**: Hardcoded by locale with no configuration option. If thresholds change, code changes are required.
-
-5. **Cart Clearing**: Cart is cleared AFTER order creation succeeds. If order creation fails, cart is NOT cleared. This is important for retry scenarios.
-
-6. **Session Timeout**: 54 minutes is from supplier app; petstore app may differ. Check if legacy has different timeout per app.
-
-7. **Email Notification**: Async sends must not block order placement. Implement as background job with retry logic.
-
-8. **Address Dropdown Constraints**: State and country dropdowns are hardcoded and must match legacy values exactly for data consistency.
-
-9. **Locale Handling**: getLocaleFromString() in legacy suggests custom locale parsing. Validate that locale parsing matches legacy behavior.
-
-10. **Credit Card Storage**: No explicit PCI compliance guidance in legacy. Assume this is a rebuild opportunity for PCI-compliant vault; legacy probably stores plaintext (bad). Do NOT replicate that.
-
-## Migration Path
-
-Capabilities are ordered as a valid dependency DAG:
-1. user-authentication (no deps)
-2. account-management (depends on user-authentication)
-3. catalog-browsing (no deps)
-4. internationalization (no deps)
-5. admin-operations (depends on user-authentication)
-6. shopping-cart (depends on catalog-browsing)
-7. order-placement (depends on shopping-cart, user-authentication)
-8. payment-processing (depends on order-placement)
-9. fulfillment-management (depends on order-placement)
-10. order-approval (depends on fulfillment-management)
-11. notifications (no deps on other capabilities)
-
-Build in this order to avoid circular dependencies.
-
-## Quality Gates
-
-Before DONE:
-- All acceptance criteria from OpenSpec PASSED in acceptance tests
-- No TS errors (tsc --build)
-- No lint errors (bun run lint)
-- E2E tests pass for user-visible workflows (Playwright)
-- Database migrations applied cleanly to a fresh SQLite instance
-- No hardcoded secrets or legacy paths in code
-
+- Nitro's `serverDir` defaults to `false` — must be `"./"` in `vite.config.ts` or `routes/`/`middleware/` never load
+- `Pages()` needs `exclude: ["**/*.test.tsx"]` or the build breaks on the first page test
+- `nitro()` needs `ignore: ["**/*.test.ts"]` or route tests get bundled into the prod server
+- `auto-imports.d.ts` doesn't exist on a fresh clone — `pretypecheck`/`prebuild` generate it; give any new `tsc`-only script the same hook
+- Playwright runs on port 5178, not 5000, so it never collides with a dev server
+- `tsconfig.node.json` is `composite: true` — can't set `noEmit`, so it has its own `outDir` to avoid scattering compiled files
+- `db/client.ts` resolves `sqlite.db` and the `drizzle/` migrations folder from `process.cwd()`, not `import.meta.url` — Vite/Nitro/Vitest all transform this module, so its `import.meta.url` isn't a real `file://` URL
+- Under Vitest (`VITEST=true`), `db/client.ts` uses an in-memory db instead of `sqlite.db`, so route tests never touch or share the dev database
+- `db/client.ts` imports `bun:sqlite` (a Bun builtin), so anything that loads it must run under Bun. Two consequences: (1) `vitest.config.ts` splits into a `client` project (jsdom, everything except `routes/**`) and a `server` project (`environment: "node"`, `routes/**/*.test.ts`) — Vite's jsdom/"client" environment can't externalize a runtime builtin at all (browsers have no such module to resolve against), only a server-like environment can; (2) `test`/`test:watch` run `bun --bun vitest` (not plain `vitest`) — Vitest's worker pool otherwise spawns real Node child processes even when the parent script itself ran under `bun run`, and Node has no `bun:sqlite` either. `.output/server/index.mjs` (PM2/systemd, see ARCHITECTURE.md#deployment) needs the same Bun requirement in production
