@@ -24,10 +24,10 @@
 
 ## 4. Session Management
 
-- [ ] 4.1 Set j_signon_username session attribute after successful authentication (SWHM-T-0018)
-- [ ] 4.2 Set j_signon Boolean session attribute (true/false based on auth state) (SWHM-T-0018)
-- [ ] 4.3 Initialize j_signon to false for new sessions where not set (SWHM-T-0018)
-- [ ] 4.4 Store ORIGINAL_URL in session for protected resource redirect (SWHM-T-0018)
+- [x] 4.1 Set j_signon_username session attribute after successful authentication (SWHM-T-0018)
+- [x] 4.2 Set j_signon Boolean session attribute (true/false based on auth state) (SWHM-T-0018)
+- [x] 4.3 Initialize j_signon to false for new sessions where not set (SWHM-T-0018)
+- [x] 4.4 Store ORIGINAL_URL in session for protected resource redirect (SWHM-T-0018)
 
 ## 5. SignOn Filter
 
