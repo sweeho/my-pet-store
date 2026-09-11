@@ -38,22 +38,22 @@ as each ticket merges. Decisions are in `design.md`; shared shapes in
 
 ## 5. Profile screens
 
-- [ ] 5.1 Replace the `/customer` placeholder with the read-only profile view, built to `artifacts/SWHM-S-0003/design/wireframe-customer-profile.html` (SWHM-T-0036)
-- [ ] 5.2 Render contact information and account details as labelled read-only rows in the wireframe's two-card layout (SWHM-T-0036)
-- [ ] 5.3 Add an edit affordance revealing a form pre-filled from the current account, per design.md § Form behaviour (SWHM-T-0036)
-- [ ] 5.4 Offer language, category, card type, state and country as the specified options (SWHM-T-0036)
-- [ ] 5.5 Accept a full card number on the form and display only the last four digits after saving (SWHM-T-0036)
-- [ ] 5.6 Return the view to its read-only state showing the submitted values after a save (SWHM-T-0036)
-- [ ] 5.7 Keep the screen behind the existing `RequireSignOn` guard so an unauthenticated visit lands on sign-on (SWHM-T-0036)
-- [ ] 5.8 Use `text-destructive` on the page background for error text, avoiding the known invisible token pair (SWHM-T-0036)
+- [x] 5.1 Replace the `/customer` placeholder with the read-only profile view, built to `artifacts/SWHM-S-0003/design/wireframe-customer-profile.html` (SWHM-T-0036)
+- [x] 5.2 Render contact information and account details as labelled read-only rows in the wireframe's two-card layout (SWHM-T-0036)
+- [x] 5.3 Add an edit affordance revealing a form pre-filled from the current account, per design.md § Form behaviour (SWHM-T-0036)
+- [x] 5.4 Offer language, category, card type, state and country as the specified options (SWHM-T-0036)
+- [x] 5.5 Accept a full card number on the form and display only the last four digits after saving (SWHM-T-0036)
+- [x] 5.6 Return the view to its read-only state showing the submitted values after a save (SWHM-T-0036)
+- [x] 5.7 Keep the screen behind the existing `RequireSignOn` guard so an unauthenticated visit lands on sign-on (SWHM-T-0036)
+- [x] 5.8 Use `text-destructive` on the page background for error text, avoiding the known invisible token pair (SWHM-T-0036)
 
 ## 6. Language preference
 
-- [ ] 6.1 Apply the stored preference to the document's `lang` attribute on load (SWHM-T-0036)
-- [ ] 6.2 Report the stored preference for that customer on a later, separate session, per design.md D5 (SWHM-T-0036)
+- [x] 6.1 Apply the stored preference to the document's `lang` attribute on load (SWHM-T-0036)
+- [x] 6.2 Report the stored preference for that customer on a later, separate session, per design.md D5 (SWHM-T-0036)
 
 ## 7. Verification
 
 - [x] 7.1 Cover the account module's creation, defaults, update and expiry parsing in the `server` project (SWHM-T-0034)
-- [ ] 7.2 Cover the profile screens in the `client` project (SWHM-T-0036)
-- [ ] 7.3 Add a Playwright spec covering view, edit, save, sign-out and sign-in-again (SWHM-T-0036)
+- [x] 7.2 Cover the profile screens in the `client` project (SWHM-T-0036)
+- [x] 7.3 Add a Playwright spec covering view, edit, save, sign-out and sign-in-again (SWHM-T-0036)
