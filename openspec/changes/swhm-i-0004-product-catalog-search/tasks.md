@@ -75,10 +75,10 @@
 
 ## 9. Transaction Management
 
-- [ ] 9.1 Declare all CatalogEJB methods with trans-attribute: Required in ejb-jar.xml (SWHM-T-0049)
-- [ ] 9.2 Ensure repeatable read isolation level (SWHM-T-0049)
-- [ ] 9.3 Test pagination consistency under concurrent modifications (SWHM-T-0049)
-- [ ] 9.4 Test that rows aren't skipped or duplicated during pagination (SWHM-T-0049)
+- [x] 9.1 Declare all CatalogEJB methods with trans-attribute: Required in ejb-jar.xml (SWHM-T-0049)
+- [x] 9.2 Ensure repeatable read isolation level (SWHM-T-0049)
+- [x] 9.3 Test pagination consistency under concurrent modifications (SWHM-T-0049)
+- [x] 9.4 Test that rows aren't skipped or duplicated during pagination (SWHM-T-0049)
 
 ## 10. Client Access Facade
 
