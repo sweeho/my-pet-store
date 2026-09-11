@@ -59,11 +59,11 @@
 
 ## 7. Localization
 
-- [ ] 7.1 Create locale-specific detail tables (category_details, product_details, item_details) (SWHM-T-0048)
-- [ ] 7.2 Populate detail tables for all supported locales (en_US, ja_JP, zh_CN, etc.) (SWHM-T-0048)
-- [ ] 7.3 Implement locale parameter passing through all query methods (SWHM-T-0048)
-- [ ] 7.4 Implement null-safe handling for missing locale-specific data (SWHM-T-0048)
-- [ ] 7.5 Test queries with multiple locales (SWHM-T-0048)
+- [x] 7.1 Create locale-specific detail tables (category_details, product_details, item_details) (SWHM-T-0048)
+- [x] 7.2 Populate detail tables for all supported locales (en_US, ja_JP, zh_CN, etc.) (SWHM-T-0048)
+- [x] 7.3 Implement locale parameter passing through all query methods (SWHM-T-0048)
+- [x] 7.4 Implement null-safe handling for missing locale-specific data (SWHM-T-0048)
+- [x] 7.5 Test queries with multiple locales (SWHM-T-0048)
 
 ## 8. Database Abstraction & Multiple Dialects
 
