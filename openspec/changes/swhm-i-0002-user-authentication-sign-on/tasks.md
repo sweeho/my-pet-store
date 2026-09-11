@@ -45,11 +45,11 @@
 
 ## 7. Sign-In Workflow
 
-- [ ] 7.1 Accept POST to j_signon_check endpoint (SWHM-T-0021)
-- [ ] 7.2 Extract j_username and j_password parameters (SWHM-T-0021)
-- [ ] 7.3 Call SignOnEJB.authenticate() with credentials (SWHM-T-0021)
-- [ ] 7.4 On success: redirect to ORIGINAL_URL with session attributes set (SWHM-T-0021)
-- [ ] 7.5 On failure: redirect to sign-on error page (SWHM-T-0021)
+- [x] 7.1 Accept POST to j_signon_check endpoint (SWHM-T-0021)
+- [x] 7.2 Extract j_username and j_password parameters (SWHM-T-0021)
+- [x] 7.3 Call SignOnEJB.authenticate() with credentials (SWHM-T-0021)
+- [x] 7.4 On success: redirect to ORIGINAL_URL with session attributes set (SWHM-T-0021)
+- [x] 7.5 On failure: redirect to sign-on error page (SWHM-T-0021)
 
 ## 8. Account Creation Workflow
 
