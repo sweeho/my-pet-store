@@ -1,0 +1,394 @@
+schemaVersion: 1
+program:
+  key: petstore
+  title: Petstore E-Commerce
+  source: extraction
+  generator: vortex-spec-extraction
+  sourceRef: vortex/legacy-spec/sx-0001
+capabilities:
+  - slug: user-authentication
+    title: User Authentication & Sign-On
+    order: 1
+    dependsOn: []
+    priority: 0
+    change:
+      dir: openspec/changes/sx-user-authentication
+      specCapabilities:
+        - user-authentication
+    canvas:
+      problem: Users need to create accounts and authenticate to access personalized features and protected resources
+      solution: Implement username/password authentication with session management, protected resource access control, and username persistence via cookies
+      userStories:
+        - As a customer, I want to create an account with a username and password so I can access my account later
+        - As a customer, I want to sign in with my credentials so I can access protected features
+        - As a customer, I want the system to remember my username so I don't have to type it every time
+      acceptanceCriteria:
+        - "Create new user account — user can register with username and password"
+        - "Authenticate user with credentials — correct credentials grant access, incorrect credentials deny access"
+        - "Persist username in browser cookie — cookie lasts 30 days when remember checkbox is selected"
+        - "Intercept unauthenticated access — unsigned-on users redirected to sign-on page"
+        - "Redirect to originally-requested resource — user sent to original URL after successful sign-in"
+      outOfScope:
+        - OAuth or social login
+        - Multi-factor authentication
+        - Password reset or recovery flows
+        - Role-based access control beyond basic authenticated/unauthenticated
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "Sign-on form (signon.jsp) with fields: username (text input), password (password input), \"Remember My User Name\" checkbox. Form posts to j_signon_check endpoint. Pre-fills username from bp_signon cookie if present, otherwise defaults to 'j2ee'."
+        - "User creation form (signon.jsp, new customer section) with fields: username (text input), password (password input), password repeat (password input). Form posts to createuser.do endpoint. No default values; all fields initially empty."
+        - "Sign-on error page (signon_failed.jsp) displays generic error message: \"There were errors signing you in. The user name and password you entered were not found in our records. Please try again.\""
+        - "The supplier application SHALL display a form-based login screen that prompts for username and password. The login form SHALL submit to j_security_check endpoint using the J2EE standard form-based authentication mechanism."
+    evidence:
+      irRefs: [AUTH-ENT-0001, AUTH-VALI-0001, AUTH-OPER-0001, AUTH-SCRE-0001, AUTH-SCRE-0002, AUTH-SCRE-0003, AUTH-SCRE-0004]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: account-management
+    title: Customer Account & Profile Management
+    order: 2
+    dependsOn: [user-authentication]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-account-management
+      specCapabilities:
+        - account-management
+    canvas:
+      problem: Customers need to manage their profile information, contact details, and preferences
+      solution: Provide account management capability for customers to view and update contact information, addresses, credit card details, and language preferences
+      userStories:
+        - As a customer, I want to update my contact information so my orders ship to the correct address
+        - As a customer, I want to manage multiple addresses for billing and shipping
+        - As a customer, I want to set my language preference so I see content in my preferred language
+      acceptanceCriteria:
+        - "Customer account stores contact information, address, and credit card details"
+        - "Language preference is stored and applied to subsequent sessions"
+        - "Duplicate accounts are rejected with descriptive error message"
+      outOfScope:
+        - Account suspension or deactivation
+        - Change password functionality
+        - Address validation against postal services
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "The customer profile screen SHALL display (read-only) contact information including first name, last name, street address, city, state/province, postal code, and country, along with other account details."
+    evidence:
+      irRefs: [ACCT-REQUIREMENT-0001, ACCOUNT-MGMT-RULE-0001, ACCOUNT-MGMT-SCREEN-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: catalog-browsing
+    title: Product Catalog & Search
+    order: 3
+    dependsOn: []
+    priority: 0
+    change:
+      dir: openspec/changes/sx-catalog-browsing
+      specCapabilities:
+        - catalog-browsing
+    canvas:
+      problem: Customers need to discover and browse products organized by category
+      solution: Provide a catalog interface supporting category browsing, pagination, multi-locale content, and search
+      userStories:
+        - As a customer, I want to browse products by category so I can find items I'm interested in
+        - As a customer, I want to search for products by name so I can quickly find specific items
+        - As a customer, I want to see products in my language so I can understand descriptions
+      acceptanceCriteria:
+        - "Catalog displays categories, products, and items with locale-specific names and descriptions"
+        - "Search returns matching items across name, category, and description fields"
+        - "Pagination supports browsing large product sets with configurable page size"
+        - "Locale parameter filters content for the requested language"
+      outOfScope:
+        - Product recommendations
+        - Wishlist or favorites functionality
+        - Product reviews or ratings
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+    evidence:
+      irRefs: [CAT-ENTITY-0001, CAT-ENTITY-0002, CAT-REQUIREMENT-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: internationalization
+    title: Multi-Language Support
+    order: 4
+    dependsOn: []
+    priority: 0
+    change:
+      dir: openspec/changes/sx-internationalization
+      specCapabilities:
+        - internationalization
+    canvas:
+      problem: The application serves customers in multiple countries who speak different languages
+      solution: Implement locale-aware content retrieval, user language preference storage, and locale parameter propagation through all layers
+      userStories:
+        - As a Japanese customer, I want to see the catalog in Japanese so I can understand product information
+        - As a customer, I want my language preference saved so it applies to all subsequent visits
+      acceptanceCriteria:
+        - "System supports en_US, ja_JP, and zh_CN locales"
+        - "Catalog queries return language-specific content for the requested locale"
+        - "Missing locale data returns null rather than falling back to another language"
+        - "User language preference is stored in customer profile and applied by default"
+      outOfScope:
+        - Currency conversion or localized pricing
+        - Date and time formatting by locale
+        - Right-to-left language support
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+    evidence:
+      irRefs: [CAT-ENTITY-0003, INTL-SUPPORT-REQ-0001, INTL-SUPPORT-RULE-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: admin-operations
+    title: Administrative Operations & Management
+    order: 5
+    dependsOn: [user-authentication]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-admin-operations
+      specCapabilities:
+        - admin-operations
+    canvas:
+      problem: Administrators need tools to manage orders, inventory, and system operations
+      solution: Provide admin interface for order management, inventory updates, and operational visibility
+      userStories:
+        - As an administrator, I want to view and manage orders so I can track fulfillment
+        - As an administrator, I want to update inventory so product availability is accurate
+      acceptanceCriteria:
+        - "Administrators can access protected admin resources"
+        - "Order status and fulfillment information are visible to admins"
+      outOfScope:
+        - Real-time analytics dashboards
+        - User role management
+        - Audit logging of admin actions
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "A login screen SHALL be displayed to users who attempt to access protected administrative functions. The login form SHALL request User ID and Password and submit via POST to j_security_check."
+        - "A home/index screen SHALL be displayed after successful authentication, providing options to launch the rich client for order management or to logout."
+        - "An error screen SHALL be displayed when login authentication fails, informing the user to verify their username and password and providing a link to return to the sign-in page."
+        - "The Orders View screen SHALL display a read-only table of all approved, completed, and denied orders, with columns for Order ID, User ID, Order Date, Order Amount, and Status."
+    evidence:
+      irRefs: [admin-ops-0001, admin-ops-0002, admin-ops-0003, admin-ops-0004, admin-ops-0005, admin-ops-0006, admin-ops-0007, ORDERLIST-SCREEN-0001, ADMIN-SCREEN-0003, CHARTDATA-REQ-0001, ADMIN-SCREEN-0001, ADMIN-SCREEN-0002, ADMIN-SCREEN-0004]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: shopping-cart
+    title: Shopping Cart Management
+    order: 6
+    dependsOn: [catalog-browsing]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-shopping-cart
+      specCapabilities:
+        - shopping-cart
+    canvas:
+      problem: Customers need to add items to a temporary cart before checkout
+      solution: Implement in-memory shopping cart with add, remove, update, and subtotal calculation capabilities
+      userStories:
+        - As a customer, I want to add items to my cart so I can purchase multiple items
+        - As a customer, I want to update quantities in my cart so I can change my order before checkout
+        - As a customer, I want to see my cart subtotal so I know how much I'm spending
+      acceptanceCriteria:
+        - "Items can be added to cart with default or specified quantity"
+        - "Items can be removed from cart"
+        - "Quantities can be updated, with item removal when quantity is 0 or negative"
+        - "Cart subtotal is calculated as sum of (unitCost × quantity) for all items"
+      outOfScope:
+        - Cart persistence across sessions
+        - Abandoned cart recovery
+        - Cart sharing or wishlists
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "The shopping cart screen SHALL display items with names, quantities, unit costs, and a total, providing an \"Update Cart\" button for quantity changes and remove links for each item. An empty cart message is shown when cart.count == 0."
+    evidence:
+      irRefs: [CART-REQUIREMENT-0001, CART-REQUIREMENT-0002, CART-REQUIREMENT-0003, XMLDOC-ENTITY-0005, screen-cart-001, shopping-cart-workflow-001, shopping-cart-req-001, shopping-cart-req-002, shopping-cart-req-003, shopping-cart-calc-001, shopping-cart-persist-001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: order-placement
+    title: Order Submission & Checkout
+    order: 7
+    dependsOn: [shopping-cart, user-authentication]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-order-placement
+      specCapabilities:
+        - order-placement
+    canvas:
+      problem: Customers need to submit orders with billing, shipping, and payment information
+      solution: Implement order placement workflow accepting customer information, generating unique order IDs, and clearing cart after successful submission
+      userStories:
+        - As a customer, I want to enter billing and shipping addresses so my order is processed correctly
+        - As a customer, I want to enter payment information so I can pay for my order
+        - As a customer, I want confirmation of my order so I know it was submitted
+      acceptanceCriteria:
+        - "Order placement accepts customer contact, address, and credit card information"
+        - "Order is assigned unique ID from UniqueIdGenerator (seed 1001)"
+        - "Order includes current date as order date"
+        - "Line items are created from cart contents with quantity and unit price"
+        - "Cart is cleared after successful order placement"
+        - "Empty cart triggers ShoppingCartEmptyOrderException"
+      outOfScope:
+        - Payment authorization or credit card validation
+        - Tax calculation
+        - Shipping cost estimation
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "The system SHALL present an \"Enter Order Information\" screen capturing billing and shipping contact details (first name, last name, street address, city, state/province, postal code) with all fields validated."
+        - "The order information screen SHALL display two sections: \"Billing Information\" and \"Shipping Information\", each with first name, last name, street address (two fields), city, state/province dropdown, postal code, country dropdown, telephone, and email fields. States shall be limited to CA, NY, TX. Countries shall include at least United States, Canada, Japan, and China."
+        - "Upon successful order placement, the system SHALL display a confirmation screen with the order ID and customer email address, confirming that a confirmation email will be sent."
+    evidence:
+      irRefs: [ORDER-PLACEMENT-REQ-0001, ORDER-PLACEMENT-RULE-0001, ORDER-PLACEMENT-RULE-0002, SCREEN-ORDER-INFO-0001, screen-order-info-001, screen-order-review-001, screen-order-complete-001, order-placement-entity-0001, order-placement-requirement-0001, order-placement-relationship-0001, order-placement-creditcard-0001, order-placement-date-format-0001, order-placement-transaction-0001, order-placement-access-control-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: payment-processing
+    title: Payment & Credit Card Processing
+    order: 8
+    dependsOn: [order-placement]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-payment-processing
+      specCapabilities:
+        - payment-processing
+    canvas:
+      problem: Orders require payment validation and processing to complete transactions
+      solution: Validate credit card information and support payment authorization
+      userStories:
+        - As a customer, I want my credit card to be validated so I know it's accepted
+        - As the system, I want to ensure card expiry is checked so expired cards are rejected
+      acceptanceCriteria:
+        - "Credit card stores card number, card type, and expiry date in MM/YYYY format"
+        - "Card type acceptance rules are enforced"
+        - "Card expiry validation prevents use of expired cards"
+      outOfScope:
+        - PCI compliance or secure card storage
+        - Real-time payment gateway integration
+        - Refund or chargeback handling
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+    evidence:
+      irRefs: [PAY-ENTITY-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: fulfillment-management
+    title: Order Fulfillment & Shipping
+    order: 9
+    dependsOn: [order-placement]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-fulfillment-management
+      specCapabilities:
+        - fulfillment-management
+    canvas:
+      problem: Orders need to be tracked through fulfillment and shipping to completion
+      solution: Track line item quantities ordered and shipped, support partial shipments, and detect order completion
+      userStories:
+        - As a fulfillment manager, I want to track shipments against orders so I know what's been delivered
+        - As a fulfillment manager, I want to handle partial shipments so I can update tracking as goods ship
+        - As a customer, I want to know when my order is complete so I can stop tracking it
+      acceptanceCriteria:
+        - "Line items track ordered and shipped quantities separately"
+        - "Invoice processing updates shipped quantities and re-evaluates order status"
+        - "Multiple partial shipments can be processed for a single order"
+        - "Order marked complete only when all quantities fully shipped"
+      outOfScope:
+        - Tracking number generation or carrier integration
+        - Customer notifications of shipment status
+        - Inventory reservations
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "The system SHALL display a home screen with a heading, description of the supplier module, and buttons to display inventory or logout."
+        - "The supplier application SHALL display an inventory update screen that lists all current inventory items with their existing quantities and allows administrators to enter new quantities. The screen SHALL display item ID, existing quantity, a text input for new quantity, and a checkbox to mark items for update."
+    evidence:
+      irRefs: [FULFL-RULE-0001, FULFL-RULE-0002, FULFL-RULE-0003, FULFL-RULE-0004, FULFL-RULE-0005, FULFL-RULE-0006, FULFL-RULE-0007, FULFL-RULE-0008, FULFL-RULE-0009, FULFL-RULE-0010, SCREEN-0001, SCREEN-0002, SCREEN-0003, FUL-ENT-0001, FUL-ENT-0002, FUL-ENT-0003, FUL-BUS-0001, FUL-BUS-0002, FUL-BUS-0003, FUL-BUS-0004, FUL-INT-0001, ENTITY-INV-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: order-approval
+    title: Order Approval Workflow
+    order: 10
+    dependsOn: [fulfillment-management]
+    priority: 0
+    change:
+      dir: openspec/changes/sx-order-approval
+      specCapabilities:
+        - order-approval
+    canvas:
+      problem: Orders need review and approval before fulfillment begins
+      solution: Implement order approval workflow with terminal status states and supplier PO generation
+      userStories:
+        - As an order manager, I want to approve or deny orders so fulfillment is controlled
+        - As the system, I want approved orders to generate supplier purchase orders so vendors are notified
+      acceptanceCriteria:
+        - "Orders transition through PENDING → APPROVED/DENIED → COMPLETED states"
+        - "Only PENDING orders can be updated; terminal states are immutable"
+        - "Approved orders generate supplier POs with shipping address and line items"
+        - "Notifications are queued for both approved and denied orders"
+      outOfScope:
+        - Approval rule engine or auto-approval
+        - Audit trail of approvals
+        - Escalation workflows
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+      screens:
+        - "The Orders Approval screen SHALL display a table of pending orders with columns for Order ID, User ID, Order Date, Order Amount, and Status. The Status column SHALL be editable via a dropdown selector allowing values PENDING, APPROVED, or DENIED. The screen SHALL provide three buttons: Approve (sets selected rows to APPROVED), Deny (sets selected rows to DENIED), and Commit (sends all changes to the server)."
+        - "The Orders Approval screen status column cells SHALL be rendered with background color coding: green for APPROVED status, red for DENIED status, and yellow for PENDING status."
+    evidence:
+      irRefs: [OPC-APPROVAL-0001, OPC-APPROVAL-0002, OPC-AUTO-APPROVAL-0001, OPC-APPROVAL-INTAKE-0001, OPC-STATUS-GUARD-0001, OPC-SUPPLIER-PO-GEN-0001, OPC-APPROVAL-NOTIFICATION-0001, OPC-WORKFLOW-0001, OPC-WORKFLOW-STATES-0001, ORDERAPP-SCREEN-0001, ORDERAPP-SCREEN-0002, ORDERAPP-BR-0001, ORDERAPP-WF-0001, order-approval-statusquery-0001, order-approval-statusupdate-0001, order-approval-transitions-0001, order-approval-workflow-0001, order-approval-creation-0001]
+      reviewedBy: null
+      reviewedAt: null
+
+  - slug: notifications
+    title: Customer Notifications & Communication
+    order: 11
+    dependsOn: []
+    priority: 0
+    change:
+      dir: openspec/changes/sx-notifications
+      specCapabilities:
+        - notifications
+    canvas:
+      problem: Customers need to be notified of order status changes via email
+      solution: Send asynchronous email notifications for order placement and approval/denial events
+      userStories:
+        - As a customer, I want confirmation email when my order is placed so I have a record
+        - As a customer, I want to be notified when my order is approved or denied so I know its status
+      acceptanceCriteria:
+        - "Order placement generates notification with order ID and customer email"
+        - "Order approval/denial generates notification for each outcome"
+        - "Notifications are sent asynchronously via message queue"
+      outOfScope:
+        - Email template customization
+        - Notification preferences or opt-out
+        - SMS or push notifications
+      risksAssumptions: []
+      techStack: []
+      affectedCode: []
+    evidence:
+      irRefs: [NOTIF-REQUIREMENT-0001, NOTIF-REQUIREMENT-0002]
+      reviewedBy: null
+      reviewedAt: null
+
+artifacts:
+  openapi: api/openapi.yaml
+  erd: architecture/erd.mermaid
+  schema: architecture/schema.sql
+  agents: AGENTS.md

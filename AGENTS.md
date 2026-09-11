@@ -19,6 +19,7 @@ obvious; it does not restate them.
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — stack, data flow, deployment
 - [DESIGN.md](./DESIGN.md) — tokens, theming, component pattern
 - [PRODUCT.md](./PRODUCT.md) — what this is; replace for a real product
+- [legacy-analysis/rebuild-guidance.md](./legacy-analysis/rebuild-guidance.md) — stack constraints and the decisions carried over from the legacy Java EE app
 
 ## Build & run
 
