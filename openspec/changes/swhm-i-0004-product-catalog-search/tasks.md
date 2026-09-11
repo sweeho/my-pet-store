@@ -2,12 +2,12 @@
 
 ## 1. Data Model & Entities
 
-- [ ] 1.1 Define Category entity with id, name (localized), description (localized) fields (SWHM-T-0046)
-- [ ] 1.2 Define Product entity with id, name (localized), description (localized) fields (SWHM-T-0046)
-- [ ] 1.3 Define Item entity with id, category, productId, productName, description, imageLocation, 5 attributes, listPrice, unitCost fields (SWHM-T-0046)
-- [ ] 1.4 Define Page entity with objects list, start index, and hasNext boolean flag (SWHM-T-0046)
-- [ ] 1.5 Create database schema for category, product, item tables with locale-specific detail tables (SWHM-T-0046)
-- [ ] 1.6 Create indexes on categoryID, productID, itemID, locale columns for query performance (SWHM-T-0046)
+- [x] 1.1 Define Category entity with id, name (localized), description (localized) fields (SWHM-T-0046)
+- [x] 1.2 Define Product entity with id, name (localized), description (localized) fields (SWHM-T-0046)
+- [x] 1.3 Define Item entity with id, category, productId, productName, description, imageLocation, 5 attributes, listPrice, unitCost fields (SWHM-T-0046)
+- [x] 1.4 Define Page entity with objects list, start index, and hasNext boolean flag (SWHM-T-0046)
+- [x] 1.5 Create database schema for category, product, item tables with locale-specific detail tables (SWHM-T-0046)
+- [x] 1.6 Create indexes on categoryID, productID, itemID, locale columns for query performance (SWHM-T-0046)
 
 ## 2. Category Retrieval Service
 
