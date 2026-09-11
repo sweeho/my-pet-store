@@ -16,11 +16,11 @@
 
 ## 3. Authentication Service
 
-- [ ] 3.1 Implement SignOnEJB.authenticate(userName, password) method (SWHM-T-0017)
-- [ ] 3.2 Look up user by userName via UserLocalHome.findByPrimaryKey() (SWHM-T-0017)
-- [ ] 3.3 Call user.matchPassword(password) for verification (SWHM-T-0017)
-- [ ] 3.4 Return false if user not found (catch FinderException) (SWHM-T-0017)
-- [ ] 3.5 Implement SignOnEJB.createUser(userName, password) for user registration (SWHM-T-0017)
+- [x] 3.1 Implement SignOnEJB.authenticate(userName, password) method (SWHM-T-0017)
+- [x] 3.2 Look up user by userName via UserLocalHome.findByPrimaryKey() (SWHM-T-0017)
+- [x] 3.3 Call user.matchPassword(password) for verification (SWHM-T-0017)
+- [x] 3.4 Return false if user not found (catch FinderException) (SWHM-T-0017)
+- [x] 3.5 Implement SignOnEJB.createUser(userName, password) for user registration (SWHM-T-0017)
 
 ## 4. Session Management
 
