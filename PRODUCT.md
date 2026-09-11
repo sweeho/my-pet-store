@@ -4,14 +4,14 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for how it is built, [DESIGN.md](./DESI
 
 ## Mission
 
-My Pet Store is a web storefront for pets and pet supplies. It is at the foundation stage: the application runs, names itself, and proves its own build and test pipeline. The commerce surface — what is sold, to whom, and how — is not yet decided and is stated as such below rather than assumed.
+My Pet Store is a web storefront for pets and pet supplies. It is being rebuilt, capability by capability, from a legacy Java EE petstore whose extracted specifications are the source of record for what each capability must do — see `legacy-analysis/` for the extraction and `openspec/specs/` for the specifications themselves. What the store sells, and how an order reaches a customer, are still open; who a customer is, is not.
 
 ## Problem space and users
 
-- **Shoppers** want to find and buy pet products without wading through a general-purpose marketplace.
-- **The team** needs a foundation it has watched run before building any of that. Every later sprint inherits whatever this one leaves behind, which is why the first capability is the application itself rather than a feature.
+- **Shoppers** want to find and buy pet products without wading through a general-purpose marketplace, and want the store to recognise them when they come back.
+- **The team** needs a foundation it has watched run before building any of that. Every later sprint inherits whatever the previous one leaves behind, which is why the first capability was the application itself rather than a feature.
 
-The shopper problem is the reason the product exists; the team problem is the reason the first sprint contains no shopper-facing feature.
+The shopper problem is the reason the product exists; the team problem is the reason the first sprint contained no shopper-facing feature.
 
 ## Capability map
 
@@ -20,6 +20,7 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 | Capability               | What it covers                                                                                                                                                                            | Spec                                     |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `application-foundation` | The running, product-branded application and the automated gate that proves it — what a visitor sees at `/`, what a clean checkout must produce, and what CI must report on a branch push | `openspec/specs/application-foundation/` |
+| `user-authentication`    | Who a customer is and what proves it — account creation and its constraints, credential verification, signed-on session state, which resources require it, and remembering a username     | `openspec/specs/user-authentication/`    |
 
 ## Scope
 
@@ -30,6 +31,8 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 - Native mobile applications. The product is delivered in a browser.
 - Being a general marketplace or a multi-tenant platform. My Pet Store is one store.
 - Owning payment card data directly. Any future payment capability integrates a processor rather than storing card details.
+- Federated or social sign-in, multi-factor authentication, and password reset or recovery. A customer is identified by a username and a password they set; anything beyond that is a separate product decision, not an extension of the current one.
+- Roles or permissions beyond authenticated and unauthenticated. An administrative capability is specified separately and will state its own model.
 - Re-scaffolding the technical foundation. The stack the application was bootstrapped onto is settled — see ARCHITECTURE.md § Key Decisions.
 
 ## Not yet decided
@@ -37,12 +40,15 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 These are open at the product level. A future idea has to settle each before a capability can be specified for it; none is an omission from this document.
 
 - The catalogue model — whether the store sells live animals, supplies, or both, and how inventory is sourced.
-- Whether shoppers have accounts, and what an account is for. The current `users` table and the request-scoped user in `middleware/auth.ts` are boilerplate demo content, not a product decision.
+- What an account holds beyond credentials — profile, addresses, order history and preferences are specified by their own capabilities, not by authentication.
 - Checkout, payment and fulfilment.
+
+The `users` table inherited from the template is still demo content and is not a product decision; the authenticated customer is a separate entity (ARCHITECTURE.md § Data model).
 
 ## Success measures
 
 At the product level, and deliberately few:
 
 - A shopper can complete the store's primary journey end to end in a browser, without an error state that has no recovery.
+- A returning shopper can sign in and reach the resource they asked for, rather than being dropped somewhere else.
 - The verification pipeline reports a verdict on every change before it lands, so the foundation's health is observed rather than assumed.
