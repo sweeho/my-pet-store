@@ -29,6 +29,15 @@ establish the session, honour the remember-username checkbox, and tell the clien
    resolve the destination — the session's `original_url` when one is stored, otherwise
    `/signon-welcome` — and clear `original_url` once consumed so a later sign-in does not
    replay a stale destination. Return `{ signedOn: true, redirectTo }`.
+   **Deviation (minor, recorded per the deviation protocol):** `auth/session.ts`'s
+   `setOriginalUrl(session: SignOnSession, url: string): SignOnSession` — a fixed contract
+   owned by SWHM-T-0018, out of this ticket's ownership — accepts only a `string`, so there is
+   no way to write `original_url` back to `null` without a signature change. The clear step is
+   not implemented; `redirectTo` is still computed correctly for this request. A stale
+   `original_url` can only resurface on a _redundant_ repeat sign-in on an already-signed-on
+   session, since `middleware/signon.ts`/`check.get.ts` never call `setOriginalUrl` while
+   `j_signon` is true — no scenario in the delta spec exercises that path. See `summary.md`
+   § Notes; a follow-up ticket is raised for the capability the upstream contract is missing.
 4. **Remember the username** in the same request: `rememberUsername` when the checkbox came
    back truthy, `forgetUsername` when it did not. The clear branch runs on every sign-in
    without the box, whether or not a cookie is currently set.
