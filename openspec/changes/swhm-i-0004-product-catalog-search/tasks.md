@@ -11,13 +11,13 @@
 
 ## 2. Category Retrieval Service
 
-- [ ] 2.1 Implement CatalogEJB.getCategory(categoryID, locale) to retrieve single category (SWHM-T-0051)
-- [ ] 2.2 Implement CatalogEJB.getCategories(start, count, locale) with pagination (SWHM-T-0051)
-- [ ] 2.3 Implement GenericCatalogDAO.getCategory() with locale-aware SQL query (SWHM-T-0051)
-- [ ] 2.4 Implement GenericCatalogDAO.getCategories() with ResultSet.absolute() pagination (SWHM-T-0051)
-- [ ] 2.5 Ensure results ordered by category name (SWHM-T-0051)
-- [ ] 2.6 Implement hasNext flag detection (check for row after consuming count) (SWHM-T-0051)
-- [ ] 2.7 Return Page.EMPTY_PAGE for invalid start positions or no results (SWHM-T-0051)
+- [x] 2.1 Implement CatalogEJB.getCategory(categoryID, locale) to retrieve single category (SWHM-T-0051)
+- [x] 2.2 Implement CatalogEJB.getCategories(start, count, locale) with pagination (SWHM-T-0051)
+- [x] 2.3 Implement GenericCatalogDAO.getCategory() with locale-aware SQL query (SWHM-T-0051)
+- [x] 2.4 Implement GenericCatalogDAO.getCategories() with ResultSet.absolute() pagination (SWHM-T-0051)
+- [x] 2.5 Ensure results ordered by category name (SWHM-T-0051)
+- [x] 2.6 Implement hasNext flag detection (check for row after consuming count) (SWHM-T-0051)
+- [x] 2.7 Return Page.EMPTY_PAGE for invalid start positions or no results (SWHM-T-0051)
 
 ## 3. Product Retrieval Service
 
