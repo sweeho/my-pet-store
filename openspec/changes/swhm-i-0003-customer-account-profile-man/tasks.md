@@ -1,64 +1,59 @@
 # Account Management — Implementation Tasks
 
-## 1. Core Entities
+Every checkbox is tagged with the ticket that owns it. The platform ticks them server-side
+as each ticket merges. Decisions are in `design.md`; shared shapes in
+`artifacts/SWHM-S-0003/INTERFACES.md`.
 
-- [ ] 1.1 Implement Customer entity with userId primary key
-- [ ] 1.2 Implement Account entity with status field (active/disabled)
-- [ ] 1.3 Implement Profile entity with preferredLanguage, favoriteCategory, myListPreference, bannerPreference
-- [ ] 1.4 Implement ContactInfo entity with givenName, familyName, telephone, email
-- [ ] 1.5 Implement Address entity with streetName1, streetName2, city, state, zipCode, country
-- [ ] 1.6 Implement relationships: Customer→Account, Account→ContactInfo, ContactInfo→Address
+## 1. Data model
 
-## 2. Entity Creation & Relationships
+- [ ] 1.1 Add `customers`, `accounts`, `profiles`, `contact_info`, `addresses` and `card_metadata` to `db/schema.ts`, each keyed on `user_name` with cascading foreign keys (SWHM-T-0034)
+- [ ] 1.2 Key `customers.user_name` to `auth_users.user_name` so the credential row stays the identity (SWHM-T-0034)
+- [ ] 1.3 Store card type, expiry and last four digits only — no card-number column, per design.md D1 (SWHM-T-0034)
+- [ ] 1.4 Generate the drizzle migration into `drizzle/` and commit it with the schema change (SWHM-T-0034)
 
-- [ ] 2.1 Implement Customer.ejbCreate(userId) to store userId
-- [ ] 2.2 Implement Customer.ejbPostCreate() to auto-create Account and Profile with defaults
-- [ ] 2.3 Set Account status to "active" on creation
-- [ ] 2.4 Initialize Profile with default values (en_US, null, true, true)
-- [ ] 2.5 Implement cascade-delete relationships for ContactInfo→Address and Account→ContactInfo/CreditCard
+## 2. Account module
 
-## 3. Account Workflows
+- [ ] 2.1 Create the `account/` capability directory outside Nitro's scanned paths and register its tests in Vitest's `server` project (SWHM-T-0034)
+- [ ] 2.2 Implement `createCustomer(userName)` writing the account row with status `active` and the profile row with defaults `en_US` / null / true / true (SWHM-T-0034)
+- [ ] 2.3 Implement `findAccount` and `getAccountOrDefaults`, the latter returning profile defaults when no row exists, per design.md D4 (SWHM-T-0034)
+- [ ] 2.4 Implement `updateAccount` populating contact info, address, card metadata and profile from one update payload (SWHM-T-0034)
+- [ ] 2.5 Implement `expiryMonth` / `expiryYear` parsing `MM/YYYY`, falling back to `01` / `2010` for a malformed value (SWHM-T-0034)
+- [ ] 2.6 Implement `lastFour` and reduce any supplied card number to it before persistence (SWHM-T-0034)
+- [ ] 2.7 Export the language, category, card-type, state and country vocabularies from one module shared by the validator and the form (SWHM-T-0034)
+- [ ] 2.8 Validate language, category and card type server side; accept state and country as typed, per design.md D6 (SWHM-T-0034)
 
-- [ ] 3.1 Implement customer creation workflow via CustomerEJBAction.perform(CREATE event)
-- [ ] 3.2 Implement scf.createCustomer(userId) method
-- [ ] 3.3 Implement updateCustomer() method to populate Account/ContactInfo/Profile from event
-- [ ] 3.4 Implement UPDATE event handling in CustomerEJBAction
+## 3. Duplicate-account rejection
 
-## 4. Validation Rules
+- [ ] 3.1 Reject an already-registered user name in `auth/validation.ts` with a descriptive `CreateUserError`, per design.md D3 (SWHM-T-0034)
+- [ ] 3.2 Call `createCustomer` from the existing `insertUser` success path so registration creates the account and profile rows (SWHM-T-0034)
 
-- [ ] 4.1 Validate supported languages (en_US, ja_JP, zh_CN)
-- [ ] 4.2 Validate supported categories (BIRDS, CATS, DOGS, FISH, REPTILES)
-- [ ] 4.3 Validate state values (California, New York, Texas)
-- [ ] 4.4 Validate country values (USA, Canada, Japan, China)
-- [ ] 4.5 Validate card types (Java Card, Duke Express, Meow Card)
+## 4. Account API
 
-## 5. Credit Card Management
+- [ ] 4.1 Add `GET /api/customer` returning the signed-on customer's contact information, address, card metadata and preferences (SWHM-T-0035)
+- [ ] 4.2 Add `PUT /api/customer` applying an update and returning the updated account (SWHM-T-0035)
+- [ ] 4.3 Resolve the customer from the existing sign-on session and refuse an unauthenticated request without returning account data (SWHM-T-0035)
+- [ ] 4.4 Answer a validation failure with a descriptive message and leave stored values unchanged (SWHM-T-0035)
+- [ ] 4.5 Scope every read and write to the session's own user name so one customer cannot reach another's account (SWHM-T-0035)
+- [ ] 4.6 Cover the routes with tests under `routes/` in the `server` project (SWHM-T-0035)
 
-- [ ] 5.1 Implement CreditCard entity with cardNumber, cardType, expiryDate
-- [ ] 5.2 Parse expiry date in MM/YYYY format
-- [ ] 5.3 Implement getExpiryMonth() and getExpiryYear() accessor methods
+## 5. Profile screens
 
-## 6. Account Creation Form
+- [ ] 5.1 Replace the `/customer` placeholder with the read-only profile view, built to `artifacts/SWHM-S-0003/design/wireframe-customer-profile.html` (SWHM-T-0036)
+- [ ] 5.2 Render contact information and account details as labelled read-only rows in the wireframe's two-card layout (SWHM-T-0036)
+- [ ] 5.3 Add an edit affordance revealing a form pre-filled from the current account, per design.md § Form behaviour (SWHM-T-0036)
+- [ ] 5.4 Offer language, category, card type, state and country as the specified options (SWHM-T-0036)
+- [ ] 5.5 Accept a full card number on the form and display only the last four digits after saving (SWHM-T-0036)
+- [ ] 5.6 Return the view to its read-only state showing the submitted values after a save (SWHM-T-0036)
+- [ ] 5.7 Keep the screen behind the existing `RequireSignOn` guard so an unauthenticated visit lands on sign-on (SWHM-T-0036)
+- [ ] 5.8 Use `text-destructive` on the page background for error text, avoiding the known invisible token pair (SWHM-T-0036)
 
-- [ ] 6.1 Build account creation form with contact information section
-- [ ] 6.2 Add credit card information input to creation form
-- [ ] 6.3 Add profile preferences (language, category, myList, banners) to form
-- [ ] 6.4 Wire form submission to POST createcustomer.do with action=create
-- [ ] 6.5 Pre-populate form with default values
+## 6. Language preference
 
-## 7. Account Edit Form
+- [ ] 6.1 Apply the stored preference to the document's `lang` attribute on load (SWHM-T-0036)
+- [ ] 6.2 Report the stored preference for that customer on a later, separate session, per design.md D5 (SWHM-T-0036)
 
-- [ ] 7.1 Build account edit form with all fields
-- [ ] 7.2 Pre-populate all fields with current entity values via EL expressions
-- [ ] 7.3 Wire form submission to POST customer.do with action=update
-- [ ] 7.4 Support updates to contact info, address, credit card, and profile
+## 7. Verification
 
-## 8. Integration Testing
-
-- [ ] 8.1 Test customer creation creates Account and Profile
-- [ ] 8.2 Test Account created with "active" status
-- [ ] 8.3 Test Profile defaults are set correctly
-- [ ] 8.4 Test updateCustomer() populates all related entities
-- [ ] 8.5 Test account edit updates all fields correctly
-- [ ] 8.6 Test language preference change updates profile
-
+- [ ] 7.1 Cover the account module's creation, defaults, update and expiry parsing in the `server` project (SWHM-T-0034)
+- [ ] 7.2 Cover the profile screens in the `client` project (SWHM-T-0036)
+- [ ] 7.3 Add a Playwright spec covering view, edit, save, sign-out and sign-in-again (SWHM-T-0036)
