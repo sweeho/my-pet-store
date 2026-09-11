@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -77,3 +77,89 @@ export const cardMetadata = sqliteTable("card_metadata", {
   expiryDate: text("expiry_date"),
   lastFour: text("last_four"),
 });
+
+// Entity/detail split: one row per entity, one row per entity per locale.
+// This is the localization mechanism itself, not a normalization preference
+// — it's what makes "missing locale data returns null" a data fact rather
+// than a code branch (design.md § Planning record, D2).
+export const category = sqliteTable("category", {
+  catid: text("catid").primaryKey(),
+});
+
+export const categoryDetails = sqliteTable(
+  "category_details",
+  {
+    catid: text("catid")
+      .notNull()
+      .references(() => category.catid, { onDelete: "cascade" }),
+    locale: text("locale").notNull(),
+    name: text("name").notNull(),
+    descn: text("descn").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.catid, t.locale] }),
+    index("category_details_locale_idx").on(t.locale),
+  ],
+);
+
+export const product = sqliteTable(
+  "product",
+  {
+    productid: text("productid").primaryKey(),
+    catid: text("catid")
+      .notNull()
+      .references(() => category.catid, { onDelete: "cascade" }),
+  },
+  (t) => [index("product_catid_idx").on(t.catid)],
+);
+
+export const productDetails = sqliteTable(
+  "product_details",
+  {
+    productid: text("productid")
+      .notNull()
+      .references(() => product.productid, { onDelete: "cascade" }),
+    locale: text("locale").notNull(),
+    name: text("name").notNull(),
+    descn: text("descn").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.productid, t.locale] }),
+    index("product_details_locale_idx").on(t.locale),
+  ],
+);
+
+export const item = sqliteTable(
+  "item",
+  {
+    itemid: text("itemid").primaryKey(),
+    productid: text("productid")
+      .notNull()
+      .references(() => product.productid, { onDelete: "cascade" }),
+    listPrice: real("list_price").notNull(),
+    unitCost: real("unit_cost").notNull(),
+  },
+  (t) => [index("item_productid_idx").on(t.productid)],
+);
+
+export const itemDetails = sqliteTable(
+  "item_details",
+  {
+    itemid: text("itemid")
+      .notNull()
+      .references(() => item.itemid, { onDelete: "cascade" }),
+    locale: text("locale").notNull(),
+    name: text("name").notNull(),
+    image: text("image").notNull(),
+    descn: text("descn").notNull(),
+    attr1: text("attr1"),
+    attr2: text("attr2"),
+    attr3: text("attr3"),
+    attr4: text("attr4"),
+    attr5: text("attr5"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.itemid, t.locale] }),
+    index("item_details_locale_idx").on(t.locale),
+  ],
+);
