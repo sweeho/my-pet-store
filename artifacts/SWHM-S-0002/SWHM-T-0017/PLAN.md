@@ -27,6 +27,11 @@ never reaches into `auth/user.ts` directly.
 2. **`createUser(userName, password)`** in the same module (design.md § Account Creation,
    steps 2–4): call `validateNewUser`, then `insertUser`, returning the created `AuthUser`.
    `CreateUserError` propagates to the caller unchanged — SWHM-T-0022 turns it into a response.
+   **Deviation (minor, recorded per the deviation protocol):** SWHM-T-0016 moved the
+   `validateNewUser` call inside `auth/user.ts`'s `insertUser` itself, so `createUser` here
+   delegates to `insertUser` directly rather than calling `validateNewUser` a second time.
+   `CreateUserError` still propagates unchanged; no interface contract changed. See
+   `summary.md` § Notes.
 3. **Tests.** `auth/authenticate.test.ts`, against a real user inserted through `createUser`:
    correct credentials → `true`; wrong password → `false`; a username that was never created →
    `false`; a correct password in the wrong case → `false` (matching is case-sensitive).
