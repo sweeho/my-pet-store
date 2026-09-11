@@ -61,11 +61,11 @@
 
 ## 9. User Interfaces
 
-- [ ] 9.1 Create sign-in form (signon.jsp) with username/password inputs and remember checkbox (SWHM-T-0023)
-- [ ] 9.2 Create sign-up form (signon.jsp new customer section) with username/password/confirm fields (SWHM-T-0023)
-- [ ] 9.3 Implement username field pre-population from bp_signon cookie (SWHM-T-0023)
-- [ ] 9.4 Create sign-on error page (signon_failed.jsp) with error message (SWHM-T-0023)
-- [ ] 9.5 Add password confirmation validation on client side (SWHM-T-0023)
+- [x] 9.1 Create sign-in form (signon.jsp) with username/password inputs and remember checkbox (SWHM-T-0023)
+- [x] 9.2 Create sign-up form (signon.jsp new customer section) with username/password/confirm fields (SWHM-T-0023)
+- [x] 9.3 Implement username field pre-population from bp_signon cookie (SWHM-T-0023)
+- [x] 9.4 Create sign-on error page (signon_failed.jsp) with error message (SWHM-T-0023)
+- [x] 9.5 Add password confirmation validation on client side (SWHM-T-0023)
 
 ## 10. Integration Testing
 
