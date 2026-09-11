@@ -82,10 +82,10 @@
 
 ## 10. Client Access Facade
 
-- [ ] 10.1 Implement CatalogHelper to provide EJB or DAO access choice (SWHM-T-0055)
-- [ ] 10.2 Implement fast-lane path for read-only DAO access (SWHM-T-0055)
-- [ ] 10.3 Implement EJB path for transactional consistency (SWHM-T-0055)
-- [ ] 10.4 Document when to use each path (SWHM-T-0055)
+- [x] 10.1 Implement CatalogHelper to provide EJB or DAO access choice (SWHM-T-0055)
+- [x] 10.2 Implement fast-lane path for read-only DAO access (SWHM-T-0055)
+- [x] 10.3 Implement EJB path for transactional consistency (SWHM-T-0055)
+- [x] 10.4 Document when to use each path (SWHM-T-0055)
 
 ## 11. Testing
 
