@@ -2,6 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 import { eq } from "drizzle-orm";
 
+import { createCustomer } from "../account/customer";
 import { db } from "../db/client";
 import { authUsers } from "../db/schema";
 import { validateNewUser } from "./validation";
@@ -24,6 +25,7 @@ export function insertUser(userName: string, password: string): AuthUser {
   validateNewUser(userName, password);
   const user: AuthUser = { userName, password: hashPassword(password) };
   db.insert(authUsers).values(user).run();
+  createCustomer(userName);
   return user;
 }
 

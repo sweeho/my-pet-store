@@ -21,6 +21,7 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `application-foundation` | The running, product-branded application and the automated gate that proves it — what a visitor sees at `/`, what a clean checkout must produce, and what CI must report on a branch push | `openspec/specs/application-foundation/` |
 | `user-authentication`    | Who a customer is and what proves it — account creation and its constraints, credential verification, signed-on session state, which resources require it, and remembering a username     | `openspec/specs/user-authentication/`    |
+| `account-management`     | What an account holds beyond credentials — contact information and address, card metadata, and profile preferences, and how a customer reads and updates them                             | `openspec/specs/account-management/`     |
 
 ## Scope
 
@@ -30,7 +31,7 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 
 - Native mobile applications. The product is delivered in a browser.
 - Being a general marketplace or a multi-tenant platform. My Pet Store is one store.
-- Owning payment card data directly. Any future payment capability integrates a processor rather than storing card details.
+- Owning payment card data directly. The store keeps enough to recognise a card a customer has already told it about — the type, the expiry and the last four digits — and never the card number itself. Any capability that needs the number integrates a processor rather than storing it.
 - Federated or social sign-in, multi-factor authentication, and password reset or recovery. A customer is identified by a username and a password they set; anything beyond that is a separate product decision, not an extension of the current one.
 - Roles or permissions beyond authenticated and unauthenticated. An administrative capability is specified separately and will state its own model.
 - Re-scaffolding the technical foundation. The stack the application was bootstrapped onto is settled — see ARCHITECTURE.md § Key Decisions.
@@ -40,7 +41,7 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 These are open at the product level. A future idea has to settle each before a capability can be specified for it; none is an omission from this document.
 
 - The catalogue model — whether the store sells live animals, supplies, or both, and how inventory is sourced.
-- What an account holds beyond credentials — profile, addresses, order history and preferences are specified by their own capabilities, not by authentication.
+- Order history, and whether an account keeps more than one address. A customer has one contact address today; separate billing and shipping addresses are a question for order placement, not for the account.
 - Checkout, payment and fulfilment.
 
 The `users` table inherited from the template is still demo content and is not a product decision; the authenticated customer is a separate entity (ARCHITECTURE.md § Data model).

@@ -22,6 +22,13 @@
       "when": 1789108475801,
       "tag": "0002_chilly_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789122107165,
+      "tag": "0003_quick_clea",
+      "breakpoints": true
     }
   ]
 }
