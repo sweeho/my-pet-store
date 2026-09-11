@@ -29,12 +29,12 @@ as each ticket merges. Decisions are in `design.md`; shared shapes in
 
 ## 4. Account API
 
-- [ ] 4.1 Add `GET /api/customer` returning the signed-on customer's contact information, address, card metadata and preferences (SWHM-T-0035)
-- [ ] 4.2 Add `PUT /api/customer` applying an update and returning the updated account (SWHM-T-0035)
-- [ ] 4.3 Resolve the customer from the existing sign-on session and refuse an unauthenticated request without returning account data (SWHM-T-0035)
-- [ ] 4.4 Answer a validation failure with a descriptive message and leave stored values unchanged (SWHM-T-0035)
-- [ ] 4.5 Scope every read and write to the session's own user name so one customer cannot reach another's account (SWHM-T-0035)
-- [ ] 4.6 Cover the routes with tests under `routes/` in the `server` project (SWHM-T-0035)
+- [x] 4.1 Add `GET /api/customer` returning the signed-on customer's contact information, address, card metadata and preferences (SWHM-T-0035)
+- [x] 4.2 Add `PUT /api/customer` applying an update and returning the updated account (SWHM-T-0035)
+- [x] 4.3 Resolve the customer from the existing sign-on session and refuse an unauthenticated request without returning account data (SWHM-T-0035)
+- [x] 4.4 Answer a validation failure with a descriptive message and leave stored values unchanged (SWHM-T-0035)
+- [x] 4.5 Scope every read and write to the session's own user name so one customer cannot reach another's account (SWHM-T-0035)
+- [x] 4.6 Cover the routes with tests under `routes/` in the `server` project (SWHM-T-0035)
 
 ## 5. Profile screens
 
