@@ -53,11 +53,11 @@
 
 ## 8. Account Creation Workflow
 
-- [ ] 8.1 Accept POST to createuser.do endpoint (SWHM-T-0022)
-- [ ] 8.2 Extract j_username, j_password parameters (SWHM-T-0022)
-- [ ] 8.3 Call SignOnEJB.createUser() to register new account (SWHM-T-0022)
-- [ ] 8.4 On success: establish session and redirect appropriately (SWHM-T-0022)
-- [ ] 8.5 On CreateException: redirect to user_creation_error.jsp (SWHM-T-0022)
+- [x] 8.1 Accept POST to createuser.do endpoint (SWHM-T-0022)
+- [x] 8.2 Extract j_username, j_password parameters (SWHM-T-0022)
+- [x] 8.3 Call SignOnEJB.createUser() to register new account (SWHM-T-0022)
+- [x] 8.4 On success: establish session and redirect appropriately (SWHM-T-0022)
+- [x] 8.5 On CreateException: redirect to user_creation_error.jsp (SWHM-T-0022)
 
 ## 9. User Interfaces
 
