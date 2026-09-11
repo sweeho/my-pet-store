@@ -4,7 +4,7 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for how it is built, [DESIGN.md](./DESI
 
 ## Mission
 
-My Pet Store is a web storefront for pets and pet supplies. It is being rebuilt, capability by capability, from a legacy Java EE petstore whose extracted specifications are the source of record for what each capability must do — see `legacy-analysis/` for the extraction and `openspec/specs/` for the specifications themselves. What the store sells, and how an order reaches a customer, are still open; who a customer is, is not.
+My Pet Store is a web storefront for pets and pet supplies. It is being rebuilt, capability by capability, from a legacy Java EE petstore whose extracted specifications are the source of record for what each capability must do — see `legacy-analysis/` for the extraction and `openspec/specs/` for the specifications themselves. How an order reaches a customer is still open; who a customer is, and what the store sells, are not.
 
 ## Problem space and users
 
@@ -22,6 +22,7 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 | `application-foundation` | The running, product-branded application and the automated gate that proves it — what a visitor sees at `/`, what a clean checkout must produce, and what CI must report on a branch push | `openspec/specs/application-foundation/` |
 | `user-authentication`    | Who a customer is and what proves it — account creation and its constraints, credential verification, signed-on session state, which resources require it, and remembering a username     | `openspec/specs/user-authentication/`    |
 | `account-management`     | What an account holds beyond credentials — contact information and address, card metadata, and profile preferences, and how a customer reads and updates them                             | `openspec/specs/account-management/`     |
+| `catalog-browsing`       | What the store sells and how a shopper finds it — the category, product and item hierarchy, localized content for each, paginated browsing, and keyword search across items               | `openspec/specs/catalog-browsing/`       |
 
 ## Scope
 
@@ -34,13 +35,14 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 - Owning payment card data directly. The store keeps enough to recognise a card a customer has already told it about — the type, the expiry and the last four digits — and never the card number itself. Any capability that needs the number integrates a processor rather than storing it.
 - Federated or social sign-in, multi-factor authentication, and password reset or recovery. A customer is identified by a username and a password they set; anything beyond that is a separate product decision, not an extension of the current one.
 - Roles or permissions beyond authenticated and unauthenticated. An administrative capability is specified separately and will state its own model.
+- Personalised merchandising — recommendations, wishlists, favourites, reviews and ratings. The catalogue shows what the store sells; what a particular shopper might also like is a product decision nobody has taken.
 - Re-scaffolding the technical foundation. The stack the application was bootstrapped onto is settled — see ARCHITECTURE.md § Key Decisions.
 
 ## Not yet decided
 
 These are open at the product level. A future idea has to settle each before a capability can be specified for it; none is an omission from this document.
 
-- The catalogue model — whether the store sells live animals, supplies, or both, and how inventory is sourced.
+- Whether the catalogue's contents are administered in the product or loaded as data. The store now has a catalogue structure — categories holding products holding purchasable items, each localized — but nothing in the product creates or edits one; the demo catalogue is seeded.
 - Order history, and whether an account keeps more than one address. A customer has one contact address today; separate billing and shipping addresses are a question for order placement, not for the account.
 - Checkout, payment and fulfilment.
 
@@ -51,5 +53,6 @@ The `users` table inherited from the template is still demo content and is not a
 At the product level, and deliberately few:
 
 - A shopper can complete the store's primary journey end to end in a browser, without an error state that has no recovery.
+- A shopper can find a product they came for, by browsing a category or by searching, without knowing how the catalogue is organised.
 - A returning shopper can sign in and reach the resource they asked for, rather than being dropped somewhere else.
 - The verification pipeline reports a verdict on every change before it lands, so the foundation's health is observed rather than assumed.
