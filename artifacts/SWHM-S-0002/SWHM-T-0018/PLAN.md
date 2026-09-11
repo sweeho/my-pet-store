@@ -50,10 +50,18 @@ May create or modify — nothing else:
 | `auth/session.test.ts`                  | NEW — unit cover                     |
 | `routes/api/signon/session.get.ts`      | NEW — `GET /api/signon/session`      |
 | `routes/api/signon/session.get.test.ts` | NEW — route cover                    |
+| `tsconfig.node.json`                    | one-line addendum — see below        |
 
 Out of ownership: `auth/user.ts`, `auth/validation.ts`, `auth/authenticate.ts`,
 `vitest.config.ts`, `middleware/`, `src/`, `e2e/`, `openspec/`, `artifacts/`, and the
 repository-root narrative documents.
+
+**Deviation (minor, recorded per protocol):** `tsconfig.node.json`'s `include` never listed
+`auth/` — no earlier ticket's `routes/`/`middleware/`/`db/` file imported from `auth/`, so
+`tsc --build`'s project graph never needed to compile it. Step 4's endpoint is the first file
+under `routes/` to import from `auth/`, which surfaced the gap as a `tsc` project-reference
+error (`TS6307`). Added `"auth"` to the include array — additive, no behavior change, no
+fixed-interface or ownership-map impact — and proceeded rather than blocking.
 
 ## Definition of Done
 
