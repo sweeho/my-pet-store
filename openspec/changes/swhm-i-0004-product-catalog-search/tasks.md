@@ -89,18 +89,18 @@
 
 ## 11. Testing
 
-- [ ] 11.1 Write unit tests for Category entity creation and retrieval (SWHM-T-0056)
-- [ ] 11.2 Write unit tests for Product entity with category filtering (SWHM-T-0056)
-- [ ] 11.3 Write unit tests for Item entity with all 13 attributes (SWHM-T-0056)
-- [ ] 11.4 Write unit tests for pagination with hasNext calculation (SWHM-T-0056)
-- [ ] 11.5 Write unit tests for search tokenization and matching (SWHM-T-0056)
-- [ ] 11.6 Write integration tests for getCategory, getCategories (SWHM-T-0056)
-- [ ] 11.7 Write integration tests for getProduct, getProducts (SWHM-T-0056)
-- [ ] 11.8 Write integration tests for getItem, getItems (SWHM-T-0056)
-- [ ] 11.9 Write integration tests for searchItems with various queries (SWHM-T-0056)
-- [ ] 11.10 Write integration tests for pagination edge cases (empty, last page, invalid start) (SWHM-T-0056)
-- [ ] 11.11 Write integration tests for locale-specific content retrieval (SWHM-T-0056)
-- [ ] 11.12 Write E2E tests for browsing workflow: category → product → item (SWHM-T-0056)
+- [x] 11.1 Write unit tests for Category entity creation and retrieval (SWHM-T-0056)
+- [x] 11.2 Write unit tests for Product entity with category filtering (SWHM-T-0056)
+- [x] 11.3 Write unit tests for Item entity with all 13 attributes (SWHM-T-0056)
+- [x] 11.4 Write unit tests for pagination with hasNext calculation (SWHM-T-0056)
+- [x] 11.5 Write unit tests for search tokenization and matching (SWHM-T-0056)
+- [x] 11.6 Write integration tests for getCategory, getCategories (SWHM-T-0056)
+- [x] 11.7 Write integration tests for getProduct, getProducts (SWHM-T-0056)
+- [x] 11.8 Write integration tests for getItem, getItems (SWHM-T-0056)
+- [x] 11.9 Write integration tests for searchItems with various queries (SWHM-T-0056)
+- [x] 11.10 Write integration tests for pagination edge cases (empty, last page, invalid start) (SWHM-T-0056)
+- [x] 11.11 Write integration tests for locale-specific content retrieval (SWHM-T-0056)
+- [x] 11.12 Write E2E tests for browsing workflow: category → product → item (SWHM-T-0056)
 
 ## 12. Performance & Optimization
 
