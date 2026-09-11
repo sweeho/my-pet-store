@@ -25,6 +25,7 @@ My Pet Store is a single deployable: one Vite process serves a React SPA and a N
 .
 ├── src/
 │   ├── components/ui/   # shadcn/ui-style primitives (+ *.test.tsx)
+│   ├── components/       # Behavioural components that are not design-system primitives
 │   ├── pages/            # Frontend routes, file-based (+ *.test.tsx)
 │   ├── hooks/, utils/, types/, constants/, data/, store/
 │   ├── test/              # Vitest setup

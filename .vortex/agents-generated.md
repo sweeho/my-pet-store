@@ -23,3 +23,18 @@ new server-side directory has to be added to the `server` project's `include` an
 `client` project's `exclude` when it is created.
 
 _Recorded during SWHM-S-0002 (change `swhm-i-0002-user-authentication-sign-on`)._
+
+## Implementation containers do not ship a Chromium
+
+`AGENTS.md` § Test & validate says every environment this template targets — including agent
+workspace containers — ships a Chromium, and tells you to prefer `verify-full`. That does not
+hold in the implementation containers: six consecutive tickets in SWHM-S-0002 (SWHM-T-0016,
+0018, 0020, 0022, 0023, 0024) each ran `bun run test:e2e` and each got the same fail-fast from
+`scripts/ensure-playwright-browser.mjs` reporting Chromium is genuinely not installed.
+
+The instruction's substance is unchanged, so treat it as: **run `verify-full`; if the preflight
+reports the browser missing, fall back to `bun run verify`, say so in your summary, and move on.**
+Do not retry it and do not install a browser — the browser tier does run, in CI on every ticket
+branch and again at integration QA, which is where those assertions are actually observed.
+
+_Recorded during SWHM-S-0002 (change `swhm-i-0002-user-authentication-sign-on`)._
