@@ -67,11 +67,11 @@
 
 ## 8. Database Abstraction & Multiple Dialects
 
-- [ ] 8.1 Create CatalogDAOSQL.xml with SQL statements for all database types (SWHM-T-0050)
-- [ ] 8.2 Implement Cloudscape SQL dialect for all queries (SWHM-T-0050)
-- [ ] 8.3 Implement Oracle SQL dialect for all queries (SWHM-T-0050)
-- [ ] 8.4 Implement database type detection in GenericCatalogDAO (SWHM-T-0050)
-- [ ] 8.5 Test with both Cloudscape and Oracle databases (SWHM-T-0050)
+- [x] 8.1 Create CatalogDAOSQL.xml with SQL statements for all database types (SWHM-T-0050)
+- [x] 8.2 Implement Cloudscape SQL dialect for all queries (SWHM-T-0050)
+- [x] 8.3 Implement Oracle SQL dialect for all queries (SWHM-T-0050)
+- [x] 8.4 Implement database type detection in GenericCatalogDAO (SWHM-T-0050)
+- [x] 8.5 Test with both Cloudscape and Oracle databases (SWHM-T-0050)
 
 ## 9. Transaction Management
 
