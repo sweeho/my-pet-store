@@ -4,7 +4,9 @@ import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
-import { users } from "./schema";
+import { seedCatalog } from "../catalog/seed";
+
+import { category, users } from "./schema";
 
 // Vitest sets VITEST=true in every worker; an in-memory db keeps route
 // integration tests isolated from the file-backed dev/prod db and from
@@ -30,4 +32,12 @@ if (db.select().from(users).all().length === 0) {
       { name: "Jane Smith", email: "jane@example.com" },
     ])
     .run();
+}
+
+// The demo catalog is deliberately absent under Vitest: unit and integration
+// tests start with an empty catalog and control their own fixtures, so no
+// assertion is ever unknowingly checked against seed data (design.md §
+// Planning record, D9).
+if (db.select().from(category).all().length === 0 && !process.env.VITEST) {
+  seedCatalog();
 }
