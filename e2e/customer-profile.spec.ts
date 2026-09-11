@@ -78,6 +78,7 @@ test.describe("Customer profile", () => {
     await signInForm.getByLabel("Username").fill(username);
     await signInForm.getByLabel("Password", { exact: true }).fill(password);
     await signInForm.getByRole("button", { name: "Sign In" }).click();
+    await expect(page).toHaveURL(/\/signon-welcome$/);
 
     await page.goto("/customer");
     await expect(page.getByRole("group", { name: "First name" })).toContainText("Priya");
