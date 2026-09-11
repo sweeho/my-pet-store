@@ -30,13 +30,13 @@
 
 ## 4. Item Retrieval Service
 
-- [ ] 4.1 Implement CatalogEJB.getItem(itemID, locale) returning all 13 item attributes (SWHM-T-0053)
-- [ ] 4.2 Implement CatalogEJB.getItems(productID, start, count, locale) with product filtering (SWHM-T-0053)
-- [ ] 4.3 Implement GenericCatalogDAO.getItem() populating all Item fields from result set (SWHM-T-0053)
-- [ ] 4.4 Implement GenericCatalogDAO.getItems() with product filter and pagination (SWHM-T-0053)
-- [ ] 4.5 Ensure imageLocation field is retrieved from item_details table (SWHM-T-0053)
-- [ ] 4.6 Ensure all 5 attribute fields (attribute1-5) are populated (SWHM-T-0053)
-- [ ] 4.7 Ensure pricing fields (listPrice, unitCost) are retrieved as doubles (SWHM-T-0053)
+- [x] 4.1 Implement CatalogEJB.getItem(itemID, locale) returning all 13 item attributes (SWHM-T-0053)
+- [x] 4.2 Implement CatalogEJB.getItems(productID, start, count, locale) with product filtering (SWHM-T-0053)
+- [x] 4.3 Implement GenericCatalogDAO.getItem() populating all Item fields from result set (SWHM-T-0053)
+- [x] 4.4 Implement GenericCatalogDAO.getItems() with product filter and pagination (SWHM-T-0053)
+- [x] 4.5 Ensure imageLocation field is retrieved from item_details table (SWHM-T-0053)
+- [x] 4.6 Ensure all 5 attribute fields (attribute1-5) are populated (SWHM-T-0053)
+- [x] 4.7 Ensure pricing fields (listPrice, unitCost) are retrieved as doubles (SWHM-T-0053)
 
 ## 5. Search Service
 
