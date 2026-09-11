@@ -21,6 +21,7 @@
     "middleware",
     "db",
     "auth",
+    "account",
     "e2e"
   ]
 }

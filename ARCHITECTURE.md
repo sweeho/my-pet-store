@@ -34,6 +34,7 @@ My Pet Store is a single deployable: one Vite process serves a React SPA and a N
 ├── routes/api/            # Backend routes, file-based (+ *.test.ts)
 ├── middleware/             # Runs before every route handler
 ├── auth/                    # Server-side authentication modules (+ *.test.ts) — not a scanned directory
+├── account/                 # Customer account & profile modules (+ *.test.ts) — not a scanned directory
 ├── db/                       # Drizzle schema.ts + client.ts (sqlite connection, migrate, seed)
 ├── drizzle/                   # Generated SQL migrations (drizzle-kit generate), committed
 ├── e2e/                      # Playwright specs + global-setup.ts
@@ -56,7 +57,7 @@ My Pet Store is a single deployable: one Vite process serves a React SPA and a N
 
 Creating the file is the whole registration step on both sides; nothing lists routes anywhere.
 
-Nitro scans `api/`, `routes/`, `middleware/`, `plugins/` and `tasks/`, and auto-imports from `utils/**`. **Server-side code that is not an endpoint must live outside those directories** — a `.ts` file under `routes/` becomes an HTTP route whether or not it exports a handler. That is why capability modules get their own top-level directory (`auth/` today) and why a new one must not be named `utils`.
+Nitro scans `api/`, `routes/`, `middleware/`, `plugins/` and `tasks/`, and auto-imports from `utils/**`. **Server-side code that is not an endpoint must live outside those directories** — a `.ts` file under `routes/` becomes an HTTP route whether or not it exports a handler. That is why capability modules get their own top-level directory — `auth/` and `account/` — and why a new one must not be named `utils`.
 
 ## Data model
 
@@ -65,6 +66,7 @@ Defined in `db/schema.ts`:
 - **users** — `id` (autoincrement pk), `name`, `email` (unique). Template demo content, seeded by `db/client.ts` and probed by `e2e/smoke.spec.ts`; not a product decision (PRODUCT.md § Not yet decided).
 - **auth_users** — `user_name` (pk), `password`. The authenticated customer. Deliberately distinct from `users`: the demo table has no credential column and a numeric key, and its routes are regression cover that a repurpose would destroy. → `openspec/specs/user-authentication/`
 - **sessions** — `id` (pk), `j_signon`, `j_signon_username`, `original_url`, `updated_at`. Per-visitor server-side state; the attribute names are the ones the authentication specification asserts.
+- **customers**, **accounts**, **profiles**, **contact_info**, **addresses**, **card_metadata** — what an account holds beyond credentials. Every one of them is keyed on `user_name` and foreign-keys upward with `ON DELETE CASCADE`: the relationships are 1:1 the whole way down, so a shared primary key carries them and no surrogate id is introduced. `customers.user_name` references `auth_users.user_name`, which keeps the credential row as the identity. `card_metadata` holds a card type, an expiry and four digits — see § Key Decisions. → `openspec/specs/account-management/`
 
 Routes import `db` and the table objects directly (see `routes/api/users/`) — there is no repository layer, and adding one is a decision that has not been taken.
 
@@ -88,7 +90,7 @@ Authentication is `middleware/signon.ts` and the handlers under `routes/api/sign
 - **Access control is decided in one pure function and enforced in two places.** SPA navigation never reaches the server, so a server-only filter would protect an API path and silently leave the equivalent page open in development, which is exactly where the browser tier runs. A new protected resource is added to the configuration, never as a new check.
 - **TypeScript is strict**, with complete annotations on exported functions.
 - **`auto-imports.d.ts` is generated, not committed.** It does not exist on a fresh clone; the `prebuild` and `pretypecheck` hooks create it. Any new tsc-only script needs the same hook or it fails only on a clean checkout.
-- **Vitest runs as two projects, chosen by path**: tests for server-side code (`routes/**`, `auth/**`) run in the `server` project (node), everything else in `client` (jsdom). A test that reaches `db/client.ts` from the jsdom project cannot resolve `bun:sqlite` at all, so a new server-side directory must be added to that project's include when it is created.
+- **Vitest runs as two projects, chosen by path**: tests for server-side code (`routes/**`, `auth/**`, `account/**`) run in the `server` project (node), everything else in `client` (jsdom). A test that reaches `db/client.ts` from the jsdom project cannot resolve `bun:sqlite` at all, so a new server-side directory must be added to that project's include when it is created.
 
 ## Testing
 
@@ -109,3 +111,5 @@ Decisions that bind work beyond the change that made them. Each is authored wher
 - **Protected resources are declared in configuration and enforced by a single decision function**, consumed by server middleware and by the client route guard. One decision with two enforcement points is the only arrangement that covers both an API path and a client-side navigation to the same resource. _Authored in change `swhm-i-0002-user-authentication-sign-on`._
 - **Credentials are stored hashed, never as plaintext**, even where an extracted legacy specification describes plaintext comparison. The specification's scenarios observe only whether authentication succeeds, so the deviation costs nothing it specifies and removes a standing exposure from every capability that follows. Deviations of this kind are recorded against the sprint rather than by editing the extracted spec. _Authored in change `swhm-i-0002-user-authentication-sign-on`._
 - **Server-side capability code lives in its own top-level directory, outside the ones Nitro scans**, with its tests registered in Vitest's `server` project. A module placed under `routes/` becomes a public endpoint by existing, and one tested from the jsdom project cannot load the database driver at all. _Authored in change `swhm-i-0002-user-authentication-sign-on`._
+- **A card number is never persisted.** The store holds a card's type, expiry and last four digits — enough to show a customer which card it already has — and reduces any number it is given to those four digits before storage. This holds even where an extracted legacy specification asks for the number, on the same reasoning as the credentials decision above. It binds every later capability: an order or payment flow that needs a real card number integrates a processor rather than reading one back from this database, which PRODUCT.md § Scope already requires. _Authored in change `swhm-i-0003-customer-account-profile-man` (D1)._
+- **An account's entities share the customer's primary key rather than carrying surrogate ids.** The account, profile, contact information, address and card metadata are each 1:1 with the customer, so `user_name` is the key throughout and `ON DELETE CASCADE` expresses the ownership the legacy container did in code. Anything later that turns out to be 1:N — a second address, an order — takes its own key instead of widening one of these. _Authored in change `swhm-i-0003-customer-account-profile-man`._

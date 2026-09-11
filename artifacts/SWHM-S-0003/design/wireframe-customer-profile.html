@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Customer Profile — wireframe</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #ffffff;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: #3f3f46;
+      }
+      .frame { width: 720px; padding: 0 0 24px; }
+
+      /* top nav strip — matches the app's global nav (logo left, links right) */
+      .nav {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 24px; border-bottom: 1px solid #e4e4e7;
+      }
+      .logo { width: 28px; height: 28px; background: #d4d4d8; border: 1px solid #c4c4cb; border-radius: 6px; }
+      .navlinks { display: flex; gap: 16px; align-items: center; }
+      .navlink { width: 52px; height: 8px; background: #d4d4d8; border-radius: 2px; }
+      .navlink.short { width: 38px; }
+
+      .page { padding: 24px; max-width: 672px; margin: 0 auto; }
+
+      .h1 { font-size: 20px; font-weight: 700; color: #52525b; margin: 0 0 4px; }
+      .sub { height: 8px; width: 220px; background: #e4e4e7; border-radius: 2px; margin-bottom: 20px; }
+
+      .card {
+        border: 1px solid #e4e4e7; border-radius: 10px; background: #fafafa;
+        padding: 16px 18px; margin-bottom: 16px;
+      }
+      .cardhead {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e4e4e7;
+      }
+      .cardtitle { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #71717a; }
+      .badge {
+        font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+        color: #71717a; border: 1px solid #d4d4d8; border-radius: 999px;
+        padding: 3px 8px; background: #f4f4f5;
+      }
+
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+      .field { display: flex; flex-direction: column; gap: 6px; }
+      .field.full { grid-column: 1 / -1; }
+      .label { font-size: 11px; color: #71717a; }
+      /* read-only value: a plain text bar, no input box, no edit affordance */
+      .value { height: 10px; background: #d4d4d8; border-radius: 2px; }
+      .w90 { width: 90%; } .w70 { width: 70%; } .w55 { width: 55%; } .w40 { width: 40%; } .w30 { width: 30%; }
+
+      .note { font-size: 11px; color: #a1a1aa; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="nav">
+        <div class="logo"></div>
+        <div class="navlinks">
+          <div class="navlink"></div>
+          <div class="navlink short"></div>
+          <div class="navlink short"></div>
+        </div>
+      </div>
+
+      <div class="page">
+        <h1 class="h1">Customer Profile</h1>
+        <div class="sub"></div>
+
+        <!-- Contact information: read-only, exactly the fields the brief names -->
+        <div class="card">
+          <div class="cardhead">
+            <span class="cardtitle">Contact information</span>
+            <span class="badge">Read only</span>
+          </div>
+          <div class="grid">
+            <div class="field">
+              <span class="label">First name</span>
+              <div class="value w70"></div>
+            </div>
+            <div class="field">
+              <span class="label">Last name</span>
+              <div class="value w55"></div>
+            </div>
+            <div class="field full">
+              <span class="label">Street address</span>
+              <div class="value w90"></div>
+            </div>
+            <div class="field">
+              <span class="label">City</span>
+              <div class="value w55"></div>
+            </div>
+            <div class="field">
+              <span class="label">State / Province</span>
+              <div class="value w40"></div>
+            </div>
+            <div class="field">
+              <span class="label">Postal code</span>
+              <div class="value w30"></div>
+            </div>
+            <div class="field">
+              <span class="label">Country</span>
+              <div class="value w55"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- "other account details" — the brief names no fields, so none are drawn -->
+        <div class="card">
+          <div class="cardhead">
+            <span class="cardtitle">Account details</span>
+            <span class="badge">Read only</span>
+          </div>
+          <div class="grid">
+            <div class="field">
+              <span class="label">&nbsp;</span>
+              <div class="value w70"></div>
+            </div>
+            <div class="field">
+              <span class="label">&nbsp;</span>
+              <div class="value w55"></div>
+            </div>
+            <div class="field">
+              <span class="label">&nbsp;</span>
+              <div class="value w55"></div>
+            </div>
+            <div class="field">
+              <span class="label">&nbsp;</span>
+              <div class="value w40"></div>
+            </div>
+          </div>
+          <div class="note">
+            Same label + read-only value rows as above. The brief states "other account
+            details" without naming them — field names deliberately not invented.
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

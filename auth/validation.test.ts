@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { db } from "../db/client";
+import { authUsers } from "../db/schema";
 import {
   CreateUserError,
   MAX_PASSWD_LENGTH,
@@ -44,5 +46,13 @@ describe("auth/validation", () => {
 
   it("VT-06: a valid username and password pair throws nothing", () => {
     expect(() => validateNewUser("alice", "secret123")).not.toThrow();
+  });
+
+  it("VT-07: a user name that is already registered throws naming the user name", () => {
+    db.insert(authUsers).values({ userName: "taken", password: "hash" }).run();
+
+    expect(() => validateNewUser("taken", "secret123")).toThrow(
+      new CreateUserError("User ID taken already exists"),
+    );
   });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { db } from "../db/client";
+import { authUsers } from "../db/schema";
+import { findAccount } from "../account/customer";
+import { CreateUserError } from "./validation";
 import { findUser, insertUser, matchPassword } from "./user";
 
 describe("auth/user", () => {
@@ -30,5 +34,27 @@ describe("auth/user", () => {
     const created = insertUser("dave", "secret123");
 
     expect(created.password).not.toBe("secret123");
+  });
+
+  it("UT-05: registering a new user creates its account and profile with defaults", () => {
+    insertUser("erin", "secret123");
+
+    const account = findAccount("erin");
+
+    expect(account?.status).toBe("active");
+    expect(account?.profile).toEqual({
+      preferredLanguage: "en_US",
+      favoriteCategory: null,
+      myListPreference: true,
+      bannerPreference: true,
+    });
+  });
+
+  it("UT-06: registering an already-taken user name throws and adds no row", () => {
+    insertUser("frank", "secret123");
+    const countBefore = db.select().from(authUsers).all().length;
+
+    expect(() => insertUser("frank", "secret123")).toThrow(CreateUserError);
+    expect(db.select().from(authUsers).all().length).toBe(countBefore);
   });
 });
