@@ -69,12 +69,12 @@
 
 ## 10. Integration Testing
 
-- [ ] 10.1 Test successful user creation with valid credentials (SWHM-T-0024)
-- [ ] 10.2 Test username length validation (max 25 chars) (SWHM-T-0024)
-- [ ] 10.3 Test special character rejection (%, \*) (SWHM-T-0024)
-- [ ] 10.4 Test successful authentication with correct credentials (SWHM-T-0024)
-- [ ] 10.5 Test authentication failure with incorrect password (SWHM-T-0024)
-- [ ] 10.6 Test authentication failure with non-existent username (SWHM-T-0024)
-- [ ] 10.7 Test remember username cookie creation and retrieval (SWHM-T-0024)
-- [ ] 10.8 Test protected resource redirect to sign-on page (SWHM-T-0024)
-- [ ] 10.9 Test post-auth redirect to original URL (SWHM-T-0024)
+- [x] 10.1 Test successful user creation with valid credentials (SWHM-T-0024)
+- [x] 10.2 Test username length validation (max 25 chars) (SWHM-T-0024)
+- [x] 10.3 Test special character rejection (%, \*) (SWHM-T-0024)
+- [x] 10.4 Test successful authentication with correct credentials (SWHM-T-0024)
+- [x] 10.5 Test authentication failure with incorrect password (SWHM-T-0024)
+- [x] 10.6 Test authentication failure with non-existent username (SWHM-T-0024)
+- [x] 10.7 Test remember username cookie creation and retrieval (SWHM-T-0024)
+- [x] 10.8 Test protected resource redirect to sign-on page (SWHM-T-0024)
+- [x] 10.9 Test post-auth redirect to original URL (SWHM-T-0024)
