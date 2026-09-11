@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../db/client";
 import { authUsers } from "../db/schema";
+import { validateNewUser } from "./validation";
 
 export type AuthUser = { userName: string; password: string };
 
@@ -20,6 +21,7 @@ export function findUser(userName: string): AuthUser | undefined {
 }
 
 export function insertUser(userName: string, password: string): AuthUser {
+  validateNewUser(userName, password);
   const user: AuthUser = { userName, password: hashPassword(password) };
   db.insert(authUsers).values(user).run();
   return user;
