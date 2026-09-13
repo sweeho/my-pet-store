@@ -35,6 +35,18 @@ Pattern (see `src/components/ui/button.tsx` + `button-variants.ts`):
 
 New shared components go in `src/components/ui/`, follow this pattern, get a `*.test.tsx`.
 
+## Loading states
+
+A screen that gates its render on a fetch shows a pending indicator, never an empty page. The
+indicator is an element with `role="status"` that names what is loading — an ARIA live region, so a
+screen reader announces the state change without stealing focus — and it disappears once the content
+is present. Keep the screen's stable chrome (its heading, its container) rendered alongside it, so
+the page has an identity from first paint.
+
+There is no skeleton primitive and no spinner component; the role is the pattern. Tests locate the
+indicator by that role, never by class name or DOM shape, which is how everything else in this
+codebase is located too.
+
 ## Icons
 
 `lucide-react` for general use, `@heroicons/react` for `@headlessui/react` overlays (nav dialog).
