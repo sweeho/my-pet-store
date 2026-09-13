@@ -1,18 +1,24 @@
 import { Link, useParams, useSearchParams } from "react-router";
 
-import { Button } from "@/components";
+import { Button, LanguageSwitcher } from "@/components";
 
+import { DEFAULT_LOCALE } from "../../../../catalog/locale";
 import type { Item, Page, Product } from "../../../../catalog/types";
 import NotFound from "../../NotFound";
+import { LANGUAGE_SWITCHER_MOUNT_ID, UnavailableInLanguage } from "../UnavailableInLanguage";
 import { paginationLinks, useCatalogFetch, useCatalogLocale } from "../shared";
 
 const PAGE_SIZE = 10;
 
 export default function ProductPage() {
   const { productId } = useParams<{ productId: string }>();
-  const { locale } = useCatalogLocale();
+  const { locale, setLocale } = useCatalogLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const start = Number(searchParams.get("start") ?? "0");
+
+  useEffect(() => {
+    if (locale) document.documentElement.lang = locale;
+  }, [locale]);
 
   const productUrl =
     locale && productId
@@ -35,7 +41,8 @@ export default function ProductPage() {
   }
 
   if (notFound) return <NotFound />;
-  if (!product) return null;
+
+  const showUnavailable = Boolean(items && items.objects.length === 0 && locale !== DEFAULT_LOCALE);
 
   const { prevStart, nextStart } = items
     ? paginationLinks(items, PAGE_SIZE)
@@ -44,15 +51,43 @@ export default function ProductPage() {
   return (
     <div className="mx-auto max-w-[672px] p-6">
       <Link
-        to={`/catalog/category/${product.categoryId}`}
+        to={product ? `/catalog/category/${product.categoryId}` : "/catalog"}
         className="text-muted-foreground text-sm hover:underline"
       >
-        ← {product.categoryId}
+        ← {product ? product.categoryId : "Catalog"}
       </Link>
-      <h1 className="text-foreground mt-2 text-xl font-bold">{product.name}</h1>
-      <p className="text-muted-foreground mt-1 text-sm">{product.description}</p>
 
-      {items && (
+      <div className="mt-2 flex items-start justify-between gap-4">
+        {product ? (
+          <div>
+            <h1 className="text-foreground text-xl font-bold">{product.name}</h1>
+            <p className="text-muted-foreground mt-1 text-sm">{product.description}</p>
+          </div>
+        ) : (
+          <h1 className="text-foreground text-xl font-bold">Product</h1>
+        )}
+        {locale && (
+          <div id={LANGUAGE_SWITCHER_MOUNT_ID}>
+            <LanguageSwitcher locale={locale} onChange={setLocale} />
+          </div>
+        )}
+      </div>
+
+      {!product ? (
+        <p role="status" className="text-muted-foreground mt-6 text-sm">
+          Loading product…
+        </p>
+      ) : !items ? (
+        <p role="status" className="text-muted-foreground mt-6 text-sm">
+          Loading items…
+        </p>
+      ) : showUnavailable ? (
+        <UnavailableInLanguage
+          locale={locale ?? DEFAULT_LOCALE}
+          noun="items"
+          onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+        />
+      ) : (
         <ul className="mt-6 flex flex-col gap-2">
           {items.objects.map((item) => (
             <li key={item.itemId}>
@@ -67,7 +102,7 @@ export default function ProductPage() {
         </ul>
       )}
 
-      {items && (
+      {items && !showUnavailable && (
         <div className="mt-4 flex gap-2">
           <Button
             variant="outline"

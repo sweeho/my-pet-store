@@ -107,4 +107,32 @@ describe("CatalogHome (/catalog)", () => {
     expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });
+
+  it("PT-04: the language control renders while the first fetch is still in flight, and a pending region names what is loading", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      return new Promise(() => {});
+    });
+
+    render(<CatalogHome />, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={["/catalog?locale=ja_JP"]}>{children}</MemoryRouter>
+      ),
+    });
+
+    expect(await screen.findByRole("button", { name: /日本語/ })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading categories…");
+  });
+
+  it("PT-05: sets document.documentElement.lang to the active locale", async () => {
+    render(<CatalogHome />, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={["/catalog?locale=ja_JP"]}>{children}</MemoryRouter>
+      ),
+    });
+
+    await screen.findByRole("region", { name: "Categories" });
+    expect(document.documentElement.lang).toBe("ja_JP");
+  });
 });
