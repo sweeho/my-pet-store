@@ -28,7 +28,7 @@
 
 ## 5. Testing
 
-- [ ] 5.1 Test catalog queries with en_US locale (SWHM-T-0076)
-- [ ] 5.2 Test catalog queries with ja_JP locale (SWHM-T-0076)
-- [ ] 5.3 Test catalog queries with zh_CN locale (SWHM-T-0076)
-- [ ] 5.4 Test missing locale data returns null (SWHM-T-0076)
+- [x] 5.1 Test catalog queries with en_US locale (SWHM-T-0076)
+- [x] 5.2 Test catalog queries with ja_JP locale (SWHM-T-0076)
+- [x] 5.3 Test catalog queries with zh_CN locale (SWHM-T-0076)
+- [x] 5.4 Test missing locale data returns null (SWHM-T-0076)
