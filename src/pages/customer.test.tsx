@@ -240,4 +240,24 @@ describe("CustomerProfile", () => {
       expect(document.documentElement.lang).toBe("ja_JP");
     });
   });
+
+  it("PT-10: shows the heading and a status indicator while the account read is in flight, then replaces it with content", async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    fetchMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }),
+    );
+
+    render(<CustomerProfile />);
+
+    expect(screen.getByRole("heading", { name: "Customer Profile" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Contact information" })).not.toBeInTheDocument();
+
+    resolveFetch(jsonResponse(sampleAccount));
+
+    await screen.findByRole("region", { name: "Contact information" });
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
 });
