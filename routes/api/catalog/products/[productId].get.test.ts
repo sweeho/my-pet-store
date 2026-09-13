@@ -32,7 +32,7 @@ describe("GET /api/catalog/products/:productId", () => {
     });
   });
 
-  it("PD-02: a product that does not exist answers 404 with a plain error body, never a 200 carrying null", async () => {
+  it("PD-02: a product that does not exist answers 404 with reason not-found", async () => {
     const event = new H3Event(
       new Request("http://localhost/api/catalog/products/RT-NOT-A-PRODUCT"),
       { params: { productId: "RT-NOT-A-PRODUCT" } },
@@ -41,6 +41,24 @@ describe("GET /api/catalog/products/:productId", () => {
     const result = await getProduct(event);
 
     expect(event.res.status).toBe(404);
-    expect(result).toEqual({ error: "Product not found: RT-NOT-A-PRODUCT" });
+    expect(result).toEqual({
+      error: "Product not found: RT-NOT-A-PRODUCT",
+      reason: "not-found",
+    });
+  });
+
+  it("PD-03: a product with no content in the requested locale answers 404 with reason missing-translation", async () => {
+    const event = new H3Event(
+      new Request("http://localhost/api/catalog/products/RT-BULLDOGS?locale=RT-NO-SUCH-LOCALE"),
+      { params: { productId: "RT-BULLDOGS" } },
+    );
+
+    const result = await getProduct(event);
+
+    expect(event.res.status).toBe(404);
+    expect(result).toEqual({
+      error: "Product not found: RT-BULLDOGS",
+      reason: "missing-translation",
+    });
   });
 });

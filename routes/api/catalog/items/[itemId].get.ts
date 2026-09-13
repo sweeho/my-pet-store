@@ -1,8 +1,8 @@
 import { defineHandler, getQuery, getRouterParam, setResponseStatus } from "nitro/h3";
 
-import { getItem, type Item } from "../../../../catalog/catalog";
+import { getItem, missingReason, type Item, type MissingReason } from "../../../../catalog/catalog";
 
-type Result = Item | { error: string };
+type Result = Item | { error: string; reason: MissingReason };
 
 // Public — no session is read here (design.md § Planning record, D6).
 export default defineHandler((event): Result => {
@@ -13,7 +13,8 @@ export default defineHandler((event): Result => {
   const found = itemId ? getItem(itemId, locale) : null;
   if (!found) {
     setResponseStatus(event, 404);
-    return { error: `Item not found: ${itemId ?? ""}` };
+    const reason = itemId ? missingReason("item", itemId) : "not-found";
+    return { error: `Item not found: ${itemId ?? ""}`, reason };
   }
 
   return found;

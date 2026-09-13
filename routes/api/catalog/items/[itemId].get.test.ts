@@ -63,7 +63,7 @@ describe("GET /api/catalog/items/:itemId", () => {
     });
   });
 
-  it("ID-02: an item that does not exist answers 404 with a plain error body, never a 200 carrying null", async () => {
+  it("ID-02: an item that does not exist answers 404 with reason not-found", async () => {
     const event = new H3Event(new Request("http://localhost/api/catalog/items/RT-NOT-AN-ITEM"), {
       params: { itemId: "RT-NOT-AN-ITEM" },
     });
@@ -71,6 +71,31 @@ describe("GET /api/catalog/items/:itemId", () => {
     const result = await getItem(event);
 
     expect(event.res.status).toBe(404);
-    expect(result).toEqual({ error: "Item not found: RT-NOT-AN-ITEM" });
+    expect(result).toEqual({ error: "Item not found: RT-NOT-AN-ITEM", reason: "not-found" });
+  });
+
+  it("ID-03: an item with no content in the requested locale answers 404 with reason missing-translation, distinct from an unknown id under the same locale", async () => {
+    const knownItem = new H3Event(
+      new Request("http://localhost/api/catalog/items/RT-EST-2?locale=RT-NO-SUCH-LOCALE"),
+      { params: { itemId: "RT-EST-2" } },
+    );
+    const unknownItem = new H3Event(
+      new Request("http://localhost/api/catalog/items/RT-NOT-AN-ITEM?locale=RT-NO-SUCH-LOCALE"),
+      { params: { itemId: "RT-NOT-AN-ITEM" } },
+    );
+
+    const knownResult = await getItem(knownItem);
+    const unknownResult = await getItem(unknownItem);
+
+    expect(knownItem.res.status).toBe(404);
+    expect(knownResult).toEqual({
+      error: "Item not found: RT-EST-2",
+      reason: "missing-translation",
+    });
+    expect(unknownItem.res.status).toBe(404);
+    expect(unknownResult).toEqual({
+      error: "Item not found: RT-NOT-AN-ITEM",
+      reason: "not-found",
+    });
   });
 });
