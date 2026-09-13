@@ -1,7 +1,7 @@
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { Button } from "@/components";
+import { Button, LanguageSwitcher } from "@/components";
 
 import type { Category, Item, Page } from "../../../catalog/types";
 import { paginationLinks, useCatalogFetch, useCatalogLocale } from "./shared";
@@ -9,10 +9,14 @@ import { paginationLinks, useCatalogFetch, useCatalogLocale } from "./shared";
 const PAGE_SIZE = 10;
 
 export default function CatalogHome() {
-  const { locale } = useCatalogLocale();
+  const { locale, setLocale } = useCatalogLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const start = Number(searchParams.get("start") ?? "0");
   const q = searchParams.get("q") ?? "";
+
+  useEffect(() => {
+    if (locale) document.documentElement.lang = locale;
+  }, [locale]);
 
   const categoriesUrl =
     locale && !q
@@ -48,7 +52,10 @@ export default function CatalogHome() {
 
   return (
     <div className="mx-auto max-w-[672px] p-6">
-      <h1 className="text-foreground text-xl font-bold">Catalog</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-foreground text-xl font-bold">Catalog</h1>
+        {locale && <LanguageSwitcher locale={locale} onChange={setLocale} />}
+      </div>
 
       <form
         role="search"
@@ -67,32 +74,36 @@ export default function CatalogHome() {
         <Button type="submit">Search</Button>
       </form>
 
-      {q && searchResults && (
-        <section aria-label={`Search results for "${q}"`} className="mt-6">
-          <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
-            Search results for &quot;{q}&quot;
-          </h2>
-          {searchResults.objects.length === 0 ? (
-            <p className="text-muted-foreground mt-2 text-sm">No items matched your search.</p>
-          ) : (
-            <ul className="mt-2 flex flex-col gap-2">
-              {searchResults.objects.map((item) => (
-                <li key={item.itemId}>
-                  <Link
-                    to={`/catalog/item/${item.itemId}`}
-                    className="text-foreground hover:underline"
-                  >
-                    {item.description}
-                  </Link>
-                  <span className="text-muted-foreground ml-2 text-xs">{item.productName}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      )}
-
-      {!q && categories && (
+      {q ? (
+        searchResults ? (
+          <section aria-label={`Search results for "${q}"`} className="mt-6">
+            <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
+              Search results for &quot;{q}&quot;
+            </h2>
+            {searchResults.objects.length === 0 ? (
+              <p className="text-muted-foreground mt-2 text-sm">No items matched your search.</p>
+            ) : (
+              <ul className="mt-2 flex flex-col gap-2">
+                {searchResults.objects.map((item) => (
+                  <li key={item.itemId}>
+                    <Link
+                      to={`/catalog/item/${item.itemId}`}
+                      className="text-foreground hover:underline"
+                    >
+                      {item.description}
+                    </Link>
+                    <span className="text-muted-foreground ml-2 text-xs">{item.productName}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : (
+          <p role="status" className="text-muted-foreground mt-6 text-sm">
+            Loading search results…
+          </p>
+        )
+      ) : categories ? (
         <section aria-label="Categories" className="mt-6">
           <ul className="flex flex-col gap-2">
             {categories.objects.map((category) => (
@@ -107,6 +118,10 @@ export default function CatalogHome() {
             ))}
           </ul>
         </section>
+      ) : (
+        <p role="status" className="text-muted-foreground mt-6 text-sm">
+          Loading categories…
+        </p>
       )}
 
       {activePage && (
