@@ -8,6 +8,6 @@
 
 ## 2. Fix
 
-- [ ] 2.1 Set the light `:root` `--destructive-foreground` to `oklch(1 0 0)` in `src/index.css` (SWHM-T-0005)
-- [ ] 2.2 Add `src/theme-tokens.test.ts` asserting the light pair meets 4.5:1 and that neither theme's pair is identical, with a failure message naming the offending theme (SWHM-T-0005)
-- [ ] 2.3 Confirm the four existing `text-destructive` usages and `src/components/ui/button.test.tsx` are unaffected by the change (SWHM-T-0005)
+- [x] 2.1 Set the light `:root` `--destructive-foreground` to `oklch(1 0 0)` in `src/index.css` (SWHM-T-0005)
+- [x] 2.2 Add `src/theme-tokens.test.ts` asserting the light pair meets 4.5:1 and that neither theme's pair is identical, with a failure message naming the offending theme (SWHM-T-0005)
+- [x] 2.3 Confirm the four existing `text-destructive` usages and `src/components/ui/button.test.tsx` are unaffected by the change (SWHM-T-0005)
