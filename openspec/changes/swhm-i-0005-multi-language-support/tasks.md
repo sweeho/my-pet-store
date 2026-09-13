@@ -8,10 +8,10 @@
 
 ## 2. Database Schema
 
-- [ ] 2.1 Add locale column to category_details table (SWHM-T-0073)
-- [ ] 2.2 Add locale column to product_details table (SWHM-T-0073)
-- [ ] 2.3 Add locale column to item_details table (SWHM-T-0073)
-- [ ] 2.4 Populate detail tables for all supported locales (SWHM-T-0073)
+- [x] 2.1 Add locale column to category_details table (SWHM-T-0073)
+- [x] 2.2 Add locale column to product_details table (SWHM-T-0073)
+- [x] 2.3 Add locale column to item_details table (SWHM-T-0073)
+- [x] 2.4 Populate detail tables for all supported locales (SWHM-T-0073)
 
 ## 3. Data Access Layer
 
