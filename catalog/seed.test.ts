@@ -3,7 +3,14 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { CATEGORIES } from "../account/vocabulary";
 import { db } from "../db/client";
-import { category, categoryDetails, item, itemDetails, product } from "../db/schema";
+import {
+  category,
+  categoryDetails,
+  item,
+  itemDetails,
+  product,
+  productDetails,
+} from "../db/schema";
 import { CATALOG_SEED, seedCatalog } from "./seed";
 
 describe("catalog/seed", () => {
@@ -88,5 +95,45 @@ describe("catalog/seed", () => {
       db.select().from(categoryDetails).where(eq(categoryDetails.locale, "de_DE")).all(),
     ).toEqual([]);
     expect(db.select().from(itemDetails).where(eq(itemDetails.locale, "de_DE")).all()).toEqual([]);
+  });
+
+  it("ST-08: every product has product_details rows for both en_US and ja_JP, and every item has item_details rows for both", () => {
+    const products = db.select().from(product).all();
+    const items = db.select().from(item).all();
+
+    for (const { productid } of products) {
+      const locales = db
+        .select()
+        .from(productDetails)
+        .where(eq(productDetails.productid, productid))
+        .all()
+        .map((r) => r.locale)
+        .sort();
+
+      expect(locales).toEqual(["en_US", "ja_JP"]);
+    }
+
+    for (const { itemid } of items) {
+      const locales = db
+        .select()
+        .from(itemDetails)
+        .where(eq(itemDetails.itemid, itemid))
+        .all()
+        .map((r) => r.locale)
+        .sort();
+
+      expect(locales).toEqual(["en_US", "ja_JP"]);
+    }
+  });
+
+  // zh_CN is deliberately absent from product and item content — the idea's Out of
+  // Scope excludes "Adding zh_CN product and item content to the seed data", and the
+  // mock-catalog-zh-empty state depends on there being no row to find. This assertion
+  // is the fixture: filling it in should fail a test, not slip through unnoticed.
+  it("ST-09: no zh_CN row exists for any product or item", () => {
+    expect(
+      db.select().from(productDetails).where(eq(productDetails.locale, "zh_CN")).all(),
+    ).toEqual([]);
+    expect(db.select().from(itemDetails).where(eq(itemDetails.locale, "zh_CN")).all()).toEqual([]);
   });
 });
