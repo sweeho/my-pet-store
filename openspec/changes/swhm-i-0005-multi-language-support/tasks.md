@@ -2,9 +2,9 @@
 
 ## 1. Locale Support
 
-- [ ] 1.1 Define supported locales (en_US, ja_JP, zh_CN) (SWHM-T-0072)
-- [ ] 1.2 Store user language preference in customer profile (SWHM-T-0072)
-- [ ] 1.3 Detect locale from user session or browser headers (SWHM-T-0072)
+- [x] 1.1 Define supported locales (en_US, ja_JP, zh_CN) (SWHM-T-0072)
+- [x] 1.2 Store user language preference in customer profile (SWHM-T-0072)
+- [x] 1.3 Detect locale from user session or browser headers (SWHM-T-0072)
 
 ## 2. Database Schema
 
