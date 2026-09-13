@@ -16,6 +16,11 @@ import type { Category, Item, Locale, Page, Product } from "./types";
 // this module is the only one it imports from (AC-1).
 export type { Category, Item, Locale, Page, Product } from "./types";
 
+// Re-exported so a route asking why a localized read came back empty has
+// exactly one import path into catalog/ (D1, PLAN.md § Steps 2).
+export { missingReason } from "./availability";
+export type { MissingReason } from "./availability";
+
 export const DEFAULT_START = 0;
 export const DEFAULT_COUNT = 25;
 

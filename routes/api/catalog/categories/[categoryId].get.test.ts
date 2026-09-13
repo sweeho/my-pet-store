@@ -28,7 +28,7 @@ describe("GET /api/catalog/categories/:categoryId", () => {
     expect(result).toEqual({ id: "RT-DOGS", name: "Dogs", description: "Loyal companions" });
   });
 
-  it("CD-02: a category that does not exist answers 404 with a plain error body, never a 200 carrying null", async () => {
+  it("CD-02: a category that does not exist answers 404 with reason not-found", async () => {
     const event = new H3Event(
       new Request("http://localhost/api/catalog/categories/RT-NOT-A-CATEGORY"),
       { params: { categoryId: "RT-NOT-A-CATEGORY" } },
@@ -37,6 +37,24 @@ describe("GET /api/catalog/categories/:categoryId", () => {
     const result = await getCategory(event);
 
     expect(event.res.status).toBe(404);
-    expect(result).toEqual({ error: "Category not found: RT-NOT-A-CATEGORY" });
+    expect(result).toEqual({
+      error: "Category not found: RT-NOT-A-CATEGORY",
+      reason: "not-found",
+    });
+  });
+
+  it("CD-03: a category with no content in the requested locale answers 404 with reason missing-translation", async () => {
+    const event = new H3Event(
+      new Request("http://localhost/api/catalog/categories/RT-DOGS?locale=RT-NO-SUCH-LOCALE"),
+      { params: { categoryId: "RT-DOGS" } },
+    );
+
+    const result = await getCategory(event);
+
+    expect(event.res.status).toBe(404);
+    expect(result).toEqual({
+      error: "Category not found: RT-DOGS",
+      reason: "missing-translation",
+    });
   });
 });
