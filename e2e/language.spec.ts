@@ -50,7 +50,7 @@ test.describe("Catalog locale", () => {
     page,
     browser,
   }) => {
-    const username = uniqueUsername("lang-profile");
+    const username = uniqueUsername("lang-prof");
     const password = "secret123";
 
     // page.request shares the page's own cookie jar, so the session this
