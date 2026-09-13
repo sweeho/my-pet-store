@@ -47,6 +47,32 @@ There is no skeleton primitive and no spinner component; the role is the pattern
 indicator by that role, never by class name or DOM shape, which is how everything else in this
 codebase is located too.
 
+## Unavailable content states
+
+An empty region is not an answer. Where a screen has nothing to show and the reason is something the
+visitor could act on, it says what the reason is and offers the action — in the same place the content
+would have been, not as a banner above it.
+
+The pattern has three parts, and a screen that drops any one of them is worse than the empty list it
+replaced:
+
+1. **A heading that names the specific cause**, in the visitor's own terms and including the value that
+   caused it — "No products in 中文 yet", not "No results".
+2. **A body that says nothing is broken.** A visitor's first reading of an empty screen is that the
+   store is empty or the page failed. Contradict that explicitly.
+3. **A primary action that resolves it in one click**, plus a secondary action that changes the
+   condition instead of escaping it.
+
+Name a language in its own script (`中文`, `日本語`), never as a locale code — the person reading it may
+not read the rest of the interface. This is distinct from a search that matched nothing, which is a
+correct empty result and keeps its own short message.
+
+This is a state of the screen, not a screen of its own: keep the chrome — heading, container, and any
+control the visitor needs to change the condition — rendered around it. A dedicated route would lose
+the context that makes the recovery action obvious, and would make Back the only way out.
+
+Tests locate the heading and both actions by role and accessible name, as everything else here does.
+
 ## Icons
 
 `lucide-react` for general use, `@heroicons/react` for `@headlessui/react` overlays (nav dialog).
