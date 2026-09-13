@@ -10,11 +10,15 @@ OKLCH custom properties in `src/index.css` (`:root` light, `.dark` dark), mapped
 | ---------------------------------------------------- | ---------------------------------------------------- |
 | `--background` / `--foreground`                      | `bg-background` / `text-foreground`                  |
 | `--primary` / `--secondary` / `--muted` / `--accent` | `bg-*`                                               |
-| `--destructive`                                      | `bg-destructive`                                     |
+| `--destructive` / `--destructive-foreground`         | `bg-destructive` / `text-destructive-foreground`     |
 | `--border` / `--input` / `--ring`                    | `border-border` / `border-input` / `outline-ring/50` |
 | `--radius` (+ `sm`/`md`/`lg`/`xl`)                   | `rounded-*`                                          |
 
-Known bug: light-mode `--destructive-foreground` duplicates `--destructive` (text would be invisible). Dark mode has it right.
+### Contrast
+
+A `--x` / `--x-foreground` pair must never resolve to the same colour in either theme, and must meet WCAG 2.1 AA for normal text (4.5:1). `src/theme-tokens.test.ts` enforces both for the destructive pair — distinctness in both themes, the ratio in light. The other pairs are not yet covered by an automated check; measure before changing one.
+
+Two gotchas when picking a foreground: the light neutrals `oklch(0.97 0 0)` (`--secondary`, `--muted`, `--accent`) are too dark to clear 4.5:1 against a saturated background, and the `.dark` destructive pair sits at 2.63:1 — below AA — so it is not a model to copy.
 
 ## Theming
 
