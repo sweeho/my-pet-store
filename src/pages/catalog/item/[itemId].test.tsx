@@ -116,12 +116,14 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
     ).toBeInTheDocument();
   });
 
-  it("PT-03: a non-existent item id shows a not-found state", async () => {
+  it("PT-03: a non-existent item id (reason not-found) shows a not-found state", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.startsWith("/api/customer"))
         return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
       if (url.startsWith("/api/catalog/items/")) {
-        return Promise.resolve(jsonResponse({ error: "not found" }, { ok: false, status: 404 }));
+        return Promise.resolve(
+          jsonResponse({ error: "not found", reason: "not-found" }, { ok: false, status: 404 }),
+        );
       }
       throw new Error(`unexpected fetch: ${url}`);
     });
@@ -129,5 +131,73 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
     renderAt("/catalog/item/NOPE");
 
     expect(await screen.findByRole("heading", { name: "Not Found" })).toBeInTheDocument();
+  });
+
+  it("PT-04: reason not-found shows the not-found state under ja_JP and zh_CN too, not just en_US", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/items/")) {
+        return Promise.resolve(
+          jsonResponse({ error: "not found", reason: "not-found" }, { ok: false, status: 404 }),
+        );
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/item/NOPE?locale=zh_CN");
+
+    expect(await screen.findByRole("heading", { name: "Not Found" })).toBeInTheDocument();
+  });
+
+  it("PT-05: reason missing-translation shows the unavailable-in-language state, distinct from not-found", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1")) {
+        return Promise.resolve(
+          jsonResponse(
+            { error: "Item not found: BIRDS-PARROTS-1", reason: "missing-translation" },
+            { ok: false, status: 404 },
+          ),
+        );
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1?locale=zh_CN");
+
+    expect(
+      await screen.findByRole("heading", { name: "Not available in 中文 yet" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not Found" })).not.toBeInTheDocument();
+  });
+
+  it("PT-06: the language control renders while the first fetch is still in flight, and a pending region names what is loading", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      return new Promise(() => {});
+    });
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1?locale=ja_JP");
+
+    expect(await screen.findByRole("button", { name: /日本語/ })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading item…");
+  });
+
+  it("PT-07: sets document.documentElement.lang to the active locale", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
+        return Promise.resolve(jsonResponse(ITEM));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1?locale=ja_JP");
+
+    await screen.findByRole("heading", { name: "Parrots" });
+    expect(document.documentElement.lang).toBe("ja_JP");
   });
 });

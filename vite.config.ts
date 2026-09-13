@@ -31,7 +31,10 @@ export default defineConfig({
     Pages({
       dirs: "src/pages",
       extensions: ["tsx", "jsx"],
-      exclude: ["**/*.test.tsx", "**/*.test.ts"],
+      // UnavailableInLanguage.tsx is a shared component, not a route — it
+      // lives under src/pages/catalog because it's used only by that
+      // capability's screens (SWHM-T-0075).
+      exclude: ["**/*.test.tsx", "**/*.test.ts", "**/UnavailableInLanguage.tsx"],
       importMode: "sync",
     }),
     svgr(),

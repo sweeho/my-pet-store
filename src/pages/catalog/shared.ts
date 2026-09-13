@@ -1,17 +1,34 @@
 // Shared, non-page helpers for the catalog screens. A plain .ts file (not
 // .tsx) so vite-plugin-pages — which only scans the tsx/jsx extensions
 // configured in vite.config.ts — never registers it as a route.
+import { useSearchParams } from "react-router";
+
 import { DEFAULT_LOCALE } from "../../../catalog/locale";
 import type { Locale, Page } from "../../../catalog/types";
+import { readCookie, writeCookie } from "../../utils/cookies";
 
 type ProfileResponse = { profile: { preferredLanguage: string } };
 
-// Resolves the catalog locale once: a signed-on customer's stored
-// preferredLanguage, or DEFAULT_LOCALE for a visitor with no session. The
-// catalog itself requires no session, so a failed/401 profile read is a
-// fallback, never an error state (PLAN.md step 5).
-export function useCatalogLocale(): Locale | null {
-  const [locale, setLocale] = useState<Locale | null>(null);
+const LOCALE_COOKIE = "petstore_locale";
+const LOCALE_PARAM = "locale";
+
+// The single place that decides and changes the active catalogue locale
+// (PLANNING-NOTES D2). Resolution order: the "locale" search param, the
+// petstore_locale cookie, a signed-on customer's profile.preferredLanguage,
+// then DEFAULT_LOCALE. The first two are synchronous, so a screen with
+// either one present gets a locale immediately, without waiting on the
+// /api/customer round trip; locale is null only while none of the three are
+// available yet. A failed/401 profile read is a visitor fallback, never an
+// error state (PLAN.md step 5), matching the pattern this hook already used.
+export function useCatalogLocale(): {
+  locale: Locale | null;
+  setLocale: (next: Locale) => void;
+} {
+  const [searchParams, setSearchParams] = useSearchParams();
+  // undefined: the /api/customer read hasn't resolved yet. null: it resolved
+  // to "no session" (a visitor). A string: the signed-on customer's stored
+  // preference — this also identifies "a session exists" for setLocale.
+  const [profileLocale, setProfileLocale] = useState<Locale | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,10 +37,10 @@ export function useCatalogLocale(): Locale | null {
       .then((response) => (response.ok ? (response.json() as Promise<ProfileResponse>) : null))
       .then((body) => {
         if (cancelled) return;
-        setLocale(body ? body.profile.preferredLanguage : DEFAULT_LOCALE);
+        setProfileLocale(body ? body.profile.preferredLanguage : null);
       })
       .catch(() => {
-        if (!cancelled) setLocale(DEFAULT_LOCALE);
+        if (!cancelled) setProfileLocale(null);
       });
 
     return () => {
@@ -31,7 +48,39 @@ export function useCatalogLocale(): Locale | null {
     };
   }, []);
 
-  return locale;
+  const paramLocale = searchParams.get(LOCALE_PARAM);
+  const cookieLocale = readCookie(LOCALE_COOKIE);
+  const hasSession = typeof profileLocale === "string";
+
+  const locale: Locale | null =
+    paramLocale ??
+    cookieLocale ??
+    (profileLocale === undefined ? null : (profileLocale ?? DEFAULT_LOCALE));
+
+  function setLocale(next: Locale) {
+    writeCookie(LOCALE_COOKIE, next);
+    setSearchParams(
+      (previous) => {
+        const nextParams = new URLSearchParams(previous);
+        nextParams.set(LOCALE_PARAM, next);
+        return nextParams;
+      },
+      { replace: true },
+    );
+    document.documentElement.lang = next;
+
+    // Fire-and-forget: a 401 means no session, which is the visitor path
+    // this hook already treats as a fallback rather than an error (AC-4).
+    if (hasSession) {
+      fetch("/api/customer", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile: { preferredLanguage: next } }),
+      }).catch(() => {});
+    }
+  }
+
+  return { locale, setLocale };
 }
 
 type FetchResult<T> = { url: string; data: T | null; notFound: boolean };
