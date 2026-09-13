@@ -30,6 +30,12 @@ export function RequireSignOn({ children }: RequireSignOnProps) {
     };
   }, [location.pathname, navigate]);
 
-  if (!allowed) return null;
+  if (!allowed) {
+    return (
+      <div role="status" className="mx-auto max-w-[672px] p-6">
+        Checking access…
+      </div>
+    );
+  }
   return <>{children}</>;
 }

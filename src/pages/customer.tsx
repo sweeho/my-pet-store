@@ -191,7 +191,16 @@ export function CustomerProfile() {
     setEditing(false);
   }
 
-  if (!account) return null;
+  if (!account) {
+    return (
+      <div className="mx-auto max-w-[672px] p-6">
+        <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
+        <p role="status" className="text-muted-foreground mt-4 text-sm">
+          Loading account…
+        </p>
+      </div>
+    );
+  }
 
   if (editing && form) {
     return (
