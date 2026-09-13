@@ -21,10 +21,10 @@
 
 ## 4. Content Management
 
-- [ ] 4.1 Translate category names and descriptions for all locales (SWHM-T-0075)
-- [ ] 4.2 Translate product names and descriptions for all locales (SWHM-T-0075)
-- [ ] 4.3 Translate item names and descriptions for all locales (SWHM-T-0075)
-- [ ] 4.4 Create image variants for locale-specific product images if needed (SWHM-T-0075)
+- [x] 4.1 Translate category names and descriptions for all locales (SWHM-T-0075)
+- [x] 4.2 Translate product names and descriptions for all locales (SWHM-T-0075)
+- [x] 4.3 Translate item names and descriptions for all locales (SWHM-T-0075)
+- [x] 4.4 Create image variants for locale-specific product images if needed (SWHM-T-0075)
 
 ## 5. Testing
 
