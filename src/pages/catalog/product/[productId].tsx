@@ -10,7 +10,7 @@ const PAGE_SIZE = 10;
 
 export default function ProductPage() {
   const { productId } = useParams<{ productId: string }>();
-  const locale = useCatalogLocale();
+  const { locale } = useCatalogLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const start = Number(searchParams.get("start") ?? "0");
 

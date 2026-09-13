@@ -9,7 +9,7 @@ import { paginationLinks, useCatalogFetch, useCatalogLocale } from "./shared";
 const PAGE_SIZE = 10;
 
 export default function CatalogHome() {
-  const locale = useCatalogLocale();
+  const { locale } = useCatalogLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const start = Number(searchParams.get("start") ?? "0");
   const q = searchParams.get("q") ?? "";

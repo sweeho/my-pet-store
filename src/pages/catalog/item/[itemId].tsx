@@ -15,7 +15,7 @@ function AttributeField({ label, value }: { label: string; value: string | null 
 
 export default function ItemPage() {
   const { itemId } = useParams<{ itemId: string }>();
-  const locale = useCatalogLocale();
+  const { locale } = useCatalogLocale();
 
   const itemUrl =
     locale && itemId
