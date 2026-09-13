@@ -81,6 +81,9 @@ test.describe("Customer profile", () => {
     await expect(page).toHaveURL(/\/signon-welcome$/);
 
     await page.goto("/customer");
+    await expect(page.getByRole("region", { name: "Contact information" })).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByRole("group", { name: "First name" })).toContainText("Priya");
     await expect(page.locator("html")).toHaveAttribute("lang", "ja_JP");
   });
