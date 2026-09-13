@@ -15,9 +15,9 @@
 
 ## 3. Data Access Layer
 
-- [ ] 3.1 Add Locale parameter to all catalog query methods (SWHM-T-0074)
-- [ ] 3.2 Update SQL queries to filter by locale (SWHM-T-0074)
-- [ ] 3.3 Return null for missing locale-specific content (SWHM-T-0074)
+- [x] 3.1 Add Locale parameter to all catalog query methods (SWHM-T-0074)
+- [x] 3.2 Update SQL queries to filter by locale (SWHM-T-0074)
+- [x] 3.3 Return null for missing locale-specific content (SWHM-T-0074)
 
 ## 4. Content Management
 
