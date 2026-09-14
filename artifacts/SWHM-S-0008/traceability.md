@@ -12,13 +12,13 @@
 | Product-branded application shell / Browser tab and web app manifest name the product | **none** | pass | no |
 | Product-branded application shell / Home page requests no third-party asset | SWHM-T-0080 | pass | yes |
 | Product-branded application shell / Boilerplate example screens are not reachable | SWHM-T-0082 | pass | yes |
-| Application shell navigation / Primary call to action opens the catalogue | SWHM-T-0081 | pass | no |
-| Application shell navigation / Sign-in control opens the sign-on screen | SWHM-T-0081 | pass | no |
-| Application shell navigation / No control leads nowhere | SWHM-T-0081 | pass | no |
+| Application shell navigation / Primary call to action opens the catalogue | SWHM-T-0081 | pass | yes |
+| Application shell navigation / Sign-in control opens the sign-on screen | SWHM-T-0081 | pass | yes |
+| Application shell navigation / No control leads nowhere | SWHM-T-0081 | pass | yes |
 | Item image association / Item image location is retrieved | SWHM-T-0083 | pass | yes |
 | Item image association / Item detail screen shows a placeholder when the image is unavailable | SWHM-T-0083 | pass | yes |
-| Language recovery from an untranslated screen / Language can be changed from the untranslated screen | SWHM-T-0084 | pass | no |
-| Language recovery from an untranslated screen / The control still works after the language has already been changed | SWHM-T-0084 | pass | no |
+| Language recovery from an untranslated screen / Language can be changed from the untranslated screen | SWHM-T-0084 | pass | yes |
+| Language recovery from an untranslated screen / The control still works after the language has already been changed | SWHM-T-0084 | pass | yes |
 
 ## Gaps
 
