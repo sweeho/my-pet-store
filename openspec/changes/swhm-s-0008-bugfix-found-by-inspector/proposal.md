@@ -48,3 +48,20 @@ mostly MODIFIES rather than ADDS.
   asset, and the tests that cover each.
 - **Not changed** — `catalog/seed.ts`, `catalog/item.ts`, `catalog/search.ts`, `db/schema.ts`,
   `routes/api/**`. No API contract moves.
+
+## Follow-ups / out of scope
+
+Found while root-causing, covered by none of the five committed defects, and left for a later sprint.
+Planning cannot raise a defect ticket by design, so they are recorded here.
+
+- **Product photography for the 20 seeded item images.** SWHM-T-0083 stops the broken image; it does
+  not make `/images/birds/gouldian-finch.jpg` exist, so a network log still shows one 404 per item
+  detail page. Ending that means shipping real assets at the seeded paths, which is a content
+  decision, not a code one.
+- **`middleware/auth.ts` runs on every request and attaches `{ name: "Yeasin" }`** to
+  `event.context.user` — the template author's name, on every request the application serves.
+  ARCHITECTURE.md already records that it is not authentication and gates nothing, and real
+  authentication is `middleware/signon.ts`, so nothing depends on it. It is the same class of remnant
+  as SWHM-T-0082 and should be deleted, but it sits outside every committed defect's scope.
+- **`src/constants/index.ts` exports `API_BASE_URL = "https://api.your-api.com"`**, a template
+  placeholder with no reader anywhere in the repository.
