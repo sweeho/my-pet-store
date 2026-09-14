@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -199,5 +199,29 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
 
     await screen.findByRole("heading", { name: "Parrots" });
     expect(document.documentElement.lang).toBe("ja_JP");
+  });
+
+  it("PT-08: falls back to the placeholder image on a load error, and does not loop if the placeholder itself errors", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
+        return Promise.resolve(jsonResponse(ITEM));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1");
+
+    const img = await screen.findByRole("img", { name: "Parrots" });
+    expect(img).toHaveAttribute("src", "/images/birds/african-grey.jpg");
+
+    fireEvent.error(img);
+    expect(img).toHaveAttribute("src", "/images/placeholder.svg");
+    expect(img).toHaveAttribute("alt", "Parrots");
+
+    // The placeholder itself failing must not re-trigger the fallback (and
+    // must not loop): the src stays exactly the placeholder.
+    fireEvent.error(img);
+    expect(img).toHaveAttribute("src", "/images/placeholder.svg");
   });
 });
