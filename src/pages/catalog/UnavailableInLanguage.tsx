@@ -3,7 +3,7 @@
 // missing-translation 404) — DESIGN.md § Unavailable content states.
 import { LANGUAGES } from "../../../account/vocabulary";
 import type { Locale } from "../../../catalog/types";
-import { Button } from "@/components";
+import { Button, LanguageSwitcher } from "@/components";
 
 // Mirrors LanguageSwitcher's own display names (src/components/LanguageSwitcher.tsx),
 // duplicated rather than imported so this component depends only on its own
@@ -21,20 +21,18 @@ const CONTAINER_NOUN: Record<"products" | "items", string> = {
   items: "product",
 };
 
-// The id every catalogue screen mounts its LanguageSwitcher under, so the
-// "Change language" action below can open it without a second callback prop.
-export const LANGUAGE_SWITCHER_MOUNT_ID = "catalog-language-switcher";
-
 type UnavailableInLanguageProps = {
   locale: Locale;
   noun?: "products" | "items";
   onViewInEnglish: () => void;
+  onChangeLocale?: (next: Locale) => void;
 };
 
 export function UnavailableInLanguage({
   locale,
   noun,
   onViewInEnglish,
+  onChangeLocale,
 }: UnavailableInLanguageProps) {
   const languageName = LANGUAGE_NAMES[locale as (typeof LANGUAGES)[number]] ?? locale;
   const container = noun ? CONTAINER_NOUN[noun] : "item";
@@ -44,22 +42,17 @@ export function UnavailableInLanguage({
   const subject = noun ? `the ${noun} exist` : "it exists";
   const body = `This ${container} has nothing translated into ${languageName}. Nothing has gone wrong — ${subject}, but not in this language.`;
 
-  function openLanguageSwitcher() {
-    document
-      .getElementById(LANGUAGE_SWITCHER_MOUNT_ID)
-      ?.querySelector<HTMLButtonElement>("button")
-      ?.click();
-  }
-
   return (
     <div className="border-border bg-muted mt-6 rounded-lg border p-6 text-center">
       <h2 className="text-foreground text-[15px] font-medium">{heading}</h2>
       <p className="text-muted-foreground mt-1.5 text-[13px] leading-relaxed">{body}</p>
       <div className="mt-4 flex justify-center gap-2">
         <Button onClick={onViewInEnglish}>View in English (US)</Button>
-        <Button variant="outline" onClick={openLanguageSwitcher}>
-          Change language
-        </Button>
+        <LanguageSwitcher
+          label="Change language"
+          locale={locale}
+          onChange={(next) => onChangeLocale?.(next)}
+        />
       </div>
     </div>
   );

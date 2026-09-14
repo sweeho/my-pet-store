@@ -35,6 +35,14 @@ Pattern (see `src/components/ui/button.tsx` + `button-variants.ts`):
 
 New shared components go in `src/components/ui/`, follow this pattern, get a `*.test.tsx`.
 
+## Brand mark
+
+`src/components/StoreMark.tsx` is the store's mark — an inline SVG plus the `STORE_NAME` wordmark, both drawn in `currentColor` so the mark takes its colour from whatever surface it sits on. It is deliberately not a `ui/` primitive and does not follow the variants pattern above: it has no variants, only an optional `className` for sizing, and it sits in `src/components/` with the other behavioural components.
+
+The whole mark is `aria-hidden`. Whatever renders it supplies the accessible name on the surrounding element — the landing header and its mobile panel each carry an `sr-only` span inside the logo link, which is what `getByRole("link", { name: … })` matches. Naming the mark as well would make every logo link announce the store twice.
+
+A mark, icon or font is never referenced from a third-party host. The template this page was generated from hotlinked its logo from `tailwindcss.com`, which shipped a demo asset to every visitor and made the store's own branding depend on someone else's CDN.
+
 ## Loading states
 
 A screen that gates its render on a fetch shows a pending indicator, never an empty page. The
@@ -46,6 +54,14 @@ the page has an identity from first paint.
 There is no skeleton primitive and no spinner component; the role is the pattern. Tests locate the
 indicator by that role, never by class name or DOM shape, which is how everything else in this
 codebase is located too.
+
+## Image states
+
+An image whose source may not resolve falls back once to `/images/placeholder.svg`, a committed flat vector with no external reference. The handler checks whether the current `src` is already the placeholder before reassigning, so a placeholder that itself fails to load is a no-op rather than a second swap — without that guard an unreachable fallback re-enters the error handler indefinitely.
+
+`alt` does not change with the swap. It names the thing the image stands for, not the file that happened to load, so the accessible name is identical whichever of the two renders — which is also what lets a test assert the fallback on `src` alone.
+
+The fallback is a degradation, not a fix: a screen showing the placeholder is still issuing a request that 404s. Where an asset is genuinely expected to exist, ship it — the placeholder is for the case where it legitimately might not.
 
 ## Unavailable content states
 
@@ -62,6 +78,8 @@ replaced:
    store is empty or the page failed. Contradict that explicitly.
 3. **A primary action that resolves it in one click**, plus a secondary action that changes the
    condition instead of escaping it.
+
+A recovery action renders its own control; it never operates one belonging to another region of the screen. Reaching for another component's node and dispatching events at it produces a control that works once per page load — see ARCHITECTURE.md § Key Decisions for why, and for what to do instead.
 
 Name a language in its own script (`中文`, `日本語`), never as a locale code — the person reading it may
 not read the rest of the interface. This is distinct from a search that matched nothing, which is a

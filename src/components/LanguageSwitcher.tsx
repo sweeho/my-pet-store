@@ -17,16 +17,17 @@ const LANGUAGE_NAMES: Record<(typeof LANGUAGES)[number], string> = {
 type LanguageSwitcherProps = {
   locale: Locale;
   onChange: (next: Locale) => void;
+  label?: string;
 };
 
-export function LanguageSwitcher({ locale, onChange }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ locale, onChange, label }: LanguageSwitcherProps) {
   const currentName = LANGUAGE_NAMES[locale as (typeof LANGUAGES)[number]] ?? locale;
 
   return (
     <Menu as="div" className="relative inline-block text-left">
       <MenuButton as={Button} variant="outline" size="sm" className="gap-2">
         <Globe className="text-muted-foreground size-4" aria-hidden="true" />
-        {currentName}
+        {label ?? currentName}
         <ChevronDown className="text-muted-foreground size-3.5" aria-hidden="true" />
       </MenuButton>
       <MenuItems className="border-border bg-card absolute right-0 z-10 mt-1.5 w-56 rounded-lg border p-1.5 shadow-lg focus:outline-none">
