@@ -1,6 +1,7 @@
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
+import { StoreMark } from "@/components";
 import { STORE_NAME } from "@/constants";
 
 const navigation = [
@@ -22,11 +23,7 @@ const Home = () => {
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5">
               <span className="sr-only">{STORE_NAME}</span>
-              <img
-                alt=""
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-                className="h-8 w-auto"
-              />
+              <StoreMark className="h-8 w-auto text-white" />
             </a>
           </div>
           <div className="flex lg:hidden">
@@ -58,11 +55,7 @@ const Home = () => {
             <div className="flex items-center justify-between">
               <a href="#" className="-m-1.5 p-1.5">
                 <span className="sr-only">{STORE_NAME}</span>
-                <img
-                  alt=""
-                  src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-                  className="h-8 w-auto"
-                />
+                <StoreMark className="h-8 w-auto text-white" />
               </a>
               <button
                 type="button"
