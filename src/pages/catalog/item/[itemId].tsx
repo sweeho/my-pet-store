@@ -5,7 +5,7 @@ import { LanguageSwitcher } from "@/components";
 import { DEFAULT_LOCALE } from "../../../../catalog/locale";
 import type { Item } from "../../../../catalog/types";
 import NotFound from "../../NotFound";
-import { LANGUAGE_SWITCHER_MOUNT_ID, UnavailableInLanguage } from "../UnavailableInLanguage";
+import { UnavailableInLanguage } from "../UnavailableInLanguage";
 import { useCatalogLocale } from "../shared";
 
 // Mirrors catalog/availability.ts's MissingReason — duplicated rather than
@@ -101,7 +101,7 @@ export default function ItemPage() {
           ← {item ? item.productName : "Catalog"}
         </Link>
         {locale && (
-          <div id={LANGUAGE_SWITCHER_MOUNT_ID}>
+          <div>
             <LanguageSwitcher locale={locale} onChange={setLocale} />
           </div>
         )}
@@ -111,6 +111,7 @@ export default function ItemPage() {
         <UnavailableInLanguage
           locale={locale ?? DEFAULT_LOCALE}
           onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+          onChangeLocale={setLocale}
         />
       ) : !item ? (
         <>

@@ -5,7 +5,7 @@ import { Button, LanguageSwitcher } from "@/components";
 import { DEFAULT_LOCALE } from "../../../../catalog/locale";
 import type { Item, Page, Product } from "../../../../catalog/types";
 import NotFound from "../../NotFound";
-import { LANGUAGE_SWITCHER_MOUNT_ID, UnavailableInLanguage } from "../UnavailableInLanguage";
+import { UnavailableInLanguage } from "../UnavailableInLanguage";
 import { paginationLinks, useCatalogFetch, useCatalogLocale } from "../shared";
 
 const PAGE_SIZE = 10;
@@ -67,7 +67,7 @@ export default function ProductPage() {
           <h1 className="text-foreground text-xl font-bold">Product</h1>
         )}
         {locale && (
-          <div id={LANGUAGE_SWITCHER_MOUNT_ID}>
+          <div>
             <LanguageSwitcher locale={locale} onChange={setLocale} />
           </div>
         )}
@@ -86,6 +86,7 @@ export default function ProductPage() {
           locale={locale ?? DEFAULT_LOCALE}
           noun="items"
           onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+          onChangeLocale={setLocale}
         />
       ) : (
         <ul className="mt-6 flex flex-col gap-2">
