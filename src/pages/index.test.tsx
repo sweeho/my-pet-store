@@ -53,4 +53,31 @@ describe("Home page", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("requests no third-party asset and renders a store-branded mark instead of the template logo", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Home />);
+
+    // The header logo link keeps its accessible name and now renders an
+    // in-repo SVG mark rather than a hotlinked <img>.
+    const headerLogoLink = screen.getByRole("link", { name: "My Pet Store" });
+    expect(within(headerLogoLink).queryByRole("img")).not.toBeInTheDocument();
+    expect(headerLogoLink.querySelector("svg")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Open main menu" }));
+    const dialog = await screen.findByRole("dialog");
+    const dialogLogoLink = within(dialog).getByRole("link", { name: "My Pet Store" });
+    expect(within(dialogLogoLink).queryByRole("img")).not.toBeInTheDocument();
+    expect(dialogLogoLink.querySelector("svg")).toBeInTheDocument();
+
+    for (const element of container.querySelectorAll<HTMLImageElement | HTMLAnchorElement>(
+      "[src], [href]",
+    )) {
+      const value = element.getAttribute("src") ?? element.getAttribute("href") ?? "";
+      expect(value).not.toContain("tailwindcss.com");
+      if (value) {
+        expect(value.startsWith("http://") || value.startsWith("https://")).toBe(false);
+      }
+    }
+  });
 });
