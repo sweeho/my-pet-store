@@ -19,7 +19,7 @@ downstream: [artifacts/SWHM-S-0008/qa-test-report.md]
 - **Root cause:** `openspec/changes/.../design.md` § RC-1/D-2 identifies and fixes the `navigation` array, both "Log in" links, and the three hero anchors, but never names the logo anchors — SWHM-T-0080's scope was the `<img>` → `StoreMark` swap only, SWHM-T-0081's was the nav/hero `href`s only. The logo's own `href="#"` was never assigned to either ticket, so it survived both. The scenario as written ("every navigation … link on the page … in the header") does not carve out an exception for it.
 - **Fix rounds:**
   1. Changed both `<a href="#">` logo wrappers in `src/pages/index.tsx` to `<Link to="/">` (the same `react-router` `Link` pattern every other in-app control in this file already uses) — `bun run verify` → `55 test files, 302 tests passed`; `bunx playwright test --project=chromium -g "logo link now routes"` → `1 passed`, confirming both logo links now resolve to `href="/"`.
-- **Resolution:** FIXED-IN-PLACE (commit: pending — see `qa-test-report.md` for the SHA once committed on this ticket branch)
+- **Resolution:** FIXED-IN-PLACE (commit: `8bffebd`)
 - **Validation evidence:** `bun run verify` → `Test Files 55 passed (55)`, `Tests 302 passed (302)`; `bun run test:e2e -- --project=chromium` → `20 passed (5.3s)`, 0 failed, 0 skipped, run after the fix.
 
 ## Summary
