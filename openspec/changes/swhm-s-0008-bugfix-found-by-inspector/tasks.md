@@ -8,8 +8,8 @@
 
 ## 2. Landing page shell
 
-- [ ] 2.1 Add `src/components/StoreMark.tsx` and render it in place of both hotlinked `<img>` tags in `src/pages/index.tsx` (SWHM-T-0080)
-- [ ] 2.2 Assert in `src/pages/index.test.tsx` that neither logo location requests an off-origin asset (SWHM-T-0080)
+- [x] 2.1 Add `src/components/StoreMark.tsx` and render it in place of both hotlinked `<img>` tags in `src/pages/index.tsx` (SWHM-T-0080)
+- [x] 2.2 Assert in `src/pages/index.test.tsx` that neither logo location requests an off-origin asset (SWHM-T-0080)
 - [ ] 2.3 Point the nav, "Log in" and hero controls at `/catalog`, `/customer` and `/signon` with `react-router`'s `Link`, and remove the controls that name no screen (SWHM-T-0081)
 - [ ] 2.4 Update `src/pages/index.test.tsx` and `e2e/home.spec.ts` to the new nav names and assert no link targets a placeholder fragment (SWHM-T-0081)
 
