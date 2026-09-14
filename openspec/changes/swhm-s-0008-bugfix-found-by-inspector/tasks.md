@@ -15,8 +15,8 @@
 
 ## 3. Boilerplate example screens
 
-- [ ] 3.1 Delete `src/pages/users/index.tsx`, `src/pages/users/[id].tsx` and `src/pages/users/profile.tsx`, leaving `routes/api/users/**` and the `users` table untouched (SWHM-T-0082)
-- [ ] 3.2 Add `e2e/legacy-routes.spec.ts` asserting the three paths render the not-found screen and that `GET /api/users` still answers (SWHM-T-0082)
+- [x] 3.1 Delete `src/pages/users/index.tsx`, `src/pages/users/[id].tsx` and `src/pages/users/profile.tsx`, leaving `routes/api/users/**` and the `users` table untouched (SWHM-T-0082)
+- [x] 3.2 Add `e2e/legacy-routes.spec.ts` asserting the three paths render the not-found screen and that `GET /api/users` still answers (SWHM-T-0082)
 
 ## 4. Catalogue item image
 
