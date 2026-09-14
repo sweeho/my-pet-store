@@ -127,6 +127,11 @@ export default function ItemPage() {
             src={item.imageLocation}
             alt={item.productName}
             className="mt-4 max-w-xs rounded-md"
+            onError={(event) => {
+              const img = event.currentTarget;
+              if (img.src.endsWith("/images/placeholder.svg")) return;
+              img.src = "/images/placeholder.svg";
+            }}
           />
 
           <p className="text-foreground mt-4 text-sm">{item.description}</p>
