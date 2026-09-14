@@ -20,8 +20,8 @@
 
 ## 4. Catalogue item image
 
-- [ ] 4.1 Add `public/images/placeholder.svg` and give the item detail `<img>` a single-shot `onError` fallback to it, preserving `alt` (SWHM-T-0083)
-- [ ] 4.2 Cover the fallback in `src/pages/catalog/item/[itemId].test.tsx`, asserting the alternative text is unchanged after it fires (SWHM-T-0083)
+- [x] 4.1 Add `public/images/placeholder.svg` and give the item detail `<img>` a single-shot `onError` fallback to it, preserving `alt` (SWHM-T-0083)
+- [x] 4.2 Cover the fallback in `src/pages/catalog/item/[itemId].test.tsx`, asserting the alternative text is unchanged after it fires (SWHM-T-0083)
 
 ## 5. Language recovery control
 
