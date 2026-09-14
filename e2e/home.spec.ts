@@ -17,7 +17,7 @@ test.describe("Home page", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Pet Store");
     await expect(page.getByRole("link", { name: "Get started" })).toBeVisible();
 
-    for (const item of ["Features", "Tech Stack", "Docs", "GitHub"]) {
+    for (const item of ["Catalog", "My account"]) {
       await expect(page.getByRole("link", { name: item, exact: true })).toBeVisible();
     }
   });
@@ -50,7 +50,7 @@ test.describe("Home page", () => {
     // `fixed`-positioned), so check its visible content instead of the
     // wrapper element itself.
     const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("link", { name: "Tech Stack" })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "My account" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Close menu" })).toBeVisible();
 
     await page.getByRole("button", { name: "Close menu" }).click();
