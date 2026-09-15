@@ -124,6 +124,11 @@ describe("CategoryPage (/catalog/category/:categoryId)", () => {
       await screen.findByRole("heading", { name: "Not available in 中文 yet" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Not Found" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This category has nothing translated into 中文. Nothing has gone wrong — it exists, but not in this language.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("PT-04: an empty product list under a non-English locale shows the unavailable-in-language state, naming the language and offering to view in English (US)", async () => {

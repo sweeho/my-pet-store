@@ -14,17 +14,10 @@ const LANGUAGE_NAMES: Record<(typeof LANGUAGES)[number], string> = {
   zh_CN: "中文",
 };
 
-// The container a list's plural noun belongs to: a category lists products,
-// a product lists items.
-const CONTAINER_NOUN: Record<"products" | "items", string> = {
-  products: "category",
-  items: "product",
-};
-
 type UnavailableInLanguageProps = {
   locale: Locale;
   noun?: "products" | "items";
-  entity?: "product" | "item";
+  entity: "category" | "product" | "item";
   onViewInEnglish: () => void;
   onChangeLocale?: (next: Locale) => void;
 };
@@ -32,17 +25,16 @@ type UnavailableInLanguageProps = {
 export function UnavailableInLanguage({
   locale,
   noun,
-  entity = "item",
+  entity,
   onViewInEnglish,
   onChangeLocale,
 }: UnavailableInLanguageProps) {
   const languageName = LANGUAGE_NAMES[locale as (typeof LANGUAGES)[number]] ?? locale;
-  const container = noun ? CONTAINER_NOUN[noun] : entity;
   const heading = noun
     ? `No ${noun} in ${languageName} yet`
     : `Not available in ${languageName} yet`;
   const subject = noun ? `the ${noun} exist` : "it exists";
-  const body = `This ${container} has nothing translated into ${languageName}. Nothing has gone wrong — ${subject}, but not in this language.`;
+  const body = `This ${entity} has nothing translated into ${languageName}. Nothing has gone wrong — ${subject}, but not in this language.`;
 
   return (
     <div className="border-border bg-muted mt-6 rounded-lg border p-6 text-center">
