@@ -26,6 +26,13 @@ test.describe("Catalog browsing", () => {
   test("browses categories to products to an item, then finds the same item via search", async ({
     page,
   }) => {
+    const failedImageRequests: string[] = [];
+    page.on("response", (response) => {
+      if (response.request().resourceType() === "image" && !response.ok()) {
+        failedImageRequests.push(`${response.status()} ${response.url()}`);
+      }
+    });
+
     await page.goto("/catalog");
     await expect(page.getByRole("heading", { level: 1, name: "Catalog" })).toBeVisible();
 
@@ -46,10 +53,13 @@ test.describe("Catalog browsing", () => {
 
     await expect(page).toHaveURL(/\/catalog\/item\/BIRDS-PARROTS-1$/);
     await expect(page.getByRole("heading", { level: 1, name: "Parrots" })).toBeVisible();
-    await expect(page.getByRole("img", { name: "Parrots" })).toBeVisible();
+    const itemImage = page.getByRole("img", { name: "Parrots" });
+    await expect(itemImage).toBeVisible();
+    await expect(itemImage).toHaveAttribute("src", "/images/birds/african-grey.svg");
     await expect(page.getByRole("group", { name: "Attribute 1" })).toContainText("Grey");
     await expect(page.getByRole("group", { name: "Attribute 2" })).toContainText("Large");
     await expect(page.getByText("$599.99")).toBeVisible();
+    expect(failedImageRequests).toEqual([]);
 
     // Same item, reached from a search on /catalog instead of the browse path.
     await page.goto("/catalog");
