@@ -21,7 +21,7 @@
 
 ## 4. Post-sign-on destination
 
-- [ ] 4.1 Add a pure request-classification predicate to `auth/signon-filter.ts` and cover it in `auth/signon-filter.test.ts` (SWHM-T-0097)
-- [ ] 4.2 In `middleware/signon.ts`, set the original URL only for a navigation, and answer a denied non-navigation request as unauthenticated instead of redirecting it (SWHM-T-0097)
-- [ ] 4.3 Cover the corrupting sequence end-to-end in `e2e/signon.spec.ts`: browse the catalogue anonymously, sign on, land on the welcome screen (SWHM-T-0097)
-- [ ] 4.4 Confirm CH-01, CH-02 and SI-01 still pass unchanged — `routes/api/signon/check.get.ts` does not move (SWHM-T-0097)
+- [x] 4.1 Add a pure request-classification predicate to `auth/signon-filter.ts` and cover it in `auth/signon-filter.test.ts` (SWHM-T-0097)
+- [x] 4.2 In `middleware/signon.ts`, set the original URL only for a navigation, and answer a denied non-navigation request as unauthenticated instead of redirecting it (SWHM-T-0097)
+- [x] 4.3 Cover the corrupting sequence end-to-end in `e2e/signon.spec.ts`: browse the catalogue anonymously, sign on, land on the welcome screen (SWHM-T-0097)
+- [x] 4.4 Confirm CH-01, CH-02 and SI-01 still pass unchanged — `routes/api/signon/check.get.ts` does not move (SWHM-T-0097)
