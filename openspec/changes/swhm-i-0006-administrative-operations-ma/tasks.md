@@ -30,11 +30,11 @@
 
 ## 4. Rich Client Request Handler (ApplRequestProcessor)
 
-- [ ] 4.1 Implement ApplRequestProcessor for rich client XML requests (SWHM-T-0117)
-- [ ] 4.2 Parse XML request and extract request type and parameters (SWHM-T-0117)
-- [ ] 4.3 Validate session ID and deny requests from unauthenticated clients (SWHM-T-0117)
-- [ ] 4.4 Route request types: GETORDERS, UPDATESTATUS, REVENUE, ORDERS (SWHM-T-0117)
-- [ ] 4.5 Return XML responses with consistent structure (SWHM-T-0117)
+- [x] 4.1 Implement ApplRequestProcessor for rich client XML requests (SWHM-T-0117)
+- [x] 4.2 Parse XML request and extract request type and parameters (SWHM-T-0117)
+- [x] 4.3 Validate session ID and deny requests from unauthenticated clients (SWHM-T-0117)
+- [x] 4.4 Route request types: GETORDERS, UPDATESTATUS, REVENUE, ORDERS (SWHM-T-0117)
+- [x] 4.5 Return XML responses with consistent structure (SWHM-T-0117)
 
 ## 5. Order Management
 
