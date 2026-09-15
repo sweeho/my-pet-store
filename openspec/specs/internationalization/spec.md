@@ -58,6 +58,8 @@ A screen that has nothing to show in the visitor's language SHALL offer a contro
 
 A screen SHALL distinguish content that does not exist from content that exists but has no translation in the language being read, and SHALL NOT present its not-found screen for the second case. This holds for every catalogue screen that shows a single thing, whichever level of the catalogue that thing sits at.
 
+The language-unavailable state SHALL describe its subject as the kind of thing the screen is showing — a category, a product or an item — at every level of the catalogue. No level SHALL be described as a level it is not.
+
 #### Scenario: Language can be changed from the untranslated screen
 
 - **GIVEN** a visitor on a catalogue screen that has no content in the language they are reading
@@ -81,6 +83,18 @@ A screen SHALL distinguish content that does not exist from content that exists 
 - **GIVEN** a visitor on the screen of a product that has no translation in the language they are reading
 - **WHEN** the language-unavailable state is presented
 - **THEN** its text refers to the product, and does not describe it as an item
+
+#### Scenario: An untranslated category is described as a category
+
+- **GIVEN** a visitor on the screen of a category that exists in the catalogue but has no translation in the language they are reading
+- **WHEN** the language-unavailable state is presented
+- **THEN** its text refers to the category, and does not describe it as an item or as a product
+
+#### Scenario: An untranslated item is still described as an item
+
+- **GIVEN** a visitor on the screen of an item that exists in the catalogue but has no translation in the language they are reading
+- **WHEN** the language-unavailable state is presented
+- **THEN** its text refers to the item, and does not describe it as a category or as a product
 
 #### Scenario: A catalogue entry that does not exist still reaches the not-found screen
 
