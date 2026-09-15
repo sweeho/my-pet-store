@@ -15,7 +15,6 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "drizzle.config.ts",
-    "configs",
     "server.ts",
     "routes",
     "middleware",
