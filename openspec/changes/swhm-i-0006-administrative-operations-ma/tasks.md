@@ -2,15 +2,15 @@
 
 ## 1. Admin Authentication & Security
 
-- [ ] 1.1 Configure web.xml security-constraint for administrator role (SWHM-T-0114)
-- [ ] 1.2 Set form-based login-config with login.jsp and error.jsp (SWHM-T-0114)
-- [ ] 1.3 Implement session-timeout of 54 minutes in web.xml (SWHM-T-0114)
-- [ ] 1.4 Create login.jsp with username (j_username) and password (j_password) fields (SWHM-T-0114)
-- [ ] 1.5 Pre-populate login form with default values (jps_admin / admin) for development (SWHM-T-0114)
-- [ ] 1.6 Implement form action as j_security_check (J2EE standard endpoint) (SWHM-T-0114)
-- [ ] 1.7 Create error.jsp for failed authentication display (SWHM-T-0114)
-- [ ] 1.8 Implement session attributes j_signon and j_signon_username (SWHM-T-0114)
-- [ ] 1.9 Create logout.jsp to call session.invalidate() and redirect to index.html (SWHM-T-0114)
+- [x] 1.1 Configure web.xml security-constraint for administrator role (SWHM-T-0114)
+- [x] 1.2 Set form-based login-config with login.jsp and error.jsp (SWHM-T-0114)
+- [x] 1.3 Implement session-timeout of 54 minutes in web.xml (SWHM-T-0114)
+- [x] 1.4 Create login.jsp with username (j_username) and password (j_password) fields (SWHM-T-0114)
+- [x] 1.5 Pre-populate login form with default values (jps_admin / admin) for development (SWHM-T-0114)
+- [x] 1.6 Implement form action as j_security_check (J2EE standard endpoint) (SWHM-T-0114)
+- [x] 1.7 Create error.jsp for failed authentication display (SWHM-T-0114)
+- [x] 1.8 Implement session attributes j_signon and j_signon_username (SWHM-T-0114)
+- [x] 1.9 Create logout.jsp to call session.invalidate() and redirect to index.html (SWHM-T-0114)
 
 ## 2. Admin Home Page & Navigation
 
