@@ -29,7 +29,7 @@ export default function ProductPage() {
       ? `/api/catalog/items?productId=${encodeURIComponent(productId)}&start=${start}&count=${PAGE_SIZE}&locale=${encodeURIComponent(locale)}`
       : null;
 
-  const { data: product, notFound } = useCatalogFetch<Product>(productUrl);
+  const { data: product, reason } = useCatalogFetch<Product>(productUrl);
   const { data: items } = useCatalogFetch<Page<Item>>(itemsUrl);
 
   function goToStart(newStart: number) {
@@ -40,7 +40,7 @@ export default function ProductPage() {
     });
   }
 
-  if (notFound) return <NotFound />;
+  if (reason === "not-found") return <NotFound />;
 
   const showUnavailable = Boolean(items && items.objects.length === 0 && locale !== DEFAULT_LOCALE);
 
@@ -73,7 +73,14 @@ export default function ProductPage() {
         )}
       </div>
 
-      {!product ? (
+      {reason === "missing-translation" ? (
+        <UnavailableInLanguage
+          locale={locale ?? DEFAULT_LOCALE}
+          entity="product"
+          onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+          onChangeLocale={setLocale}
+        />
+      ) : !product ? (
         <p role="status" className="text-muted-foreground mt-6 text-sm">
           Loading product…
         </p>
@@ -103,7 +110,7 @@ export default function ProductPage() {
         </ul>
       )}
 
-      {items && !showUnavailable && (
+      {reason !== "missing-translation" && items && !showUnavailable && (
         <div className="mt-4 flex gap-2">
           <Button
             variant="outline"

@@ -55,6 +55,17 @@ describe("UnavailableInLanguage", () => {
     ).toBeInTheDocument();
   });
 
+  it('UL-03b: entity="product" names the product, not an item, when noun is omitted (SWHM-T-0098)', () => {
+    render(<UnavailableInLanguage locale="zh_CN" entity="product" onViewInEnglish={vi.fn()} />);
+
+    expect(screen.getByRole("heading", { name: "Not available in 中文 yet" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This product has nothing translated into 中文. Nothing has gone wrong — it exists, but not in this language.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("UL-04: offers a primary 'View in English (US)' action and a secondary 'Change language' action", async () => {
     const user = userEvent.setup();
     const onViewInEnglish = vi.fn();
