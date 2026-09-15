@@ -6,50 +6,7 @@ import { DEFAULT_LOCALE } from "../../../../catalog/locale";
 import type { Item } from "../../../../catalog/types";
 import NotFound from "../../NotFound";
 import { UnavailableInLanguage } from "../UnavailableInLanguage";
-import { useCatalogLocale } from "../shared";
-
-// Mirrors catalog/availability.ts's MissingReason — duplicated rather than
-// imported because that module reaches db/client.ts at runtime, and
-// everything under catalog/ is out of this ticket's ownership.
-type MissingReason = "not-found" | "missing-translation";
-
-type ItemFetchResult = { url: string; data: Item | null; reason: MissingReason | null };
-
-// A local variant of shared.ts's useCatalogFetch: that hook collapses a 404
-// to a bare boolean and discards the body, but this screen needs the
-// "reason" field the body carries (missing-translation vs not-found,
-// SWHM-T-0074) to tell the two apart. shared.ts belongs to SWHM-T-0072, so
-// this is scoped to the one screen that needs it rather than changing the
-// shared hook.
-function useItemFetch(url: string | null): { data: Item | null; reason: MissingReason | null } {
-  const [result, setResult] = useState<ItemFetchResult | null>(null);
-
-  useEffect(() => {
-    if (!url) return;
-    let cancelled = false;
-
-    fetch(url).then((response) => {
-      if (cancelled) return;
-      (response.json() as Promise<Item | { error: string; reason: MissingReason }>).then((body) => {
-        if (cancelled) return;
-        if (response.status === 404) {
-          setResult({ url, data: null, reason: (body as { reason: MissingReason }).reason });
-          return;
-        }
-        setResult({ url, data: body as Item, reason: null });
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-
-  if (!result || result.url !== url) {
-    return { data: null, reason: null };
-  }
-  return { data: result.data, reason: result.reason };
-}
+import { useCatalogFetch, useCatalogLocale } from "../shared";
 
 function AttributeField({ label, value }: { label: string; value: string | null }) {
   return (
@@ -73,7 +30,7 @@ export default function ItemPage() {
       ? `/api/catalog/items/${encodeURIComponent(itemId)}?locale=${encodeURIComponent(locale)}`
       : null;
 
-  const { data: item, reason } = useItemFetch(itemUrl);
+  const { data: item, reason } = useCatalogFetch<Item>(itemUrl);
 
   if (reason === "not-found") return <NotFound />;
 

@@ -24,6 +24,7 @@ const CONTAINER_NOUN: Record<"products" | "items", string> = {
 type UnavailableInLanguageProps = {
   locale: Locale;
   noun?: "products" | "items";
+  entity?: "product" | "item";
   onViewInEnglish: () => void;
   onChangeLocale?: (next: Locale) => void;
 };
@@ -31,11 +32,12 @@ type UnavailableInLanguageProps = {
 export function UnavailableInLanguage({
   locale,
   noun,
+  entity = "item",
   onViewInEnglish,
   onChangeLocale,
 }: UnavailableInLanguageProps) {
   const languageName = LANGUAGE_NAMES[locale as (typeof LANGUAGES)[number]] ?? locale;
-  const container = noun ? CONTAINER_NOUN[noun] : "item";
+  const container = noun ? CONTAINER_NOUN[noun] : entity;
   const heading = noun
     ? `No ${noun} in ${languageName} yet`
     : `Not available in ${languageName} yet`;

@@ -127,4 +127,24 @@ test.describe("Catalog locale", () => {
     await expect(page.getByRole("heading", { name: "Not Found" })).toBeVisible();
     await expect(page.getByText(/Not available in/)).toHaveCount(0);
   });
+
+  test("an untranslated product reaches the unavailable-in-language panel, and an unknown product id still reaches Not Found (SWHM-T-0098)", async ({
+    page,
+  }) => {
+    // BIRDS-PARROTS exists in every locale except zh_CN (catalog/seed.ts) —
+    // the product screen must offer recovery, not the generic Not Found page.
+    await page.goto("/catalog/product/BIRDS-PARROTS?locale=zh_CN");
+
+    await expect(page.getByRole("heading", { name: "Not available in 中文 yet" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Not Found" })).toHaveCount(0);
+    await expect(page.getByText(/This product has nothing translated/)).toBeVisible();
+
+    await page.getByRole("button", { name: "View in English (US)" }).click();
+    await expect(page.getByRole("heading", { name: "Parrots" })).toBeVisible();
+
+    await page.goto("/catalog/product/NO-SUCH-PRODUCT?locale=ja_JP");
+
+    await expect(page.getByRole("heading", { name: "Not Found" })).toBeVisible();
+    await expect(page.getByText(/Not available in/)).toHaveCount(0);
+  });
 });

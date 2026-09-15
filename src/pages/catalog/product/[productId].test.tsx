@@ -118,6 +118,40 @@ describe("ProductPage (/catalog/product/:productId)", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Loading product…");
   });
 
+  it("PT-02b: reason missing-translation shows the unavailable-in-language state, naming the product, not the not-found screen (SWHM-T-0098)", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/products/BIRDS-PARROTS")) {
+        return Promise.resolve(
+          jsonResponse(
+            { error: "Product not found: BIRDS-PARROTS", reason: "missing-translation" },
+            { ok: false, status: 404 },
+          ),
+        );
+      }
+      if (url.startsWith("/api/catalog/items")) return Promise.resolve(jsonResponse(EMPTY_PAGE));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/product/BIRDS-PARROTS?locale=zh_CN");
+
+    expect(
+      await screen.findByRole("heading", { name: "Not available in 中文 yet" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not Found" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This product has nothing translated into 中文. Nothing has gone wrong — it exists, but not in this language.",
+      ),
+    ).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "View in English (US)" }));
+
+    expect(document.documentElement.lang).toBe("en_US");
+  });
+
   it("PT-04: an empty item list under a non-English locale shows the unavailable-in-language state", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.startsWith("/api/customer"))

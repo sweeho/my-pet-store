@@ -102,6 +102,30 @@ describe("CategoryPage (/catalog/category/:categoryId)", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Loading category…");
   });
 
+  it("PT-02b: reason missing-translation shows the unavailable-in-language state, not the not-found screen (SWHM-T-0098)", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/categories/BIRDS")) {
+        return Promise.resolve(
+          jsonResponse(
+            { error: "Category not found: BIRDS", reason: "missing-translation" },
+            { ok: false, status: 404 },
+          ),
+        );
+      }
+      if (url.startsWith("/api/catalog/products")) return Promise.resolve(jsonResponse(EMPTY_PAGE));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/category/BIRDS?locale=zh_CN");
+
+    expect(
+      await screen.findByRole("heading", { name: "Not available in 中文 yet" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Not Found" })).not.toBeInTheDocument();
+  });
+
   it("PT-04: an empty product list under a non-English locale shows the unavailable-in-language state, naming the language and offering to view in English (US)", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.startsWith("/api/customer"))

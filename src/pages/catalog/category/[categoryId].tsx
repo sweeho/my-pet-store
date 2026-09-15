@@ -29,7 +29,7 @@ export default function CategoryPage() {
       ? `/api/catalog/products?categoryId=${encodeURIComponent(categoryId)}&start=${start}&count=${PAGE_SIZE}&locale=${encodeURIComponent(locale)}`
       : null;
 
-  const { data: category, notFound } = useCatalogFetch<Category>(categoryUrl);
+  const { data: category, reason } = useCatalogFetch<Category>(categoryUrl);
   const { data: products } = useCatalogFetch<Page<Product>>(productsUrl);
 
   function goToStart(newStart: number) {
@@ -40,7 +40,7 @@ export default function CategoryPage() {
     });
   }
 
-  if (notFound) return <NotFound />;
+  if (reason === "not-found") return <NotFound />;
 
   const showUnavailable = Boolean(
     products && products.objects.length === 0 && locale !== DEFAULT_LOCALE,
@@ -72,7 +72,13 @@ export default function CategoryPage() {
         )}
       </div>
 
-      {!category ? (
+      {reason === "missing-translation" ? (
+        <UnavailableInLanguage
+          locale={locale ?? DEFAULT_LOCALE}
+          onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+          onChangeLocale={setLocale}
+        />
+      ) : !category ? (
         <p role="status" className="text-muted-foreground mt-6 text-sm">
           Loading category…
         </p>
@@ -102,7 +108,7 @@ export default function CategoryPage() {
         </ul>
       )}
 
-      {products && !showUnavailable && (
+      {reason !== "missing-translation" && products && !showUnavailable && (
         <div className="mt-4 flex gap-2">
           <Button
             variant="outline"
