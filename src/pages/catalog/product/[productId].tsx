@@ -92,6 +92,7 @@ export default function ProductPage() {
         <UnavailableInLanguage
           locale={locale ?? DEFAULT_LOCALE}
           noun="items"
+          entity="product"
           onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
           onChangeLocale={setLocale}
         />

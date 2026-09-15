@@ -67,6 +67,7 @@ export default function ItemPage() {
       {reason === "missing-translation" ? (
         <UnavailableInLanguage
           locale={locale ?? DEFAULT_LOCALE}
+          entity="item"
           onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
           onChangeLocale={setLocale}
         />

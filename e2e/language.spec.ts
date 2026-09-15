@@ -147,4 +147,25 @@ test.describe("Catalog locale", () => {
     await expect(page.getByRole("heading", { name: "Not Found" })).toBeVisible();
     await expect(page.getByText(/Not available in/)).toHaveCount(0);
   });
+
+  test("an untranslated category reaches the unavailable-in-language panel naming the category, and an unknown category id still reaches Not Found (SWHM-T-0105)", async ({
+    page,
+  }) => {
+    // Every seeded category has a zh_CN row (catalog/seed.ts), so only a
+    // locale the catalogue has no rows for reaches this branch — see the
+    // change's design note § Verification note.
+    await page.goto("/catalog/category/BIRDS?locale=de_DE");
+
+    await expect(page.getByRole("heading", { name: "Not available in de_DE yet" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Not Found" })).toHaveCount(0);
+    await expect(page.getByText(/This category has nothing translated/)).toBeVisible();
+
+    await page.getByRole("button", { name: "View in English (US)" }).click();
+    await expect(page.getByRole("heading", { name: "Birds" })).toBeVisible();
+
+    await page.goto("/catalog/category/NO-SUCH-CATEGORY?locale=ja_JP");
+
+    await expect(page.getByRole("heading", { name: "Not Found" })).toBeVisible();
+    await expect(page.getByText(/Not available in/)).toHaveCount(0);
+  });
 });
