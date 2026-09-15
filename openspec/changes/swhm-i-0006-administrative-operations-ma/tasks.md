@@ -14,11 +14,11 @@
 
 ## 2. Admin Home Page & Navigation
 
-- [ ] 2.1 Create index.jsp for authenticated admin users (SWHM-T-0115)
-- [ ] 2.2 Display description of admin client capabilities (order management, sales visibility) (SWHM-T-0115)
-- [ ] 2.3 Add form to launch Java Web Start with currentScreen=manageorders (SWHM-T-0115)
-- [ ] 2.4 Add form to logout with currentScreen=logout (SWHM-T-0115)
-- [ ] 2.5 Wire AdminRequestProcessor routing for both forms (SWHM-T-0115)
+- [x] 2.1 Create index.jsp for authenticated admin users (SWHM-T-0115)
+- [x] 2.2 Display description of admin client capabilities (order management, sales visibility) (SWHM-T-0115)
+- [x] 2.3 Add form to launch Java Web Start with currentScreen=manageorders (SWHM-T-0115)
+- [x] 2.4 Add form to logout with currentScreen=logout (SWHM-T-0115)
+- [x] 2.5 Wire AdminRequestProcessor routing for both forms (SWHM-T-0115)
 
 ## 3. Rich Client Deployment (Java Web Start)
 
