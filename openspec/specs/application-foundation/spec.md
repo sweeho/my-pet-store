@@ -28,6 +28,12 @@ The application SHALL identify itself as My Pet Store everywhere a person or a u
 - **WHEN** a visitor loads the home page at `/` and opens the mobile navigation panel
 - **THEN** a store-branded mark is rendered in both the header and the panel, and every asset the page requests is served from the application's own origin
 
+#### Scenario: No page fetches a web font from a third-party host
+
+- **GIVEN** the application is running
+- **WHEN** a visitor loads a page and every request the page issues is recorded, together with the link elements in the document's head
+- **THEN** no request and no link element — stylesheet, font file, preconnect or prefetch hint — names a host other than the application's own origin, and the page's text is legible in the store's type without any font having been downloaded
+
 #### Scenario: Boilerplate example screens are not reachable
 
 - **GIVEN** the application is running

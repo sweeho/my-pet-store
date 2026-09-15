@@ -84,4 +84,34 @@ test.describe("Sign-on", () => {
     await expect(page).toHaveURL(/\/customer$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Customer");
   });
+
+  test("browsing the catalog anonymously does not corrupt the post-sign-in redirect", async ({
+    page,
+    request,
+  }) => {
+    const username = uniqueUsername("catalog");
+    const password = "secret123";
+
+    // Created through an isolated APIRequestContext, exactly like the
+    // /customer redirect test above, so the page stays genuinely
+    // unauthenticated for the anonymous browse below.
+    const createResponse = await request.post("/api/signon/create-user", {
+      data: { j_username: username, j_password: password, j_password_2: password },
+    });
+    expect(createResponse.ok()).toBe(true);
+    expect((await createResponse.json()).created).toBe(true);
+
+    // A catalogue screen background-fetches /api/customer on mount
+    // (useCatalogLocale) purely to resolve locale — this must not become
+    // the post-sign-on return address (design.md RC-3/D5).
+    await page.goto("/catalog");
+
+    await page.goto("/signon");
+    const signInForm = page.getByRole("form", { name: "Sign in" });
+    await signInForm.getByLabel("Username").fill(username);
+    await signInForm.getByLabel("Password", { exact: true }).fill(password);
+    await signInForm.getByRole("button", { name: "Sign In" }).click();
+
+    await expect(page).toHaveURL(/\/signon-welcome$/);
+  });
 });

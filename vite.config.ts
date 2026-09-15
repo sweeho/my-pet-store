@@ -6,12 +6,9 @@ import { defineConfig } from "vite";
 // vite plugins
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import Fonts from "unplugin-fonts/vite";
 import Inspect from "vite-plugin-inspect";
 import Pages from "vite-plugin-pages";
 import svgr from "vite-plugin-svgr";
-
-import { fonts } from "./configs/fonts.config";
 
 export default defineConfig({
   server: {
@@ -42,7 +39,6 @@ export default defineConfig({
     Inspect(),
     // ViteImagemin() - commented out due to type issues, uncomment if needed
     tailwindcss(),
-    Fonts({ google: { families: fonts } }),
     AutoImport({
       imports: ["react", "react-router"],
       dts: "./auto-imports.d.ts",
