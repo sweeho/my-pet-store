@@ -14,10 +14,10 @@
 
 ## 3. Catalogue item images
 
-- [ ] 3.1 Add a committed SVG illustration under `public/images/<category>/` for each of the 20 distinct locations the seed names, each distinguishable from the others (SWHM-T-0095)
-- [ ] 3.2 Point `catalog/seed.ts`'s 41 `image` values at those committed assets (SWHM-T-0095)
-- [ ] 3.3 Add a test under `catalog/` asserting every distinct seeded image location resolves to a file the application serves (SWHM-T-0095)
-- [ ] 3.4 Assert in `e2e/catalog.spec.ts` that an item detail screen shows the item's own image and issues no image request answered as not found (SWHM-T-0095)
+- [x] 3.1 Add a committed SVG illustration under `public/images/<category>/` for each of the 20 distinct locations the seed names, each distinguishable from the others (SWHM-T-0095)
+- [x] 3.2 Point `catalog/seed.ts`'s 41 `image` values at those committed assets (SWHM-T-0095)
+- [x] 3.3 Add a test under `catalog/` asserting every distinct seeded image location resolves to a file the application serves (SWHM-T-0095)
+- [x] 3.4 Assert in `e2e/catalog.spec.ts` that an item detail screen shows the item's own image and issues no image request answered as not found (SWHM-T-0095)
 
 ## 4. Post-sign-on destination
 
