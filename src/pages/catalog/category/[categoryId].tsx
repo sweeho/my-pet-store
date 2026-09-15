@@ -75,6 +75,7 @@ export default function CategoryPage() {
       {reason === "missing-translation" ? (
         <UnavailableInLanguage
           locale={locale ?? DEFAULT_LOCALE}
+          entity="category"
           onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
           onChangeLocale={setLocale}
         />
@@ -90,6 +91,7 @@ export default function CategoryPage() {
         <UnavailableInLanguage
           locale={locale ?? DEFAULT_LOCALE}
           noun="products"
+          entity="category"
           onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
           onChangeLocale={setLocale}
         />
