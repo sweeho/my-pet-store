@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Admin Login — wireframe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fff; color: #3f3f46;
+    font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .frame { min-height: 576px; display: flex; align-items: center; justify-content: center; padding: 32px; }
+  .col { width: 100%; max-width: 384px; }
+  .h1 { height: 22px; width: 44%; background: #52525b; border-radius: 3px; }
+  .h1-cap { font-size: 11px; color: #a1a1aa; margin-top: 6px; letter-spacing: .04em; }
+  .form { margin-top: 26px; display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .label { font-size: 13px; font-weight: 600; color: #3f3f46; }
+  .input {
+    height: 38px; border: 1px solid #d4d4d8; border-radius: 6px; background: #fff;
+    display: flex; align-items: center; padding: 0 12px;
+  }
+  .ph { height: 8px; width: 34%; background: #e4e4e7; border-radius: 2px; }
+  .dots { letter-spacing: 3px; color: #a1a1aa; font-size: 12px; }
+  .btn-primary {
+    height: 40px; border-radius: 6px; background: #3f3f46; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; margin-top: 4px;
+  }
+  .note {
+    margin-top: 18px; border: 1px dashed #d4d4d8; border-radius: 6px; padding: 8px 10px;
+    font-size: 11px; color: #a1a1aa;
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="col">
+      <div class="h1"></div>
+      <div class="h1-cap">heading — “Sign In”</div>
+
+      <div class="form">
+        <div class="field">
+          <div class="label">User ID</div>
+          <div class="input"><div class="ph"></div></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Password</div>
+          <div class="input"><span class="dots">••••••••</span></div>
+        </div>
+
+        <div class="btn-primary">Sign In</div>
+      </div>
+
+      <div class="note">form method POST → <strong>j_security_check</strong></div>
+    </div>
+  </div>
+</body>
+</html>
