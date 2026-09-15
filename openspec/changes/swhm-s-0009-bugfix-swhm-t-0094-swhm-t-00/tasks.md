@@ -8,9 +8,9 @@
 
 ## 2. Third-party web font
 
-- [ ] 2.1 Remove the `Fonts()` registration and its two imports from `vite.config.ts` (SWHM-T-0094)
-- [ ] 2.2 Delete `configs/` and its `include` entry in `tsconfig.node.json`, and drop the `unplugin-fonts` dependency (SWHM-T-0094)
-- [ ] 2.3 Assert in `e2e/home.spec.ts` that every request the page issues, and every link element in its head, names the application's own origin (SWHM-T-0094)
+- [x] 2.1 Remove the `Fonts()` registration and its two imports from `vite.config.ts` (SWHM-T-0094)
+- [x] 2.2 Delete `configs/` and its `include` entry in `tsconfig.node.json`, and drop the `unplugin-fonts` dependency (SWHM-T-0094)
+- [x] 2.3 Assert in `e2e/home.spec.ts` that every request the page issues, and every link element in its head, names the application's own origin (SWHM-T-0094)
 
 ## 3. Catalogue item images
 
