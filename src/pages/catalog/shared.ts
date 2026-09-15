@@ -83,16 +83,30 @@ export function useCatalogLocale(): {
   return { locale, setLocale };
 }
 
-type FetchResult<T> = { url: string; data: T | null; notFound: boolean };
+// Mirrors catalog/availability.ts's MissingReason — duplicated rather than
+// imported because that module reaches db/client.ts at runtime, and pulling
+// that into the browser bundle is not worth avoiding one type declaration
+// (design.md D4).
+export type MissingReason = "not-found" | "missing-translation";
+
+type FetchResult<T> = { url: string; data: T | null; reason: MissingReason | null };
 
 // Fetches `url` once it stops being null (callers pass null while a
-// dependency, e.g. the resolved locale, isn't ready yet). A 404 sets
-// notFound rather than leaving the page on data === null forever (AC-6).
-// State is only ever set from inside the fetch callback, never
-// synchronously in the effect body (react-hooks/set-state-in-effect) — a
-// url change is instead treated as "loading" by comparing the last
-// resolved result's url against the current one at render time.
-export function useCatalogFetch<T>(url: string | null): { data: T | null; notFound: boolean } {
+// dependency, e.g. the resolved locale, isn't ready yet). A 404 reads the
+// response body for the server's `reason` field rather than leaving the page
+// on data === null forever (AC-6), so a screen can distinguish "no such
+// thing" from "exists, not translated" (design.md RC/D1). A 404 body that is
+// missing or fails to parse as JSON yields "not-found" — the safe direction,
+// since guessing "missing-translation" would tell a visitor a page that
+// genuinely doesn't exist is merely untranslated (design.md D2). State is
+// only ever set from inside the fetch callback, never synchronously in the
+// effect body (react-hooks/set-state-in-effect) — a url change is instead
+// treated as "loading" by comparing the last resolved result's url against
+// the current one at render time.
+export function useCatalogFetch<T>(url: string | null): {
+  data: T | null;
+  reason: MissingReason | null;
+} {
   const [result, setResult] = useState<FetchResult<T> | null>(null);
 
   useEffect(() => {
@@ -102,11 +116,22 @@ export function useCatalogFetch<T>(url: string | null): { data: T | null; notFou
     fetch(url).then((response) => {
       if (cancelled) return;
       if (response.status === 404) {
-        setResult({ url, data: null, notFound: true });
+        (response.json() as Promise<unknown>)
+          .then((body) => {
+            if (cancelled) return;
+            const reason =
+              body && typeof body === "object" && "reason" in body
+                ? ((body as { reason: MissingReason }).reason ?? "not-found")
+                : "not-found";
+            setResult({ url, data: null, reason });
+          })
+          .catch(() => {
+            if (!cancelled) setResult({ url, data: null, reason: "not-found" });
+          });
         return;
       }
       (response.json() as Promise<T>).then((body) => {
-        if (!cancelled) setResult({ url, data: body, notFound: false });
+        if (!cancelled) setResult({ url, data: body, reason: null });
       });
     });
 
@@ -116,9 +141,9 @@ export function useCatalogFetch<T>(url: string | null): { data: T | null; notFou
   }, [url]);
 
   if (!result || result.url !== url) {
-    return { data: null, notFound: false };
+    return { data: null, reason: null };
   }
-  return { data: result.data, notFound: result.notFound };
+  return { data: result.data, reason: result.reason };
 }
 
 // The two neighbouring starts a Page's own start/hasNext license — null

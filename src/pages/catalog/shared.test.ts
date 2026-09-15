@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { readCookie } from "../../utils/cookies";
-import { useCatalogLocale } from "./shared";
+import { useCatalogFetch, useCatalogLocale } from "./shared";
 
 /**
  * UNIT TEST (jsdom)
@@ -181,5 +181,67 @@ describe("useCatalogLocale", () => {
       expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PUT")).toBe(true),
     );
     expect(result.current.locale).toBe("zh_CN");
+  });
+});
+
+/**
+ * Covers useCatalogFetch()'s reason plumbing directly (design.md RC/D1/D2,
+ * PLAN.md step 6): a 404 must surface the server's `reason` field rather than
+ * a bare boolean, and a 404 body that is missing or unparseable must fall
+ * back to "not-found" — the safe direction (design.md D2).
+ */
+describe("useCatalogFetch", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("FC-01: resolves data with a null reason on a successful response", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ id: "BIRDS" }));
+
+    const { result } = renderHook(() =>
+      useCatalogFetch<{ id: string }>("/api/catalog/categories/BIRDS"),
+    );
+
+    await waitFor(() => expect(result.current.data).toEqual({ id: "BIRDS" }));
+    expect(result.current.reason).toBeNull();
+  });
+
+  it("FC-02: a 404 body's reason field is surfaced as-is (missing-translation)", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(
+        { error: "not found", reason: "missing-translation" },
+        { ok: false, status: 404 },
+      ),
+    );
+
+    const { result } = renderHook(() => useCatalogFetch("/api/catalog/products/BIRDS-PARROTS"));
+
+    await waitFor(() => expect(result.current.reason).toBe("missing-translation"));
+    expect(result.current.data).toBeNull();
+  });
+
+  it("FC-03: a 404 body with no reason field defaults to not-found", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: "not found" }, { ok: false, status: 404 }));
+
+    const { result } = renderHook(() => useCatalogFetch("/api/catalog/products/NOPE"));
+
+    await waitFor(() => expect(result.current.reason).toBe("not-found"));
+  });
+
+  it("FC-04: a 404 whose body fails to parse as JSON defaults to not-found instead of hanging", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.reject(new Error("not JSON")),
+    });
+
+    const { result } = renderHook(() => useCatalogFetch("/api/catalog/products/NOPE"));
+
+    await waitFor(() => expect(result.current.reason).toBe("not-found"));
   });
 });
