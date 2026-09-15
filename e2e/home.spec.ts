@@ -39,6 +39,33 @@ test.describe("Home page", () => {
     }
   });
 
+  test("requests no font, stylesheet, or preconnect hint from a third-party host", async ({
+    page,
+  }) => {
+    const requestOrigins: string[] = [];
+    page.on("request", (request) => {
+      requestOrigins.push(new URL(request.url()).origin);
+    });
+
+    await page.goto("/");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("My Pet Store");
+
+    const appOrigin = new URL(page.url()).origin;
+
+    const offOriginRequests = requestOrigins.filter((origin) => origin !== appOrigin);
+    expect(offOriginRequests).toEqual([]);
+
+    const linkHrefs = await page.$$eval("head link", (links) =>
+      links
+        .map((link) => link.getAttribute("href"))
+        .filter((href): href is string => href !== null),
+    );
+    const offOriginLinks = linkHrefs.filter(
+      (href) => new URL(href, appOrigin).origin !== appOrigin,
+    );
+    expect(offOriginLinks).toEqual([]);
+  });
+
   test("opens and closes the mobile nav from the hamburger button", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/");
