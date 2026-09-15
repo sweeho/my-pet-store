@@ -4,7 +4,7 @@ import { db } from "../db/client";
 import { authUsers } from "../db/schema";
 import { findAccount } from "../account/customer";
 import { CreateUserError } from "./validation";
-import { findUser, insertUser, matchPassword } from "./user";
+import { findUser, findUserRole, insertUser, matchPassword } from "./user";
 
 describe("auth/user", () => {
   it("UT-01: a user inserted with valid credentials is found by findUser with its user_name as the key", () => {
@@ -56,5 +56,23 @@ describe("auth/user", () => {
 
     expect(() => insertUser("frank", "secret123")).toThrow(CreateUserError);
     expect(db.select().from(authUsers).all().length).toBe(countBefore);
+  });
+
+  it("UT-07: a user registered through insertUser holds no role", () => {
+    insertUser("grace", "secret123");
+
+    expect(findUserRole("grace")).toBeNull();
+  });
+
+  it("UT-08: findUserRole reads the role held by a user inserted with one", () => {
+    db.insert(authUsers)
+      .values({ userName: "admin1", password: "hash", role: "administrator" })
+      .run();
+
+    expect(findUserRole("admin1")).toBe("administrator");
+  });
+
+  it("UT-09: findUserRole is null for a user name that does not exist", () => {
+    expect(findUserRole("nobody")).toBeNull();
   });
 });

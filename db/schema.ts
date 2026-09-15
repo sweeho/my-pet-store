@@ -9,6 +9,7 @@ export const users = sqliteTable("users", {
 export const authUsers = sqliteTable("auth_users", {
   userName: text("user_name").primaryKey(),
   password: text("password").notNull(), // scrypt-hashed, see S3
+  role: text("role"), // null = ordinary customer; "administrator" = holds the marker
 });
 
 export const sessions = sqliteTable("sessions", {

@@ -1,6 +1,8 @@
 import { H3Event } from "nitro/h3";
 import { describe, expect, it } from "vitest";
 
+import { db } from "../../../db/client";
+import { authUsers } from "../../../db/schema";
 import { SESSION_COOKIE, setSignedOn, useSignOnSession } from "../../../auth/session";
 import checkAccess from "./check.get";
 
@@ -32,7 +34,7 @@ describe("GET /api/signon/check", () => {
 
     const result = await checkAccess(event);
 
-    expect(result).toEqual({ allowed: false, redirectTo: "/signon" });
+    expect(result).toEqual({ allowed: false, reason: "not-signed-on", redirectTo: "/signon" });
 
     const followUp = requestWithCookie("http://localhost/api/signon/session", cookieValueOf(event));
     expect(useSignOnSession(followUp).original_url).toBe("/customer");
@@ -72,9 +74,47 @@ describe("GET /api/signon/check", () => {
 
     const result = await checkAccess(event);
 
-    expect(result).toEqual({ allowed: false, redirectTo: "/signon" });
+    expect(result).toEqual({ allowed: false, reason: "not-signed-on", redirectTo: "/signon" });
 
     const followUp = requestWithCookie("http://localhost/api/signon/session", cookieValueOf(event));
     expect(useSignOnSession(followUp).original_url).toBeNull();
+  });
+
+  it("CH-05: a signed-on request without the administrator role is denied role-required for an admin resource, and original_url is not overwritten", async () => {
+    const setup = new H3Event(new Request("http://localhost/api/signon/check?resource=/admin"));
+    setSignedOn(useSignOnSession(setup), "alice");
+    const cookieValue = cookieValueOf(setup);
+
+    const event = requestWithCookie(
+      "http://localhost/api/signon/check?resource=/admin",
+      cookieValue,
+    );
+    const result = await checkAccess(event);
+
+    expect(result).toEqual({
+      allowed: false,
+      reason: "role-required",
+      requiredRole: "administrator",
+    });
+
+    const followUp = requestWithCookie("http://localhost/api/signon/session", cookieValue);
+    expect(useSignOnSession(followUp).original_url).toBeNull();
+  });
+
+  it("CH-06: a signed-on request holding the administrator role is allowed for an admin resource", async () => {
+    db.insert(authUsers)
+      .values({ userName: "bob-admin", password: "hash", role: "administrator" })
+      .run();
+    const setup = new H3Event(new Request("http://localhost/api/signon/check?resource=/admin"));
+    setSignedOn(useSignOnSession(setup), "bob-admin");
+    const cookieValue = cookieValueOf(setup);
+
+    const event = requestWithCookie(
+      "http://localhost/api/signon/check?resource=/admin",
+      cookieValue,
+    );
+    const result = await checkAccess(event);
+
+    expect(result).toEqual({ allowed: true });
   });
 });
