@@ -73,6 +73,19 @@ function buildReport(groupedBy: Report["groupedBy"], rawRows: RawRow[]): Report 
   return { groupedBy, rows, totalSales };
 }
 
+// No round2 here (SWHM-T-0121 PLAN.md step 2, Gotchas): quantities are
+// integers, and totalSales is a count, not money — rounding it would imply
+// a precision this measure doesn't have.
+function buildCountReport(groupedBy: Report["groupedBy"], rawRows: RawRow[]): Report {
+  const totalSales = rawRows.reduce((total, row) => total + row.value, 0);
+  const rows: ReportRow[] = rawRows.map((row) => ({
+    id: row.id,
+    label: row.label,
+    value: row.value,
+  }));
+  return { groupedBy, rows, totalSales };
+}
+
 // Sums order_line_item.quantity * unit_price — the price PAID, never a join
 // to item.list_price, which would restate history every time a price
 // changes (design.md D4). With no catid, groups by category across all of
@@ -116,4 +129,49 @@ export function getRevenueReport(range: DateRange, catid?: string): Report {
     .all();
 
   return buildReport("Item", rows);
+}
+
+// Sums order_line_item.quantity — "order quantities" (the extracted
+// scenario's wording): one line item for five units is five, not one row
+// (PLAN.md Gotchas). Same join, same half-open range and the same
+// category-or-item conditional as getRevenueReport — the only difference is
+// the aggregate expression and skipping round2 (SWHM-T-0121 PLAN.md step 2).
+export function getOrderCountReport(range: DateRange, catid?: string): Report {
+  const quantitySum = sql<number>`sum(${orderLineItem.quantity})`;
+  const inRange = and(gte(orders.orderDate, range.start), lt(orders.orderDate, range.endExclusive));
+
+  if (catid === undefined) {
+    const rows = db
+      .select({ id: category.catid, label: categoryDetails.name, value: quantitySum })
+      .from(orderLineItem)
+      .innerJoin(orders, eq(orders.orderId, orderLineItem.orderId))
+      .innerJoin(item, eq(item.itemid, orderLineItem.itemid))
+      .innerJoin(product, eq(product.productid, item.productid))
+      .innerJoin(category, eq(category.catid, product.catid))
+      .innerJoin(
+        categoryDetails,
+        and(eq(categoryDetails.catid, category.catid), eq(categoryDetails.locale, DEFAULT_LOCALE)),
+      )
+      .where(inRange)
+      .groupBy(category.catid, categoryDetails.name)
+      .all();
+
+    return buildCountReport("Category", rows);
+  }
+
+  const rows = db
+    .select({ id: item.itemid, label: itemDetails.name, value: quantitySum })
+    .from(orderLineItem)
+    .innerJoin(orders, eq(orders.orderId, orderLineItem.orderId))
+    .innerJoin(item, eq(item.itemid, orderLineItem.itemid))
+    .innerJoin(product, eq(product.productid, item.productid))
+    .innerJoin(
+      itemDetails,
+      and(eq(itemDetails.itemid, item.itemid), eq(itemDetails.locale, DEFAULT_LOCALE)),
+    )
+    .where(and(inRange, eq(product.catid, catid)))
+    .groupBy(item.itemid, itemDetails.name)
+    .all();
+
+  return buildCountReport("Item", rows);
 }

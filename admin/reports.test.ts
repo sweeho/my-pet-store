@@ -13,7 +13,7 @@ import {
   productDetails,
 } from "../db/schema";
 import { DEFAULT_LOCALE } from "../catalog/locale";
-import { getRevenueReport, parseReportDates } from "./reports";
+import { getOrderCountReport, getRevenueReport, parseReportDates } from "./reports";
 import type { DateRange } from "./types";
 
 let seq = 0;
@@ -172,6 +172,99 @@ describe("admin/reports getRevenueReport", () => {
     const range = asRange(parseReportDates("01/01/1999", "01/31/1999"));
 
     const report = getRevenueReport(range);
+
+    expect(report.rows).toEqual([]);
+    expect(report.totalSales).toBe(0);
+  });
+});
+
+describe("admin/reports getOrderCountReport", () => {
+  it("OC-01: a sale exactly on the start date is counted, one exactly on the end date is counted, one the day after is not", () => {
+    // A date range not used by any revenue test above: this file shares one
+    // in-memory db across all its tests, and totalSales sums every category
+    // in range — an overlapping range would silently add another test's rows.
+    const catid = seedCategory("Count Boundary " + nextId(""));
+    const itemId = seedItem(catid, "Count Boundary Item");
+    const range = asRange(parseReportDates("01/15/2033", "01/31/2033"));
+
+    seedSale(new Date(Date.UTC(2033, 0, 15, 0, 0, 0)), itemId, 2, 10); // on start
+    seedSale(new Date(Date.UTC(2033, 0, 31, 23, 59, 59)), itemId, 3, 20); // on end
+    seedSale(new Date(Date.UTC(2033, 1, 1, 0, 0, 0)), itemId, 99, 999); // day after end — excluded
+
+    const report = getOrderCountReport(range);
+    const row = report.rows.find((r) => r.id === catid);
+
+    expect(row?.value).toBe(5);
+    expect(report.totalSales).toBe(5);
+  });
+
+  it("OC-02: with no category filter, groups quantities by category across all categories", () => {
+    const catA = seedCategory("Count Cat A " + nextId(""));
+    const itemA = seedItem(catA, "Count Item A");
+    const catB = seedCategory("Count Cat B " + nextId(""));
+    const itemB = seedItem(catB, "Count Item B");
+    const range = asRange(parseReportDates("06/01/2024", "06/30/2024"));
+    const day = new Date(Date.UTC(2024, 5, 15));
+
+    seedSale(day, itemA, 4, 5);
+    seedSale(day, itemB, 7, 1);
+
+    const report = getOrderCountReport(range);
+
+    expect(report.groupedBy).toBe("Category");
+    expect(report.rows.find((r) => r.id === catA)?.value).toBe(4);
+    expect(report.rows.find((r) => r.id === catB)?.value).toBe(7);
+  });
+
+  it("OC-03: with a category filter, groups quantities by item within that category, not by category", () => {
+    const catid = seedCategory("Count Filtered " + nextId(""));
+    const itemOne = seedItem(catid, "Count Item One");
+    const itemTwo = seedItem(catid, "Count Item Two");
+    const otherCat = seedCategory("Count Other " + nextId(""));
+    const otherItem = seedItem(otherCat, "Count Other Item");
+    const range = asRange(parseReportDates("07/01/2024", "07/31/2024"));
+    const day = new Date(Date.UTC(2024, 6, 10));
+
+    seedSale(day, itemOne, 2, 15);
+    seedSale(day, itemTwo, 6, 25);
+    seedSale(day, otherItem, 500, 1);
+
+    const report = getOrderCountReport(range, catid);
+
+    expect(report.groupedBy).toBe("Item");
+    const ids = report.rows.map((r) => r.id);
+    expect(ids).toContain(itemOne);
+    expect(ids).toContain(itemTwo);
+    expect(ids).not.toContain(otherItem);
+    expect(report.rows.find((r) => r.id === itemOne)?.value).toBe(2);
+    expect(report.rows.find((r) => r.id === itemTwo)?.value).toBe(6);
+  });
+
+  it("OC-04: totalSales is the sum of the row quantities, an integer count rather than money", () => {
+    // Another date range not used by any revenue test above (see OC-01).
+    const catA = seedCategory("Count Round A " + nextId(""));
+    const itemA = seedItem(catA, "Count Round Item A");
+    const catB = seedCategory("Count Round B " + nextId(""));
+    const itemB = seedItem(catB, "Count Round Item B");
+    const range = asRange(parseReportDates("03/01/2034", "03/31/2034"));
+    const day = new Date(Date.UTC(2034, 2, 10));
+
+    // One line item for five units is five, not one (PLAN.md Gotchas) — the
+    // quantity summed, not the row count.
+    seedSale(day, itemA, 5, 10.004);
+    seedSale(day, itemB, 3, 10.004);
+
+    const report = getOrderCountReport(range);
+
+    expect(report.rows.find((r) => r.id === catA)?.value).toBe(5);
+    expect(report.rows.find((r) => r.id === catB)?.value).toBe(3);
+    expect(report.totalSales).toBe(8);
+  });
+
+  it("OC-05: an empty range (no orders) returns no rows and a zero total", () => {
+    const range = asRange(parseReportDates("01/01/1999", "01/31/1999"));
+
+    const report = getOrderCountReport(range);
 
     expect(report.rows).toEqual([]);
     expect(report.totalSales).toBe(0);
