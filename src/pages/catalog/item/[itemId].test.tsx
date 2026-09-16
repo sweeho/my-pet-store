@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -223,5 +224,52 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
     // must not loop): the src stays exactly the placeholder.
     fireEvent.error(img);
     expect(img).toHaveAttribute("src", "/images/placeholder.svg");
+  });
+
+  it("PT-09: renders a quantity field defaulting to 1 and an Add to Cart control", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
+        return Promise.resolve(jsonResponse(ITEM));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1");
+
+    await screen.findByRole("heading", { name: "Parrots" });
+    expect(screen.getByLabelText("Quantity")).toHaveValue(1);
+    expect(screen.getByRole("button", { name: "Add to Cart" })).toBeInTheDocument();
+  });
+
+  it("PT-10: activating Add to Cart posts the item id and the entered quantity to /api/cart", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith("/api/customer"))
+        return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
+      if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
+        return Promise.resolve(jsonResponse(ITEM));
+      if (url === "/api/cart")
+        return Promise.resolve(jsonResponse({ items: [], count: 1, subtotal: 1050 }));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    const user = userEvent.setup();
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1");
+    await screen.findByRole("heading", { name: "Parrots" });
+
+    const quantity = screen.getByLabelText("Quantity");
+    await user.clear(quantity);
+    await user.type(quantity, "3");
+    await user.click(screen.getByRole("button", { name: "Add to Cart" }));
+
+    const cartCall = fetchMock.mock.calls.find((call: unknown[]) => call[0] === "/api/cart");
+    expect(cartCall).toBeDefined();
+    expect(cartCall![1]).toMatchObject({ method: "POST" });
+    const body = JSON.parse((cartCall![1] as { body: string }).body);
+    expect(body).toEqual({ itemId: "BIRDS-PARROTS-1", quantity: 3 });
+
+    expect(await screen.findByRole("status", { name: "Add to cart status" })).toHaveTextContent(
+      "Added to cart.",
+    );
   });
 });
