@@ -55,10 +55,10 @@
 
 ## 6. Cart Clearing
 
-- [ ] 6.1 After successful LineItem creation, retrieve customer's shopping cart (SWHM-T-0158)
-- [ ] 6.2 Clear cart.items collection (SWHM-T-0158)
-- [ ] 6.3 Set cart.count = 0 (SWHM-T-0158)
-- [ ] 6.4 Update cart in session (SWHM-T-0158)
+- [x] 6.1 After successful LineItem creation, retrieve customer's shopping cart (SWHM-T-0158)
+- [x] 6.2 Clear cart.items collection (SWHM-T-0158)
+- [x] 6.3 Set cart.count = 0 (SWHM-T-0158)
+- [x] 6.4 Update cart in session (SWHM-T-0158)
 
 ## 7. Order Confirmation Display
 
