@@ -23,3 +23,19 @@ export type Page<T> = {
   items: T[];
   hasNext: boolean;
 };
+
+// Fixed in artifacts/SWHM-S-0012/SWHM-T-0120/PLAN.md § Fixed interface
+// contracts. SWHM-T-0121 reuses these — add to this file, do not restructure it.
+export type DateRange = { start: Date; endExclusive: Date };
+
+export type ReportRow = {
+  id: string;
+  label: string;
+  value: number;
+};
+
+export type Report = {
+  groupedBy: "Category" | "Item";
+  rows: ReportRow[];
+  totalSales: number;
+};
