@@ -64,6 +64,13 @@
       "when": 1789575387997,
       "tag": "0008_sour_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789597311464,
+      "tag": "0009_steady_microchip",
+      "breakpoints": true
     }
   ]
 }
