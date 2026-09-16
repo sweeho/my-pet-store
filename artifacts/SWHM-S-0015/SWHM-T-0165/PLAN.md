@@ -10,7 +10,8 @@
 Confirm on this sprint branch that a successful order submission reaches the confirmation screen
 carrying the identifier and billing email its placement produced, and that the screen renders them.
 **No production code change is expected** — the reported fault is already fixed here, and the
-regression assertion this defect asks for already exists and passes. See `design.md § D1` for why
+regression assertion this defect asks for already exists and passes, at the screen tier and in a
+real browser (CI run `35138625151` on this branch, green). See `design.md § D1` for why
 the correct outcome is to close with no diff, and `proposal.md § Why` for the verification behind
 that finding.
 

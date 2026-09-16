@@ -33,7 +33,9 @@ mechanism and about the state of the branch they were written against; that bran
   OC-08, including OC-03 (a different identifier renders, not a hard-coded 1005) and OC-05 / OC-08
   (no identifier block and no email line when there is no state). `e2e/order.spec.ts:126-158`
   drives the browser journey end to end and asserts the visible order-id group, the billing email,
-  the emptied cart and a higher identifier on a second order — SWHM-T-0166's own ACs.
+  the emptied cart and a higher identifier on a second order — SWHM-T-0166's own ACs. That journey
+  was then observed passing in a real browser: CI run `35138625151` on this sprint branch is green,
+  37 of 37 E2E tests, `e2e/order.spec.ts:126` among them.
 - The one seam neither report examined also holds. `/order-completed` is wrapped in
   `RequireSignOn`, which is the obvious way state could still be lost on arrival; it does not
   navigate on the allowed path (`src/components/RequireSignOn.tsx:21-25`), it re-renders on

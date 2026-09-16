@@ -22,14 +22,19 @@ code that is already correct for the sole purpose of closing a ticket. That is h
 becomes a new one. A defect whose fault is gone closes as resolved; the deliverable is the evidence
 that it is gone and the spec change that keeps it gone.
 
-The browser tier is the one thing this branch cannot observe locally: Chromium is genuinely absent
-from the planning container (`scripts/ensure-playwright-browser.mjs` fails fast, as recorded in
-`.vortex/agents-generated.md` for six consecutive tickets in SWHM-S-0002), so `e2e/order.spec.ts`
-was read rather than run. It runs in CI on this branch and again at integration QA, which is where
-SWHM-T-0166's acceptance criteria are actually observed. The file-ownership maps on both tickets
-therefore stay non-empty: they bound a corrective change to the one file the reports implicate, so
-that if CI contradicts the static finding the fix is already scoped, rather than leaving the
-assigned agent to decide its own blast radius mid-run.
+The browser tier cannot be observed in the planning container: Chromium is genuinely absent
+(`scripts/ensure-playwright-browser.mjs` fails fast, as recorded in `.vortex/agents-generated.md`
+for six consecutive tickets in SWHM-S-0002), so `e2e/order.spec.ts` was read rather than run here.
+It was then observed where a real browser exists — **CI run `35138625151` on this sprint branch,
+green, 37 of 37 E2E tests passed**, including `e2e/order.spec.ts:126` "places an order from a
+populated cart …, confirms it with an order id and the shopper's email, empties the cart, and gives
+a second order a higher id". That is SWHM-T-0166's acceptance criteria observed end to end in a
+browser against this branch, and it settles the static finding rather than merely supporting it.
+
+The file-ownership maps on both tickets stay non-empty anyway. They cost nothing when no diff is
+needed, and they bound a corrective change to the one file the reports implicate if a later run
+contradicts this one, rather than leaving the assigned agent to decide its own blast radius
+mid-run.
 
 ### D2 — Specify the handoff by MODIFYING the existing requirement, not adding one
 
@@ -76,10 +81,11 @@ handles two reports of one already-fixed fault, and none of it constrains work b
 
 ## Risks
 
-- **The browser tier contradicts the static finding.** Low, and bounded: if CI's
-  `e2e/order.spec.ts` run is red on the confirmation assertions, the cause is in the one file both
-  reports implicate and both tickets already own it. Nothing about this change has to be redone —
-  the scenarios are correct either way, and one of them simply starts failing instead of passing.
+- ~~The browser tier contradicts the static finding.~~ **Closed** by CI run `35138625151` on this
+  branch: the order journey passes in a real Chromium. Had it gone the other way the cause would
+  have been in the one file both reports implicate, which both tickets already own; nothing about
+  the delta would have changed, since a regression scenario is correct whether it currently passes
+  or fails.
 - **An assigned agent reads "no code change expected" as "nothing to do" and closes without
   checking.** Both `PLAN.md` files state the criteria as outcomes to be observed on this branch, and
   every criterion names the assertion or the visible element that carries it, so confirming one is a
