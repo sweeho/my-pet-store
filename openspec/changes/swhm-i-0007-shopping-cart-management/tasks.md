@@ -19,10 +19,10 @@
 
 ## 3. Cart Operations - Remove
 
-- [ ] 3.1 Implement removeItem(itemId) method (SWHM-T-0135)
-- [ ] 3.2 Remove CartItem from collection (SWHM-T-0135)
-- [ ] 3.3 Decrement cart.count (SWHM-T-0135)
-- [ ] 3.4 Recalculate cart subtotal (SWHM-T-0135)
+- [x] 3.1 Implement removeItem(itemId) method (SWHM-T-0135)
+- [x] 3.2 Remove CartItem from collection (SWHM-T-0135)
+- [x] 3.3 Decrement cart.count (SWHM-T-0135)
+- [x] 3.4 Recalculate cart subtotal (SWHM-T-0135)
 
 ## 4. Cart Operations - Update
 
