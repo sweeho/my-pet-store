@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router";
 
-import { LanguageSwitcher } from "@/components";
+import { Button, LanguageSwitcher } from "@/components";
 
 import { DEFAULT_LOCALE } from "../../../../catalog/locale";
 import type { Item } from "../../../../catalog/types";
@@ -21,9 +21,21 @@ export default function ItemPage() {
   const { itemId } = useParams<{ itemId: string }>();
   const { locale, setLocale } = useCatalogLocale();
 
+  const [quantity, setQuantity] = useState(1);
+  const [addStatus, setAddStatus] = useState<"idle" | "added" | "error">("idle");
+
   useEffect(() => {
     if (locale) document.documentElement.lang = locale;
   }, [locale]);
+
+  async function handleAddToCart(item: Item) {
+    const response = await fetch("/api/cart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId: item.itemId, quantity }),
+    });
+    setAddStatus(response.ok ? "added" : "error");
+  }
 
   const itemUrl =
     locale && itemId
@@ -102,6 +114,42 @@ export default function ItemPage() {
           </div>
 
           <p className="text-foreground mt-4 text-lg font-bold">${item.listPrice.toFixed(2)}</p>
+
+          <div className="mt-4 flex items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="quantity" className="text-foreground text-sm font-medium">
+                Quantity
+              </label>
+              <input
+                id="quantity"
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(event) => setQuantity(Number(event.target.value))}
+                className="border-input bg-background text-foreground w-20 rounded-md border px-3 py-2 text-sm"
+              />
+            </div>
+            <Button onClick={() => handleAddToCart(item)}>Add to Cart</Button>
+          </div>
+
+          {addStatus === "added" && (
+            <p
+              role="status"
+              aria-label="Add to cart status"
+              className="text-foreground mt-2 text-sm"
+            >
+              Added to cart.
+            </p>
+          )}
+          {addStatus === "error" && (
+            <p
+              role="status"
+              aria-label="Add to cart status"
+              className="text-destructive mt-2 text-sm"
+            >
+              Could not add item to cart.
+            </p>
+          )}
         </>
       )}
     </div>
