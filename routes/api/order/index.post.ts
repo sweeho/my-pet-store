@@ -1,6 +1,7 @@
 import { defineHandler, readBody, setResponseStatus } from "nitro/h3";
 
 import { useSignOnSession } from "../../../auth/session";
+import { placeOrder, type PlaceOrderResult as OrderResult } from "../../../order/order";
 import {
   OrderValidationError,
   validateOrderSubmission,
@@ -8,7 +9,7 @@ import {
 } from "../../../order/validation";
 
 type OrderErrorResult = { error: string; section?: string; field?: string };
-type PlaceOrderResult = OrderErrorResult | { accepted: true };
+type PlaceOrderResult = OrderErrorResult | OrderResult;
 
 export default defineHandler(async (event): Promise<PlaceOrderResult> => {
   const { j_signon_username: userName } = useSignOnSession(event);
@@ -28,8 +29,8 @@ export default defineHandler(async (event): Promise<PlaceOrderResult> => {
     return { error: error.message, section: error.section, field: error.field };
   }
 
-  // Order creation, line item creation and cart clearing are wired in here
-  // by SWHM-T-0156 (design.md § Phases 4-6). Until then, a valid submission
-  // is accepted without being persisted.
-  return { accepted: true };
+  // Line item creation and cart clearing are wired in here by SWHM-T-0157
+  // and SWHM-T-0158 (design.md § Phases 5-6), inside the transaction that
+  // arrives with SWHM-T-0158.
+  return placeOrder(userName, submission);
 });

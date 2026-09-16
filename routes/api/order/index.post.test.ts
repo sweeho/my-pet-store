@@ -98,7 +98,7 @@ describe("POST /api/order", () => {
     });
   });
 
-  it("PO-04: a fully valid submission from a signed-on shopper passes through validation", async () => {
+  it("PO-04: a fully valid submission from a signed-on shopper creates an order and returns its id and email", async () => {
     createUser("olivia", "secret123");
     const cookie = useSignedOnCookie("olivia");
 
@@ -107,6 +107,9 @@ describe("POST /api/order", () => {
 
     expect(event.res.status).not.toBe(400);
     expect(event.res.status).not.toBe(401);
-    expect(result).toEqual({ accepted: true });
+    expect(result).toEqual({
+      orderId: expect.any(Number),
+      email: VALID_ADDRESS.email,
+    });
   });
 });
