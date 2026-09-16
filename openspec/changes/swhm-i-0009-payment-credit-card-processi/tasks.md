@@ -13,9 +13,9 @@
 
 ## 3. Authorization
 
-- [ ] 3.1 Integrate with payment gateway (SWHM-T-0177)
-- [ ] 3.2 Send card details for authorization (SWHM-T-0177)
-- [ ] 3.3 Handle authorization responses (SWHM-T-0177)
+- [x] 3.1 Integrate with payment gateway (SWHM-T-0177)
+- [x] 3.2 Send card details for authorization (SWHM-T-0177)
+- [x] 3.3 Handle authorization responses (SWHM-T-0177)
 
 ## 4. Testing
 
