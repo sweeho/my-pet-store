@@ -190,7 +190,14 @@ test.describe("Order placement journey", () => {
     await reachCheckoutForm(page);
 
     await fillAddress(page, "Billing Information", BILLING);
-    await fillAddress(page, "Shipping Information", { ...SHIPPING, email: "not-an-email" });
+    // "maya.chen@example" — has an "@" (passes the input's native type="email"
+    // constraint, which only requires that) but no dot in the domain (fails
+    // order/validation.ts's stricter format check). "not-an-email" has no "@"
+    // at all, so the browser's own native validation blocks the submit
+    // before it ever reaches the server-driven validation this test targets
+    // — the mockup's own example (mockup-enter-order-information.html) uses
+    // this exact value for the same reason.
+    await fillAddress(page, "Shipping Information", { ...SHIPPING, email: "maya.chen@example" });
     await submitOrderForm(page);
 
     await expect(page).toHaveURL(/\/enter-order-information$/);
