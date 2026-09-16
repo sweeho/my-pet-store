@@ -21,7 +21,7 @@ downstream: [artifacts/SWHM-S-0014/qa-test-report.md]
 - **Root cause:** `src/pages/enter-order-information.tsx`'s `handleSubmit` never reads the `POST /api/order` response body on the success path — it calls `navigate("/order-completed")` with no `state`. `src/pages/order-completed.tsx` only renders the order-id/email block when `location.state` is present, so the confirmation screen renders with the id and email box entirely absent on every real browser submission. The unit test at `src/pages/enter-order-information.test.tsx:229` encoded this same call (`navigate("/order-completed")`, no state) as the expected behaviour, so the unit tier never caught it — only the E2E round trip through the real route surfaced it.
 - **Fix rounds:**
   1. Parsed the `{ orderId, email }` response body on the success path and passed it as `navigate("/order-completed", { state: { orderId, email } })`; updated the corresponding unit test assertion to expect that call. Re-ran `bunx playwright test e2e/order.spec.ts --project=chromium` → `3 passed`. Re-ran `bun run test` → `577 passed` (unit suite, includes the updated assertion).
-- **Resolution:** FIXED-IN-PLACE (commit: see commit introducing this file's follow-up update)
+- **Resolution:** FIXED-IN-PLACE (commit: `86b711e`)
 - **Validation evidence:** `bunx playwright test --project=chromium` (full suite) → `37 passed`; `bun run verify` → lint + typecheck + `577 passed` unit tests.
 
 ## Summary
