@@ -14,6 +14,6 @@
 
 ## 3. Confirm the browser journey
 
-- [ ] 3.1 Confirm the order journey in `e2e/order.spec.ts` shows a visible order-id group with a numeric identifier and the shopper's billing email after submission (SWHM-T-0166)
-- [ ] 3.2 Confirm a second order in that journey confirms with a higher identifier than the first (SWHM-T-0166)
+- [x] 3.1 Confirm the order journey in `e2e/order.spec.ts` shows a visible order-id group with a numeric identifier and the shopper's billing email after submission (SWHM-T-0166)
+- [x] 3.2 Confirm a second order in that journey confirms with a higher identifier than the first (SWHM-T-0166)
 - [x] 3.3 Check SWHM-T-0165's status first — if it closed with the criteria confirmed, close this as resolved-by-duplicate rather than re-confirming the same line (SWHM-T-0166)
