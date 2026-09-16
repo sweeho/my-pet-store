@@ -4,7 +4,7 @@
 import { db } from "../db/client";
 import { getItem } from "../catalog/item";
 import { DEFAULT_LOCALE } from "../catalog/locale";
-import { deleteCartRow, readCartRows, upsertCartRow } from "./repository";
+import { deleteAllCartRows, deleteCartRow, readCartRows, upsertCartRow } from "./repository";
 import type { Cart, CartItem } from "./types";
 
 export class UnknownItemError extends Error {}
@@ -82,4 +82,12 @@ export function updateItems(
     }
     return getCart(sessionId);
   });
+}
+
+// An explicit call, never a database cascade (design.md D4, F4) — the two
+// callers are the order-placement seam (SWHM-T-0140) and logout
+// (SWHM-T-0141). Deliberately has no HTTP surface: nothing a shopper does
+// empties a whole cart in one step.
+export function clearCart(sessionId: string): void {
+  deleteAllCartRows(sessionId);
 }

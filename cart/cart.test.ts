@@ -2,7 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import { db } from "../db/client";
 import { category, item, itemDetails, product, productDetails, sessions } from "../db/schema";
-import { addItem, getCart, removeItem, updateItem, updateItems, UnknownItemError } from "./cart";
+import {
+  addItem,
+  clearCart,
+  getCart,
+  removeItem,
+  updateItem,
+  updateItems,
+  UnknownItemError,
+} from "./cart";
 
 let sessionCounter = 0;
 function seedSession(): string {
@@ -284,5 +292,37 @@ describe("cart/cart", () => {
         expect.objectContaining({ itemId: itemB, quantity: 1 }),
       ]),
     );
+  });
+
+  it("CC-01: clearCart empties the cart — count 0, items empty, subtotal 0", () => {
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    const itemB = seedFullItem(5);
+    addItem(sessionId, itemA, 2);
+    addItem(sessionId, itemB, 1);
+
+    clearCart(sessionId);
+
+    expect(getCart(sessionId)).toEqual({ items: [], count: 0, subtotal: 0 });
+  });
+
+  it("CC-02: clearCart removes only the named session's rows", () => {
+    const sessionA = seedSession();
+    const sessionB = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionA, itemId, 1);
+    addItem(sessionB, itemId, 3);
+
+    clearCart(sessionA);
+
+    expect(getCart(sessionA)).toEqual({ items: [], count: 0, subtotal: 0 });
+    expect(getCart(sessionB).items).toEqual([expect.objectContaining({ itemId, quantity: 3 })]);
+  });
+
+  it("CC-03: clearCart on a session with no cart rows completes without throwing", () => {
+    const sessionId = seedSession();
+
+    expect(() => clearCart(sessionId)).not.toThrow();
+    expect(getCart(sessionId)).toEqual({ items: [], count: 0, subtotal: 0 });
   });
 });
