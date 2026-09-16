@@ -80,11 +80,11 @@
 
 ## 9. Supplier Home Page
 
-- [ ] 9.1 Create index.jsp with supplier home page content (SWHM-T-0194)
-- [ ] 9.2 Display module description and features (SWHM-T-0194)
-- [ ] 9.3 Add form to display inventory (posts to RcvrRequestProcessor) (SWHM-T-0194)
-- [ ] 9.4 Add logout form (posts to RcvrRequestProcessor) (SWHM-T-0194)
-- [ ] 9.5 Implement role-based navigation (SWHM-T-0194)
+- [x] 9.1 Create index.jsp with supplier home page content (SWHM-T-0194)
+- [x] 9.2 Display module description and features (SWHM-T-0194)
+- [x] 9.3 Add form to display inventory (posts to RcvrRequestProcessor) (SWHM-T-0194)
+- [x] 9.4 Add logout form (posts to RcvrRequestProcessor) (SWHM-T-0194)
+- [x] 9.5 Implement role-based navigation (SWHM-T-0194)
 
 ## 10. Integration & Exception Handling
 
