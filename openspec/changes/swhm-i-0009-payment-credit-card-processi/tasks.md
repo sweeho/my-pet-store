@@ -7,9 +7,9 @@
 
 ## 2. Validation
 
-- [ ] 2.1 Validate card number format (SWHM-T-0176)
-- [ ] 2.2 Validate expiry date not expired (SWHM-T-0176)
-- [ ] 2.3 Validate card type against accepted list (SWHM-T-0176)
+- [x] 2.1 Validate card number format (SWHM-T-0176)
+- [x] 2.2 Validate expiry date not expired (SWHM-T-0176)
+- [x] 2.3 Validate card type against accepted list (SWHM-T-0176)
 
 ## 3. Authorization
 
