@@ -2,8 +2,8 @@
 
 ## 1. Data Model
 
-- [ ] 1.1 Define CreditCard entity with number, type, expiry, cardholder (SWHM-T-0175)
-- [ ] 1.2 Store cards encrypted in database (SWHM-T-0175)
+- [x] 1.1 Define CreditCard entity with number, type, expiry, cardholder (SWHM-T-0175)
+- [x] 1.2 Store cards encrypted in database (SWHM-T-0175)
 
 ## 2. Validation
 
