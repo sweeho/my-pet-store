@@ -21,8 +21,16 @@ function formatCurrency(amount: number): string {
   return CURRENCY_FORMAT.format(amount);
 }
 
+// Keyed by itemId so an edited-but-not-yet-submitted quantity survives a
+// re-render without round-tripping through the server (PLAN.md step 1).
+function quantitiesFrom(cart: Cart): Record<string, string> {
+  return Object.fromEntries(cart.items.map((item) => [item.itemId, String(item.quantity)]));
+}
+
 export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -30,13 +38,62 @@ export default function CartPage() {
     fetch("/api/cart")
       .then((response) => response.json() as Promise<Cart>)
       .then((result) => {
-        if (!cancelled) setCart(result);
+        if (cancelled) return;
+        setCart(result);
+        setQuantities(quantitiesFrom(result));
       });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  function handleQuantityChange(itemId: string, value: string) {
+    setQuantities((prev) => ({ ...prev, [itemId]: value }));
+  }
+
+  async function handleUpdateCart() {
+    if (!cart) return;
+
+    // <input type="number">'s value sanitization (browser and jsdom alike)
+    // never delivers a non-numeric string via onChange — an invalid entry
+    // is already collapsed to "". So "empty" and "not a number" (spec
+    // discrepancy S13) are one observable case here: an empty field.
+    const nextErrors: Record<string, string> = {};
+    const updates: { itemId: string; quantity: number }[] = [];
+
+    for (const item of cart.items) {
+      const raw = (quantities[item.itemId] ?? String(item.quantity)).trim();
+      if (raw === "" || !Number.isFinite(Number(raw))) {
+        nextErrors[item.itemId] = `Quantity for ${item.productName} must be a number.`;
+        continue;
+      }
+      updates.push({ itemId: item.itemId, quantity: Number(raw) });
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    const response = await fetch("/api/cart", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updates }),
+    });
+    const result = (await response.json()) as Cart;
+    setCart(result);
+    setQuantities(quantitiesFrom(result));
+    setErrors({});
+  }
+
+  async function handleRemove(itemId: string) {
+    const response = await fetch(`/api/cart/items/${encodeURIComponent(itemId)}`, {
+      method: "DELETE",
+    });
+    const result = (await response.json()) as Cart;
+    setCart(result);
+    setQuantities(quantitiesFrom(result));
+    setErrors({});
+  }
 
   return (
     <div className="mx-auto max-w-[672px] p-6">
@@ -100,10 +157,16 @@ export default function CartPage() {
                     <input
                       type="number"
                       min={0}
-                      defaultValue={item.quantity}
+                      value={quantities[item.itemId] ?? String(item.quantity)}
+                      onChange={(event) => handleQuantityChange(item.itemId, event.target.value)}
                       aria-label={`Quantity for ${item.itemId}`}
                       className="border-input bg-background text-foreground w-[72px] rounded-md border px-2.5 py-2 text-sm tabular-nums"
                     />
+                    {errors[item.itemId] && (
+                      <p role="alert" className="text-destructive mt-1 text-xs">
+                        {errors[item.itemId]}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell className="text-foreground text-right font-medium whitespace-nowrap tabular-nums">
                     {formatCurrency(item.lineTotal)}
@@ -111,6 +174,7 @@ export default function CartPage() {
                   <TableCell className="text-right">
                     <button
                       type="submit"
+                      onClick={() => handleRemove(item.itemId)}
                       className="text-foreground text-sm font-medium hover:underline"
                     >
                       Remove
@@ -122,7 +186,9 @@ export default function CartPage() {
           </Table>
 
           <div className="mt-6 flex items-start justify-between gap-6">
-            <Button type="submit">Update Cart</Button>
+            <Button type="submit" onClick={handleUpdateCart}>
+              Update Cart
+            </Button>
             <div className="text-right">
               <div className="flex items-baseline justify-end gap-6">
                 <span className="text-muted-foreground text-sm">Subtotal</span>
