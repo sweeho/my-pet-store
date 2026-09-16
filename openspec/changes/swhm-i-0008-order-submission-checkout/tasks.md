@@ -71,12 +71,12 @@
 
 ## 8. Confirmation Notification
 
-- [ ] 8.1 Implement async notification via AsyncSender (SWHM-T-0160)
-- [ ] 8.2 Create confirmation email with order ID and details (SWHM-T-0160)
-- [ ] 8.3 Send email to customer emailaddress from Order (SWHM-T-0160)
-- [ ] 8.4 Handle AsyncSender.sendAMessage() call after order creation (SWHM-T-0160)
-- [ ] 8.5 Catch ServiceLocatorException and XMLDocumentException (SWHM-T-0160)
-- [ ] 8.6 Log errors appropriately (SWHM-T-0160)
+- [x] 8.1 Implement async notification via AsyncSender (SWHM-T-0160)
+- [x] 8.2 Create confirmation email with order ID and details (SWHM-T-0160)
+- [x] 8.3 Send email to customer emailaddress from Order (SWHM-T-0160)
+- [x] 8.4 Handle AsyncSender.sendAMessage() call after order creation (SWHM-T-0160)
+- [x] 8.5 Catch ServiceLocatorException and XMLDocumentException (SWHM-T-0160)
+- [x] 8.6 Log errors appropriately (SWHM-T-0160)
 
 ## 9. Error Handling
 
