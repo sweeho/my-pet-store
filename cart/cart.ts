@@ -1,6 +1,7 @@
 // Add + read, fixed in artifacts/SWHM-S-0013/SWHM-T-0134/PLAN.md § Fixed
 // interface contracts. Appended to by SWHM-T-0135, SWHM-T-0136 and
 // SWHM-T-0137 in that order — leave this module easy to extend.
+import { db } from "../db/client";
 import { getItem } from "../catalog/item";
 import { DEFAULT_LOCALE } from "../catalog/locale";
 import { deleteCartRow, readCartRows, upsertCartRow } from "./repository";
@@ -56,4 +57,29 @@ export function addItem(sessionId: string, itemId: string, quantity = 1): Cart {
 export function removeItem(sessionId: string, itemId: string): Cart {
   deleteCartRow(sessionId, itemId);
   return getCart(sessionId);
+}
+
+// The zero-or-less removal rule lives here and nowhere else (design.md D7):
+// every caller — including updateItems below — passes through this
+// function rather than pre-filtering, so the rule cannot drift.
+export function updateItem(sessionId: string, itemId: string, quantity: number): Cart {
+  if (quantity <= 0) return removeItem(sessionId, itemId);
+
+  upsertCartRow(sessionId, itemId, quantity);
+  return getCart(sessionId);
+}
+
+// One db.transaction for the whole batch: a write failing partway leaves
+// every quantity at its original value rather than a cart the shopper never
+// asked for (design.md D7, PLAN.md step 2).
+export function updateItems(
+  sessionId: string,
+  updates: { itemId: string; quantity: number }[],
+): Cart {
+  return db.transaction(() => {
+    for (const update of updates) {
+      updateItem(sessionId, update.itemId, update.quantity);
+    }
+    return getCart(sessionId);
+  });
 }
