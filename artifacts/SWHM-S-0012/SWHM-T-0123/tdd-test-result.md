@@ -42,8 +42,30 @@ The three `e2e/admin.spec.ts` additions were **not executed in this container** 
 containers ship no Chromium (`scripts/ensure-playwright-browser.mjs` fails fast, confirmed below), and
 PLAN.md step 6 says explicitly not to retry the preflight or install a browser here. They are written,
 reviewed against the actual redirect/verdict behaviour in `auth/signon-filter.ts` and
-`src/components/RequireAdmin.tsx` (unchanged by this ticket), and will run in CI and at integration QA.
-Their status is **Pending Verification** in this run, not a red→green pair.
+`src/components/RequireAdmin.tsx` (unchanged by this ticket), and run in CI, which does have a browser.
+
+CI's first run on this branch caught a real bug in the "signed-on non-administrator" case: it reached
+`/admin` via `page.goto`, a fresh full-page navigation. `middleware/signon.ts` answers a `role-required`
+verdict with a raw 403 JSON body for **any** navigation, not just a background fetch (design.md D3) —
+so the browser never receives the SPA's HTML at all, and `RequireAdmin`'s in-place alert never gets a
+chance to render. `getByRole('alert')` timed out on all 3 attempts:
+
+```
+✘  e2e/admin.spec.ts:68:3 › a signed-on non-administrator is refused at /admin, not bounced back to sign on
+   Error: Timed out 5000ms waiting for expect(locator).toBeVisible()
+   Locator: getByRole('alert')
+   Expected: visible
+   Received: <element(s) not found>
+1 failed, 27 passed (26.8s)
+```
+
+Fixed by reaching `/admin` the way a real signed-on user would — through the admin sign-on form's
+on-success `navigate("/admin")` (a client-side route change, so the SPA is already mounted and
+`RequireAdmin`'s fetch to `/api/signon/check` runs as a background request, which is the path the
+role-required in-place alert is actually reachable from), instead of a fresh `page.goto("/admin")`. No
+production code changed — `middleware/signon.ts`'s behaviour is correct and intentional per D3; the
+test was reaching the page the wrong way. Pushed the fix; CI re-run is `Pending Verification` as this
+file is written — this is the evidence a real browser produced, not a fabricated result.
 
 ## Green run
 

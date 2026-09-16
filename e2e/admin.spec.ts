@@ -78,14 +78,19 @@ test.describe("Administrator — access denial", () => {
     expect(createResponse.ok()).toBe(true);
     expect((await createResponse.json()).created).toBe(true);
 
-    await page.goto("/signon");
-    const signInForm = page.getByRole("form", { name: "Sign in" });
+    // Signed in through the ADMIN sign-on form, not the shopper /signon page:
+    // its on-success handler calls navigate("/admin") — a client-side route
+    // change — so RequireAdmin's role-required branch gets to render in the
+    // already-mounted SPA. A fresh full-page GET /admin (page.goto) instead
+    // hits middleware/signon.ts, which answers role-required with a raw 403
+    // JSON body for a navigation exactly as it does for a background fetch
+    // (design.md D3) — there is no HTML for the browser to render in that
+    // case, so it is not what this scenario is testing.
+    await page.goto("/admin/signon");
+    const signInForm = page.getByRole("form", { name: "Administrator sign in" });
     await signInForm.getByLabel("Username").fill(username);
-    await signInForm.getByLabel("Password", { exact: true }).fill(password);
+    await signInForm.getByLabel("Password").fill(password);
     await signInForm.getByRole("button", { name: "Sign In" }).click();
-    await expect(page).toHaveURL(/\/signon-welcome$/);
-
-    await page.goto("/admin");
 
     // A redirect back to sign-on here would loop for someone already signed
     // on (design.md D3) — the refusal renders in place instead.

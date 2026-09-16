@@ -58,6 +58,13 @@ written and reviewed against the unchanged `auth/signon-filter.ts` / `RequireAdm
   the `RemoteException`/`ServiceLocatorException` pair) were checked against the already-landed
   `admin/request.ts` and `auth/signon-filter.ts` and behave as design.md's S15 resolution describes;
   nothing here warranted a defect ticket.
+- CI's first run caught a bug in the "signed-on non-administrator" E2E case itself (not production
+  code): it reached `/admin` via a fresh `page.goto`, a full navigation, which `middleware/signon.ts`
+  answers with a raw 403 JSON body for a `role-required` verdict regardless of navigation vs. fetch
+  (design.md D3) — no HTML reaches the browser, so `RequireAdmin`'s in-place alert never renders.
+  Fixed by reaching `/admin` through the admin sign-on form's client-side `navigate("/admin")` instead,
+  matching how a real signed-on user actually gets there. See `tdd-test-result.md` for the failing
+  output.
 - The anonymous-visit E2E case asserts a redirect to `/signon` (the shared sign-on page), not
   `/admin/signon` — that is `auth/protected-resources.ts`'s existing `SIGN_ON_PAGE` constant, used
   uniformly for every protected resource regardless of role. Unchanged by this ticket and consistent
