@@ -15,14 +15,14 @@
 
 ## 2. Form Routing & Validation
 
-- [ ] 2.1 Create OrderAction to handle form submission (POST to order.do) (SWHM-T-0154)
-- [ ] 2.2 Implement form validation in OrderForm.validate() (SWHM-T-0154)
-- [ ] 2.3 Validate required fields (all address and contact fields) (SWHM-T-0154)
-- [ ] 2.4 Validate email format (SWHM-T-0154)
-- [ ] 2.5 Validate state/country selections against allowed values (SWHM-T-0154)
-- [ ] 2.6 Return validation errors to form if validation fails (SWHM-T-0154)
-- [ ] 2.7 Configure struts-config.xml mappings for order.do route (SWHM-T-0154)
-- [ ] 2.8 Define forwards: success → order processing, failure → re-render form (SWHM-T-0154)
+- [x] 2.1 Create OrderAction to handle form submission (POST to order.do) (SWHM-T-0154)
+- [x] 2.2 Implement form validation in OrderForm.validate() (SWHM-T-0154)
+- [x] 2.3 Validate required fields (all address and contact fields) (SWHM-T-0154)
+- [x] 2.4 Validate email format (SWHM-T-0154)
+- [x] 2.5 Validate state/country selections against allowed values (SWHM-T-0154)
+- [x] 2.6 Return validation errors to form if validation fails (SWHM-T-0154)
+- [x] 2.7 Configure struts-config.xml mappings for order.do route (SWHM-T-0154)
+- [x] 2.8 Define forwards: success → order processing, failure → re-render form (SWHM-T-0154)
 
 ## 3. Order ID Generation
 
