@@ -204,3 +204,22 @@ export const orderLineItem = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
 );
+
+// Quantity only — price is resolved on read through catalog/item.ts, so a
+// cart line never disagrees with the catalogue about what an item costs
+// (design.md D1). Both ON DELETE CASCADE declarations are intent only:
+// foreign-key enforcement is off in this database (F4), so neither fires;
+// clearing a cart on logout is an explicit delete, never a cascade (D4).
+export const cartItems = sqliteTable(
+  "cart_items",
+  {
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => sessions.id, { onDelete: "cascade" }),
+    itemid: text("itemid")
+      .notNull()
+      .references(() => item.itemid, { onDelete: "cascade" }),
+    quantity: integer("quantity").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.sessionId, t.itemid] })],
+);
