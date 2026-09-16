@@ -2,9 +2,20 @@ import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createUser } from "../auth/authenticate";
+import { addItem, getCart } from "../cart/cart";
 import { db } from "../db/client";
-import { addresses, orders } from "../db/schema";
-import { placeOrder } from "./order";
+import {
+  addresses,
+  category,
+  item,
+  itemDetails,
+  orderLineItem,
+  orders,
+  product,
+  productDetails,
+  sessions,
+} from "../db/schema";
+import { createLineItems, placeOrder } from "./order";
 import type { OrderSubmission } from "./validation";
 
 /**
@@ -53,6 +64,60 @@ function seedUser(): string {
 
 function readOrder(orderId: number) {
   return db.select().from(orders).where(eq(orders.orderId, orderId)).get()!;
+}
+
+function readLineItems(orderId: number) {
+  return db
+    .select()
+    .from(orderLineItem)
+    .where(eq(orderLineItem.orderId, orderId))
+    .orderBy(orderLineItem.lineNumber)
+    .all();
+}
+
+let sessionCounter = 0;
+function seedSession(): string {
+  sessionCounter += 1;
+  const id = `order-line-item-session-${sessionCounter}`;
+  db.insert(sessions)
+    .values({ id, jSignon: false, jSignonUsername: null, originalUrl: null, updatedAt: new Date() })
+    .run();
+  return id;
+}
+
+let itemCounter = 0;
+// Mirrors cart/checkout.test.ts's seedFullItem — a full, joinable item row,
+// since toOrderLineItems (called by createLineItems) resolves catid,
+// productid and price through the same catalogue joins.
+function seedFullItem(unitCost: number): string {
+  itemCounter += 1;
+  const itemid = `order-line-item-${itemCounter}`;
+  const productid = `order-line-product-${itemCounter}`;
+
+  db.insert(category).values({ catid: "order-line-cat" }).onConflictDoNothing().run();
+  db.insert(product).values({ productid, catid: "order-line-cat" }).run();
+  db.insert(productDetails)
+    .values({ productid, locale: "en_US", name: `Product ${itemCounter}`, descn: "A product" })
+    .run();
+  db.insert(item)
+    .values({ itemid, productid, listPrice: unitCost * 2, unitCost })
+    .run();
+  db.insert(itemDetails)
+    .values({
+      itemid,
+      locale: "en_US",
+      name: `Item ${itemCounter}`,
+      image: "/images/placeholder.svg",
+      descn: "An item",
+      attr1: null,
+      attr2: null,
+      attr3: null,
+      attr4: null,
+      attr5: null,
+    })
+    .run();
+
+  return itemid;
 }
 
 // createUser (auth/authenticate.ts -> account/customer.ts createCustomer)
@@ -158,5 +223,95 @@ describe("placeOrder", () => {
 
     expect(result.orderId).toBe(readOrder(result.orderId).orderId);
     expect(result.email).toBe("maya.chen@example.com");
+  });
+});
+
+describe("createLineItems", () => {
+  it("LI-01: creates one line item per cart line, carrying its quantity and unit price from the cart", () => {
+    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    const itemB = seedFullItem(5);
+    const itemC = seedFullItem(2);
+    addItem(sessionId, itemA, 3);
+    addItem(sessionId, itemB, 2);
+    addItem(sessionId, itemC, 1);
+
+    createLineItems(orderId, sessionId);
+
+    const lines = readLineItems(orderId);
+    expect(lines).toHaveLength(3);
+    expect(lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ itemid: itemA, quantity: 3, unitPrice: 10 }),
+        expect.objectContaining({ itemid: itemB, quantity: 2, unitPrice: 5 }),
+        expect.objectContaining({ itemid: itemC, quantity: 1, unitPrice: 2 }),
+      ]),
+    );
+  });
+
+  it("LI-02: each line item carries the catid and productid resolved from the catalogue, alongside itemid", () => {
+    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    addItem(sessionId, itemA, 1);
+
+    createLineItems(orderId, sessionId);
+
+    expect(readLineItems(orderId)).toEqual([
+      expect.objectContaining({
+        itemid: itemA,
+        catid: "order-line-cat",
+        productid: `order-line-product-${itemCounter}`,
+      }),
+    ]);
+  });
+
+  it("LI-03: line numbers are assigned from 1 upward, contiguous, matching the (order_id, line_number) key", () => {
+    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const sessionId = seedSession();
+    addItem(sessionId, seedFullItem(10), 1);
+    addItem(sessionId, seedFullItem(5), 1);
+    addItem(sessionId, seedFullItem(2), 1);
+
+    createLineItems(orderId, sessionId);
+
+    expect(readLineItems(orderId).map((line) => line.lineNumber)).toEqual([1, 2, 3]);
+  });
+
+  it("LI-04: unit_price is the price captured at placement — a later catalogue price change leaves it unchanged", () => {
+    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 1);
+
+    createLineItems(orderId, sessionId);
+
+    db.update(item).set({ unitCost: 999 }).where(eq(item.itemid, itemId)).run();
+
+    expect(readLineItems(orderId)[0]!.unitPrice).toBe(10);
+  });
+
+  it("LI-05: quantity_shipped is 0 on a newly created line item", () => {
+    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const sessionId = seedSession();
+    addItem(sessionId, seedFullItem(10), 1);
+
+    createLineItems(orderId, sessionId);
+
+    expect(readLineItems(orderId)[0]!.quantityShipped).toBe(0);
+  });
+
+  it("LI-06: order_amount is the sum of quantity times unit price across the line items, matching the cart's subtotal", () => {
+    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const sessionId = seedSession();
+    addItem(sessionId, seedFullItem(10), 3);
+    addItem(sessionId, seedFullItem(5), 2);
+    const cartSubtotal = getCart(sessionId).subtotal;
+
+    createLineItems(orderId, sessionId);
+
+    expect(readOrder(orderId).orderAmount).toBe(cartSubtotal);
+    expect(readOrder(orderId).orderAmount).toBe(40);
   });
 });

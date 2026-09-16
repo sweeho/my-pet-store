@@ -3,8 +3,11 @@
 // extend: SWHM-T-0157 appends line item creation and SWHM-T-0158 appends
 // cart clearing, both inside the transaction that arrives with SWHM-T-0158
 // (§ Scope boundary — no partial transaction here).
+import { eq } from "drizzle-orm";
+
+import { toOrderLineItems } from "../cart/checkout";
 import { db } from "../db/client";
-import { orders } from "../db/schema";
+import { orderLineItem, orders } from "../db/schema";
 import type { OrderAddress } from "./types";
 import type { OrderSubmission } from "./validation";
 
@@ -66,4 +69,37 @@ export function placeOrder(userName: string, submission: OrderSubmission): Place
     .get();
 
   return { orderId, email: submission.billingAddress.email! };
+}
+
+// Turns the cart into the order's line items and totals the order from
+// them (design.md § Steps 2, 5; § Decisions D5, D9). Calls the seam
+// cart/checkout.ts already exports rather than re-reading cart_items or
+// reimplementing the mapping (PLAN.md step 1); the caller still owns
+// wrapping this with placeOrder and clearing the cart in one transaction
+// (SWHM-T-0158 — § Scope boundary, no partial transaction here).
+export function createLineItems(orderId: number, sessionId: string): void {
+  const lines = toOrderLineItems(sessionId);
+
+  if (lines.length > 0) {
+    db.insert(orderLineItem)
+      .values(
+        lines.map((line) => ({
+          orderId,
+          lineNumber: line.lineNumber,
+          itemid: line.itemid,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+          catid: line.catid,
+          productid: line.productid,
+        })),
+      )
+      .run();
+  }
+
+  // order_amount is the cart's subtotal at the moment of placement — the
+  // same quantity × unitPrice arithmetic cart/cart.ts's getCart already
+  // does for the cart's own subtotal (§ Decisions D9: money stays `real`,
+  // this ticket does not settle a representation).
+  const orderAmount = lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0);
+  db.update(orders).set({ orderAmount }).where(eq(orders.orderId, orderId)).run();
 }
