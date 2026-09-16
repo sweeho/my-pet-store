@@ -2,16 +2,16 @@
 
 ## 1. Order Information Form
 
-- [ ] 1.1 Create OrderForm with billing and shipping information fields (SWHM-T-0153)
-- [ ] 1.2 Implement form with suffix \_a for billing, \_b for shipping (SWHM-T-0153)
-- [ ] 1.3 Add given_name, family_name fields with maxlength="30" (SWHM-T-0153)
-- [ ] 1.4 Add address fields (street1, street2) with maxlength="70" (SWHM-T-0153)
-- [ ] 1.5 Add city, postal_code fields with maxlength constraints (SWHM-T-0153)
-- [ ] 1.6 Add state/province dropdown (CA, NY, TX) (SWHM-T-0153)
-- [ ] 1.7 Add country dropdown (USA, Canada, Japan, China) (SWHM-T-0153)
-- [ ] 1.8 Add telephone field with maxlength="20" (SWHM-T-0153)
-- [ ] 1.9 Add email field with maxlength="50" and email validation (SWHM-T-0153)
-- [ ] 1.10 Bind form to enter_order_information.jsp JSP template (SWHM-T-0153)
+- [x] 1.1 Create OrderForm with billing and shipping information fields (SWHM-T-0153)
+- [x] 1.2 Implement form with suffix \_a for billing, \_b for shipping (SWHM-T-0153)
+- [x] 1.3 Add given_name, family_name fields with maxlength="30" (SWHM-T-0153)
+- [x] 1.4 Add address fields (street1, street2) with maxlength="70" (SWHM-T-0153)
+- [x] 1.5 Add city, postal_code fields with maxlength constraints (SWHM-T-0153)
+- [x] 1.6 Add state/province dropdown (CA, NY, TX) (SWHM-T-0153)
+- [x] 1.7 Add country dropdown (USA, Canada, Japan, China) (SWHM-T-0153)
+- [x] 1.8 Add telephone field with maxlength="20" (SWHM-T-0153)
+- [x] 1.9 Add email field with maxlength="50" and email validation (SWHM-T-0153)
+- [x] 1.10 Bind form to enter_order_information.jsp JSP template (SWHM-T-0153)
 
 ## 2. Form Routing & Validation
 
