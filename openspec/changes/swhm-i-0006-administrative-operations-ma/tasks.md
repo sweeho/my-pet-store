@@ -66,10 +66,10 @@
 
 ## 8. Order Count Reporting
 
-- [ ] 8.1 Implement ApplRequestProcessor.getChartInfo() for ORDERS type (SWHM-T-0121)
-- [ ] 8.2 Retrieve order count Map from EJB via getChartInfo(ORDERS, start, end, category) (SWHM-T-0121)
-- [ ] 8.3 Marshal results to XML with Category or Item elements (SWHM-T-0121)
-- [ ] 8.4 Include order quantities and TotalSales in response (SWHM-T-0121)
+- [x] 8.1 Implement ApplRequestProcessor.getChartInfo() for ORDERS type (SWHM-T-0121)
+- [x] 8.2 Retrieve order count Map from EJB via getChartInfo(ORDERS, start, end, category) (SWHM-T-0121)
+- [x] 8.3 Marshal results to XML with Category or Item elements (SWHM-T-0121)
+- [x] 8.4 Include order quantities and TotalSales in response (SWHM-T-0121)
 
 ## 9. Rich Client UI — Orders View
 
