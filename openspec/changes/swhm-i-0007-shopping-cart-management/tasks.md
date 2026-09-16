@@ -61,10 +61,10 @@
 
 ## 8. Integration with Checkout
 
-- [ ] 8.1 Retrieve cart from session before order placement (SWHM-T-0140)
-- [ ] 8.2 Create LineItem for each CartItem (SWHM-T-0140)
-- [ ] 8.3 Set LineItem quantity and unitPrice from CartItem (SWHM-T-0140)
-- [ ] 8.4 Clear cart after successful order creation (SWHM-T-0140)
+- [x] 8.1 Retrieve cart from session before order placement (SWHM-T-0140)
+- [x] 8.2 Create LineItem for each CartItem (SWHM-T-0140)
+- [x] 8.3 Set LineItem quantity and unitPrice from CartItem (SWHM-T-0140)
+- [x] 8.4 Clear cart after successful order creation (SWHM-T-0140)
 
 ## 9. Session Management
 
