@@ -131,20 +131,22 @@ async function submitPayment(page: Page): Promise<void> {
 
 // payment.tsx's EXPIRY_YEARS starts at the current year (src/pages/payment.tsx), so
 // index 0 of the select's options is the "— Select —" placeholder and index 1 is the
-// earliest real, always-selectable year.
+// earliest real, always-selectable year. waitFor() first: unlike selectOption(),
+// allTextContents() does not auto-wait for the element to attach, so reading it right
+// after a route navigation (before React has committed the payment form) can race and
+// return an empty list.
+async function expiryYearOptionTexts(page: Page): Promise<string[]> {
+  const select = page.getByRole("combobox", { name: "Expiry year" });
+  await select.waitFor();
+  return select.locator("option").allTextContents();
+}
+
 async function firstExpiryYearOption(page: Page): Promise<string> {
-  const years = await page
-    .getByRole("combobox", { name: "Expiry year" })
-    .locator("option")
-    .allTextContents();
-  return years[1];
+  return (await expiryYearOptionTexts(page))[1];
 }
 
 async function lastExpiryYearOption(page: Page): Promise<string> {
-  const years = await page
-    .getByRole("combobox", { name: "Expiry year" })
-    .locator("option")
-    .allTextContents();
+  const years = await expiryYearOptionTexts(page);
   return years[years.length - 1];
 }
 
@@ -180,7 +182,7 @@ test.describe("Payment journey", () => {
   test("an accepted card with a future expiry shows the in-flight state, then authorizes and confirms the order (AC-2, AC-3, AC-4)", async ({
     page,
   }) => {
-    await signOn(page, uniqueUsername("payment-ok"));
+    await signOn(page, uniqueUsername("pay-ok"));
     await addItemToCart(page);
     await reachPaymentStep(page);
 
@@ -215,7 +217,7 @@ test.describe("Payment journey", () => {
   test("an unaccepted card type is refused against the card type field, and no order is placed (AC-3)", async ({
     page,
   }) => {
-    await signOn(page, uniqueUsername("payment-type"));
+    await signOn(page, uniqueUsername("pay-type"));
     await addItemToCart(page);
     await reachPaymentStep(page);
 
@@ -242,7 +244,7 @@ test.describe("Payment journey", () => {
   test("an expired card is refused against the expiry field naming the exact expiry, and no order is placed (AC-1)", async ({
     page,
   }) => {
-    await signOn(page, uniqueUsername("payment-expired"));
+    await signOn(page, uniqueUsername("pay-expired"));
     await addItemToCart(page);
     await reachPaymentStep(page);
 
@@ -275,7 +277,7 @@ test.describe("Payment journey", () => {
   test("a processor decline leaves the shopper on the payment screen with no order placed and no charge", async ({
     page,
   }) => {
-    await signOn(page, uniqueUsername("payment-decline"));
+    await signOn(page, uniqueUsername("pay-decline"));
     await addItemToCart(page);
     await reachPaymentStep(page);
 
