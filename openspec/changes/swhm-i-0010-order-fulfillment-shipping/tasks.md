@@ -21,14 +21,14 @@
 
 ## 3. Order Fulfillment Processing
 
-- [ ] 3.1 Implement OrderFulfillmentFacadeEJB with processPO(SupplierOrderLocal po) method (SWHM-T-0192)
-- [ ] 3.2 Implement processAnOrder(SupplierOrderLocal po) for line item iteration (SWHM-T-0192)
-- [ ] 3.3 Initialize allItemsAvailable flag to true before processing (SWHM-T-0192)
-- [ ] 3.4 Implement line item filtering: skip items where quantityShipped == quantity (SWHM-T-0192)
-- [ ] 3.5 Call checkInventory() for each unshipped line item (SWHM-T-0192)
-- [ ] 3.6 Set quantityShipped equal to quantity for available items (SWHM-T-0192)
-- [ ] 3.7 Update order status to COMPLETED when allItemsAvailable is true (SWHM-T-0192)
-- [ ] 3.8 Collect fulfilled items in HashMap for invoice generation (SWHM-T-0192)
+- [x] 3.1 Implement OrderFulfillmentFacadeEJB with processPO(SupplierOrderLocal po) method (SWHM-T-0192)
+- [x] 3.2 Implement processAnOrder(SupplierOrderLocal po) for line item iteration (SWHM-T-0192)
+- [x] 3.3 Initialize allItemsAvailable flag to true before processing (SWHM-T-0192)
+- [x] 3.4 Implement line item filtering: skip items where quantityShipped == quantity (SWHM-T-0192)
+- [x] 3.5 Call checkInventory() for each unshipped line item (SWHM-T-0192)
+- [x] 3.6 Set quantityShipped equal to quantity for available items (SWHM-T-0192)
+- [x] 3.7 Update order status to COMPLETED when allItemsAvailable is true (SWHM-T-0192)
+- [x] 3.8 Collect fulfilled items in HashMap for invoice generation (SWHM-T-0192)
 
 ## 4. Inventory Verification & Reduction
 
