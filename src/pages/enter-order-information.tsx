@@ -334,7 +334,17 @@ export function EnterOrderInformation() {
         error: string;
         section?: "billing" | "shipping";
         field?: keyof SectionForm;
+        emptyCart?: boolean;
       };
+
+      // An empty cart isn't a field problem the shopper can fix on this
+      // form — send them back to /cart, where the message they're refused
+      // for is shown (design.md § Spec discrepancies S5; SWHM-T-0161).
+      if (body.emptyCart) {
+        navigate("/cart", { state: { emptyCart: true } });
+        return;
+      }
+
       setFormError(SUBMISSION_REFUSED_MESSAGE);
       setBillingError(
         body.section === "billing" && body.field
