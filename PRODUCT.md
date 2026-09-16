@@ -26,12 +26,15 @@ One line per capability. Behaviours belong in the capability's spec under `opens
 | `catalog-browsing`       | What the store sells and how a shopper finds it — the category, product and item hierarchy, localized content for each, paginated browsing, and keyword search across items               | `openspec/specs/catalog-browsing/`       |
 | `internationalization`   | Which language a shopper reads the store in — the supported languages, how the active one is chosen and remembered, and what a screen says where that language has no content             | `openspec/specs/internationalization/`   |
 | `admin-operations`       | What the person running the store can see and do — which identity may act as an administrator, the order queue and its state, moving several orders at once, and what sold over a period  | `openspec/specs/admin-operations/`       |
+| `shopping-cart`          | What a shopper has chosen but not yet bought — adding an item, changing or removing what is in the cart, what it comes to, and how long it lasts                                          | `openspec/specs/shopping-cart/`          |
 
 ## Scope
 
 **In scope, standing:** a browser-based storefront served by this repository's own frontend and API, verified end to end by its own test suites before anything is considered landed. The same application serves the person running the store, behind the same session and the same credential store as the people shopping in it.
 
 **The identity model, standing:** a person is anonymous, or signed on, or signed on as an administrator. Those are the three states, and the third is a marker on the identity record rather than a second account system — there is one credential store and one access decision for the whole product. Nothing in the product grants or revokes the marker; see § Not yet decided.
+
+**What a visit holds, standing:** browsing and choosing are open to anyone. A shopper does not sign in to look at the catalogue or to put something in a cart — a visit carries a cart from the first thing added to it, and that cart belongs to the visit rather than to an account. Where each capability draws its own line between open browsing and a signed-on action is stated by that capability, never inherited. What happens to a cart when its owner signs in, and whether one outlives the visit, are open; see § Not yet decided.
 
 **Non-goals, standing:**
 
@@ -56,7 +59,9 @@ These are open at the product level. A future idea has to settle each before a c
 - **Whether sessions expire.** They do not, for anyone. The legacy application timed an administrator out after 54 minutes; adopting that is a decision about every session in the product, not an administration setting, so it belongs to the authentication capability rather than to this one.
 - Whether the catalogue's contents are administered in the product or loaded as data. The store now has a catalogue structure — categories holding products holding purchasable items, each localized — but nothing in the product creates or edits one; the demo catalogue is seeded. The administration screens read orders; they do not edit the catalogue.
 - **Order history as a shopper sees it.** Orders exist as data and an operator can read them, but nothing shows a customer their own past orders, and whether an account keeps more than one address is still a question for order placement rather than for the account.
-- Checkout and payment — how an order comes to exist in the first place, and how it is paid for.
+- **Which price a shopper is charged.** The catalogue quotes one figure per item and the cart totals a different one — the store's cost rather than its list price. Both come from the extracted specification, which is explicit about each in turn, and the cart's own mockup prices its example item at cost. No code change settles this: it is a decision about what the store charges, and it has to be taken before anything takes a shopper's money. Until it is, the cart's subtotal is not a price anyone should act on.
+- Checkout and payment — how an order comes to exist in the first place, and how it is paid for. A cart now exists to start from, and the mapping from a cart to an order's line items is built and tested, but nothing calls it.
+- **What becomes of a cart.** It lasts as long as the visit and no longer: signing out empties it, and nothing recovers, merges or remembers one. Whether a returning shopper should find their cart where they left it, and whether signing in should adopt a cart built while anonymous, are unasked questions rather than deferred features.
 - How money is represented once totals are summed. Reporting is the first place the product adds prices together; the representation it uses is provisional — see ARCHITECTURE.md § Data model.
 
 The `users` table inherited from the template is still demo content and is not a product decision; the authenticated customer is a separate entity (ARCHITECTURE.md § Data model).

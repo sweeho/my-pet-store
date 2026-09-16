@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #fff;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: #52525b;
+      }
+      .page { max-width: 672px; margin: 0 auto; padding: 24px; }
+      .frame-label {
+        font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+        color: #a1a1aa; padding: 8px 24px 0; border-bottom: 1px dashed #e4e4e7;
+        margin-bottom: 4px;
+      }
+      .h1 { height: 14px; width: 168px; background: #52525b; border-radius: 3px; }
+      .h1-note { font-size: 9px; color: #a1a1aa; margin-left: 8px; vertical-align: 3px; }
+
+      .colhead {
+        display: grid;
+        grid-template-columns: 1fr 96px 92px 76px;
+        gap: 12px; align-items: end;
+        padding: 0 0 6px; margin-top: 24px;
+        border-bottom: 1px solid #e4e4e7;
+      }
+      .colhead span {
+        font-size: 10px; font-weight: 700; letter-spacing: .07em;
+        text-transform: uppercase; color: #a1a1aa;
+      }
+      .num { text-align: right; }
+      .ctr { text-align: center; }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 96px 92px 76px;
+        gap: 12px; align-items: center;
+        padding: 14px 0; border-bottom: 1px solid #f4f4f5;
+      }
+      .bar { background: #d4d4d8; border-radius: 3px; height: 10px; }
+      .bar-name { width: 78%; height: 11px; background: #a1a1aa; }
+      .bar-name.s2 { width: 62%; }
+      .bar-name.s3 { width: 88%; }
+      .bar-sub { width: 42%; height: 8px; margin-top: 6px; }
+      .bar-cost { width: 52px; height: 10px; margin-left: auto; }
+
+      .qty {
+        width: 64px; height: 34px; margin: 0 auto;
+        border: 1px solid #d4d4d8; border-radius: 6px; background: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; color: #71717a;
+      }
+      .remove {
+        font-size: 12px; color: #71717a; text-decoration: underline;
+        text-align: right; display: block;
+      }
+
+      .totalrow {
+        display: flex; justify-content: flex-end; align-items: baseline;
+        gap: 16px; padding: 16px 0 0;
+      }
+      .total-label {
+        font-size: 11px; font-weight: 700; letter-spacing: .07em;
+        text-transform: uppercase; color: #a1a1aa;
+      }
+      .total-val { height: 14px; width: 76px; background: #52525b; border-radius: 3px; }
+
+      .actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+      .btn {
+        height: 40px; padding: 0 16px; border-radius: 6px;
+        border: 1px solid #a1a1aa; background: #e4e4e7;
+        display: inline-flex; align-items: center;
+        font-size: 13px; font-weight: 500; color: #3f3f46;
+      }
+      .hint { font-size: 10px; color: #a1a1aa; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="frame-label">Shopping cart · cart.count &gt; 0</div>
+    <div class="page">
+      <div class="h1"></div><span class="h1-note">“Shopping Cart”</span>
+
+      <div class="colhead">
+        <span>Item</span>
+        <span class="num">Unit Cost</span>
+        <span class="ctr">Quantity</span>
+        <span class="num">&nbsp;</span>
+      </div>
+
+      <div class="row">
+        <div>
+          <div class="bar bar-name"></div>
+          <div class="bar bar-sub"></div>
+        </div>
+        <div><div class="bar bar-cost"></div></div>
+        <div><div class="qty">2</div></div>
+        <div><a class="remove">Remove</a></div>
+      </div>
+
+      <div class="row">
+        <div>
+          <div class="bar bar-name s2"></div>
+          <div class="bar bar-sub"></div>
+        </div>
+        <div><div class="bar bar-cost"></div></div>
+        <div><div class="qty">1</div></div>
+        <div><a class="remove">Remove</a></div>
+      </div>
+
+      <div class="row">
+        <div>
+          <div class="bar bar-name s3"></div>
+          <div class="bar bar-sub"></div>
+        </div>
+        <div><div class="bar bar-cost"></div></div>
+        <div><div class="qty">4</div></div>
+        <div><a class="remove">Remove</a></div>
+      </div>
+
+      <div class="totalrow">
+        <span class="total-label">Total</span>
+        <div class="total-val"></div>
+      </div>
+
+      <div class="actions">
+        <span class="btn">Update Cart</span>
+      </div>
+
+      <div class="hint">
+        Quantity fields are editable; “Update Cart” submits all quantity changes at once.
+      </div>
+    </div>
+  </body>
+</html>

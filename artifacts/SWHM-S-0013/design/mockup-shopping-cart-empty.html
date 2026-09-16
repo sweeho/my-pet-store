@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shopping Cart — My Pet Store</title>
+    <style>
+      :root {
+        --background: #ffffff;
+        --foreground: #0a0a0a;
+        --primary: #171717;
+        --primary-foreground: #fafafa;
+        --muted: #f5f5f5;
+        --muted-foreground: #737373;
+        --border: #e5e5e5;
+        --input: #e5e5e5;
+        --radius: 10px;
+        --radius-md: 8px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        background: var(--background);
+        color: var(--foreground);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .page { margin: 0 auto; max-width: 672px; padding: 24px; }
+      .backlink {
+        color: var(--muted-foreground);
+        font-size: 14px;
+        line-height: 20px;
+        text-decoration: none;
+      }
+      .backlink:hover { text-decoration: underline; }
+      h1 {
+        margin-top: 8px;
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .empty {
+        margin-top: 24px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--background);
+        padding: 48px 24px;
+        text-align: center;
+      }
+      .empty-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 16px;
+        border-radius: 999px;
+        background: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .empty-icon svg { width: 22px; height: 22px; stroke: var(--muted-foreground); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+      .empty-title { font-size: 16px; line-height: 24px; font-weight: 500; }
+      .empty-body {
+        margin: 6px auto 0;
+        max-width: 380px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--muted-foreground);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        padding: 0 16px;
+        margin-top: 24px;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1px solid transparent;
+        font-family: inherit;
+      }
+      .btn-default { background: var(--primary); color: var(--primary-foreground); }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <a class="backlink" href="/catalog">← Continue shopping</a>
+      <h1>Shopping Cart</h1>
+
+      <div class="empty">
+        <div class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h2.2l2.3 11.2a1.8 1.8 0 0 0 1.8 1.4h8.9a1.8 1.8 0 0 0 1.8-1.4L21 7H5.2"/></svg>
+        </div>
+        <p class="empty-title">Your Shopping Cart is Empty.</p>
+        <p class="empty-body">Items you add while browsing the catalog will appear here for the rest of your visit.</p>
+        <a class="btn btn-default" href="/catalog">Browse the catalog</a>
+      </div>
+    </div>
+  </body>
+</html>

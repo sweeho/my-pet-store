@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #fff;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: #52525b;
+      }
+      .page { max-width: 672px; margin: 0 auto; padding: 24px; }
+      .frame-label {
+        font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+        color: #a1a1aa; padding: 8px 24px 0; border-bottom: 1px dashed #e4e4e7;
+        margin-bottom: 4px;
+      }
+      .h1 { height: 14px; width: 168px; background: #52525b; border-radius: 3px; }
+      .h1-note { font-size: 9px; color: #a1a1aa; margin-left: 8px; vertical-align: 3px; }
+      .empty {
+        margin-top: 24px;
+        font-size: 14px; color: #71717a;
+      }
+      .hint { font-size: 10px; color: #a1a1aa; margin-top: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="frame-label">Shopping cart · cart.count == 0</div>
+    <div class="page">
+      <div class="h1"></div><span class="h1-note">“Shopping Cart”</span>
+
+      <p class="empty">Your Shopping Cart is Empty.</p>
+
+      <div class="hint">
+        No item rows, no quantity fields, no total, no “Update Cart” button in this state.
+      </div>
+    </div>
+  </body>
+</html>
