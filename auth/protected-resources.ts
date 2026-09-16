@@ -17,6 +17,7 @@ export const PROTECTED_RESOURCES: ProtectedResource[] = [
   { legacy: "customer.screen", path: "/customer" },
   { legacy: "customer.do", path: "/api/customer" },
   { legacy: "enter_order_information.screen", path: "/enter-order-information" },
+  { legacy: "order_completed.jsp", path: "/order-completed" },
   { legacy: "signon_welcome.screen", path: "/signon-welcome" },
   { legacy: "index.jsp", path: ADMIN_HOME_PAGE, requiresRole: ADMIN_ROLE },
   { legacy: "AdminRequestProcessor", path: "/api/admin", requiresRole: ADMIN_ROLE },
