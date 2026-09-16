@@ -359,10 +359,12 @@ export function EnterOrderInformation() {
       return;
     }
 
+    const result = (await response.json()) as { orderId: number; email: string };
+
     setFormError(null);
     setBillingError(null);
     setShippingError(null);
-    navigate("/order-completed");
+    navigate("/order-completed", { state: { orderId: result.orderId, email: result.email } });
   }
 
   return (
