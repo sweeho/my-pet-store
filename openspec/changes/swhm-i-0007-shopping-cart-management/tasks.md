@@ -76,11 +76,11 @@
 
 ## 10. Testing
 
-- [ ] 10.1 Test adding item to empty cart (SWHM-T-0142)
-- [ ] 10.2 Test adding duplicate item (increment quantity) (SWHM-T-0142)
-- [ ] 10.3 Test removing item from cart (SWHM-T-0142)
-- [ ] 10.4 Test updating quantities (SWHM-T-0142)
-- [ ] 10.5 Test cart subtotal calculation (SWHM-T-0142)
-- [ ] 10.6 Test line total calculation (quantity × unitCost) (SWHM-T-0142)
-- [ ] 10.7 Test empty cart display (SWHM-T-0142)
-- [ ] 10.8 Test populated cart display (SWHM-T-0142)
+- [x] 10.1 Test adding item to empty cart (SWHM-T-0142)
+- [x] 10.2 Test adding duplicate item (increment quantity) (SWHM-T-0142)
+- [x] 10.3 Test removing item from cart (SWHM-T-0142)
+- [x] 10.4 Test updating quantities (SWHM-T-0142)
+- [x] 10.5 Test cart subtotal calculation (SWHM-T-0142)
+- [x] 10.6 Test line total calculation (quantity × unitCost) (SWHM-T-0142)
+- [x] 10.7 Test empty cart display (SWHM-T-0142)
+- [x] 10.8 Test populated cart display (SWHM-T-0142)
