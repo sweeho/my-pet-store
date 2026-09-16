@@ -217,16 +217,18 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
   });
 
   describe("submitting the order", () => {
-    it("EOI-13: an accepted submission reaches the placement path rather than the form's error branch", async () => {
+    it("EOI-13: an accepted submission reaches the placement path rather than the form's error branch, carrying the order id and email forward", async () => {
       const { default: userEvent } = await import("@testing-library/user-event");
-      mockOrderResponse(jsonResponse({ accepted: true }));
+      mockOrderResponse(jsonResponse({ orderId: 1005, email: "maya.chen@example.com" }));
       renderPage();
       await screen.findByText("Persian");
 
       await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
 
       await vi.waitFor(() => {
-        expect(navigateMock).toHaveBeenCalledWith("/order-completed");
+        expect(navigateMock).toHaveBeenCalledWith("/order-completed", {
+          state: { orderId: 1005, email: "maya.chen@example.com" },
+        });
       });
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
