@@ -69,7 +69,13 @@ when no past month exists in the current year either.
   installed.
 - `bun run verify` (lint + typecheck + full unit suite) — 619 passed, 0 failed, exit 0
   (unchanged unit-test count; this ticket adds no `*.test.ts`/`*.test.tsx` file).
-- CI on this branch (real Chromium, `design.md` F10): verdict recorded in the ticket
-  comment before transitioning to done.
+- CI's first run on this branch (real Chromium) failed for real: 3 tests hit
+  `uniqueUsername`'s own `MAX_USERID_LENGTH` guard (labels too long once `Date.now()` is
+  appended) and 1 flaked on a real race — `allTextContents()` doesn't auto-wait for the
+  `Expiry year` select the way `selectOption()` does, so reading it immediately after
+  navigation could catch an empty option list. Fixed both (shorter labels, an explicit
+  `waitFor()` before reading the select's options) — no app code touched. CI's second run
+  on the fix commit is green (run 35149752951, distinct from the first failing run
+  35149448665).
 
 Full detail: `artifacts/SWHM-S-0016/SWHM-T-0178/tdd-test-result.md`.
