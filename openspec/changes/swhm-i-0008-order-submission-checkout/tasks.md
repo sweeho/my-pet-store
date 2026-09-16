@@ -80,11 +80,11 @@
 
 ## 9. Error Handling
 
-- [ ] 9.1 Implement ShoppingCartEmptyOrderException (SWHM-T-0161)
-- [ ] 9.2 Check cart.count > 0 before order processing (SWHM-T-0161)
-- [ ] 9.3 Throw ShoppingCartEmptyOrderException if cart is empty (SWHM-T-0161)
-- [ ] 9.4 Catch exception and redirect to cart page with error message (SWHM-T-0161)
-- [ ] 9.5 Display error: "Your shopping cart is empty. Please add items before ordering." (SWHM-T-0161)
+- [x] 9.1 Implement ShoppingCartEmptyOrderException (SWHM-T-0161)
+- [x] 9.2 Check cart.count > 0 before order processing (SWHM-T-0161)
+- [x] 9.3 Throw ShoppingCartEmptyOrderException if cart is empty (SWHM-T-0161)
+- [x] 9.4 Catch exception and redirect to cart page with error message (SWHM-T-0161)
+- [x] 9.5 Display error: "Your shopping cart is empty. Please add items before ordering." (SWHM-T-0161)
 
 ## 10. Integration Testing
 
