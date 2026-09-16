@@ -13,10 +13,9 @@ import { EnterOrderInformation } from "./enter-order-information";
  * against accessible roles/labels rather than DOM shape. Built to
  * artifacts/SWHM-S-0014/design/mockup-enter-order-information.html.
  *
- * No submit handler exists yet (SWHM-T-0154's scope), so there is nothing to
- * assert about form submission or the per-field/form-level error states —
- * DESIGN.md § Form validation states says both are absent until there is
- * something to report.
+ * Submission tests mock useNavigate the way
+ * src/components/RequireSignOn.test.tsx does, since this page calls it on a
+ * successful submit.
  */
 function jsonResponse(body: unknown, init: { ok: boolean; status?: number } = { ok: true }) {
   return { ok: init.ok, status: init.status ?? (init.ok ? 200 : 400), json: async () => body };
@@ -46,6 +45,15 @@ const POPULATED_CART: Cart = {
 };
 
 const fetchMock = vi.fn();
+const navigateMock = vi.fn();
+
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual<typeof import("react-router")>("react-router");
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
+});
 
 function renderPage() {
   return render(
@@ -55,9 +63,20 @@ function renderPage() {
   );
 }
 
+// Only /api/cart is mocked unless a test also calls mockOrderResponse to
+// answer a POST to /api/order — the two default tests here never submit.
+function mockOrderResponse(response: ReturnType<typeof jsonResponse>) {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+    if (url === "/api/order" && init?.method === "POST") return Promise.resolve(response);
+    throw new Error(`unexpected fetch: ${url}`);
+  });
+}
+
 describe("EnterOrderInformation (/enter-order-information)", () => {
   beforeEach(() => {
     fetchMock.mockReset();
+    navigateMock.mockReset();
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
       throw new Error(`unexpected fetch: ${url}`);
@@ -195,5 +214,74 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
 
     await screen.findByText("Persian");
     expect(screen.getByRole("link", { name: "Return to Cart" })).toHaveAttribute("href", "/cart");
+  });
+
+  describe("submitting the order", () => {
+    it("EOI-13: an accepted submission reaches the placement path rather than the form's error branch", async () => {
+      const { default: userEvent } = await import("@testing-library/user-event");
+      mockOrderResponse(jsonResponse({ accepted: true }));
+      renderPage();
+      await screen.findByText("Persian");
+
+      await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
+
+      await vi.waitFor(() => {
+        expect(navigateMock).toHaveBeenCalledWith("/order-completed");
+      });
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("EOI-14: a refused submission shows one form-level alert and marks the offending field invalid with its own message", async () => {
+      const { default: userEvent } = await import("@testing-library/user-event");
+      mockOrderResponse(
+        jsonResponse(
+          {
+            error: "Shipping email must be a valid email address.",
+            section: "shipping",
+            field: "email",
+          },
+          { ok: false, status: 400 },
+        ),
+      );
+      renderPage();
+      await screen.findByText("Persian");
+
+      const shipping = within(screen.getByRole("region", { name: "Shipping Information" }));
+      const shippingEmail = shipping.getByLabelText("Email");
+      await userEvent.type(shippingEmail, "maya.chen@example");
+
+      await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
+
+      const alerts = await screen.findAllByRole("alert");
+      expect(alerts).toHaveLength(2);
+      expect(
+        screen.getByText("Please correct the highlighted field before submitting your order."),
+      ).toBeInTheDocument();
+      expect(shippingEmail).toHaveAttribute("aria-invalid", "true");
+      const fieldAlert = screen.getByText("Shipping email must be a valid email address.");
+      expect(fieldAlert).toHaveAttribute("role", "alert");
+      expect(navigateMock).not.toHaveBeenCalled();
+    });
+
+    it("EOI-15: a refused submission leaves every entered value intact", async () => {
+      const { default: userEvent } = await import("@testing-library/user-event");
+      mockOrderResponse(
+        jsonResponse(
+          { error: "Billing first name is required.", section: "billing", field: "givenName" },
+          { ok: false, status: 400 },
+        ),
+      );
+      renderPage();
+      await screen.findByText("Persian");
+
+      const billing = within(screen.getByRole("region", { name: "Billing Information" }));
+      const billingFamilyName = billing.getByLabelText("Last name");
+      await userEvent.type(billingFamilyName, "Chen");
+
+      await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
+      await screen.findAllByRole("alert");
+
+      expect(billingFamilyName).toHaveValue("Chen");
+    });
   });
 });
