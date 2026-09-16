@@ -1,4 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -148,5 +149,143 @@ describe("CartPage (/cart)", () => {
       "href",
       "/catalog",
     );
+  });
+
+  it("CPT-07: activating Update Cart sends every row's quantity in a single PUT /api/cart request and renders the response", async () => {
+    const updatedCart: Cart = {
+      items: [
+        { ...POPULATED_CART.items[0]!, quantity: 3, lineTotal: 1050 },
+        { ...POPULATED_CART.items[1]!, quantity: 2, lineTotal: 90 },
+      ],
+      count: 2,
+      subtotal: 1140,
+    };
+
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/cart" && init?.method === "PUT") {
+        return Promise.resolve(jsonResponse(updatedCart));
+      }
+      if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url} ${init?.method}`);
+    });
+
+    renderPage();
+    await screen.findByRole("table");
+
+    const quantityInput = screen.getByRole("spinbutton", { name: "Quantity for BIRDS-PARROTS-1" });
+    await userEvent.clear(quantityInput);
+    await userEvent.type(quantityInput, "3");
+
+    await userEvent.click(screen.getByRole("button", { name: "Update Cart" }));
+
+    await waitFor(() => {
+      const putCalls = fetchMock.mock.calls.filter(([, init]) => init?.method === "PUT");
+      expect(putCalls).toHaveLength(1);
+    });
+
+    const [, putInit] = fetchMock.mock.calls.find(([, init]) => init?.method === "PUT")!;
+    const body = JSON.parse((putInit as RequestInit).body as string);
+    expect(body).toEqual({
+      updates: [
+        { itemId: "BIRDS-PARROTS-1", quantity: 3 },
+        { itemId: "CATS-SHORTHAIR-1", quantity: 2 },
+      ],
+    });
+
+    expect(
+      await screen.findByRole("spinbutton", { name: "Quantity for BIRDS-PARROTS-1" }),
+    ).toHaveValue(3);
+    expect(screen.getByText("$1,140.00")).toBeInTheDocument();
+  });
+
+  it("CPT-08: setting a row's quantity to 0 and activating Update Cart removes that row", async () => {
+    const afterRemoval: Cart = { items: [{ ...POPULATED_CART.items[1]! }], count: 1, subtotal: 90 };
+
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/cart" && init?.method === "PUT") {
+        return Promise.resolve(jsonResponse(afterRemoval));
+      }
+      if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url} ${init?.method}`);
+    });
+
+    renderPage();
+    await screen.findByRole("table");
+
+    const quantityInput = screen.getByRole("spinbutton", { name: "Quantity for BIRDS-PARROTS-1" });
+    await userEvent.clear(quantityInput);
+    await userEvent.type(quantityInput, "0");
+    await userEvent.click(screen.getByRole("button", { name: "Update Cart" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Parrots")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Shorthair Cats")).toBeInTheDocument();
+  });
+
+  it("CPT-09: activating a row's Remove control sends DELETE /api/cart/items/{itemId} for that item alone", async () => {
+    const afterRemoval: Cart = { items: [{ ...POPULATED_CART.items[1]! }], count: 1, subtotal: 90 };
+
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/cart/items/BIRDS-PARROTS-1" && init?.method === "DELETE") {
+        return Promise.resolve(jsonResponse(afterRemoval));
+      }
+      if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url} ${init?.method}`);
+    });
+
+    renderPage();
+    const table = await screen.findByRole("table");
+    const parrotRow = within(table).getByText("Parrots").closest("tr") as HTMLElement;
+
+    await userEvent.click(within(parrotRow).getByRole("button", { name: "Remove" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Parrots")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Shorthair Cats")).toBeInTheDocument();
+
+    const deleteCalls = fetchMock.mock.calls.filter(([, init]) => init?.method === "DELETE");
+    expect(deleteCalls).toHaveLength(1);
+  });
+
+  it("CPT-10: an empty quantity field is refused on screen with a message naming the row, and no PUT is sent", async () => {
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url} ${init?.method}`);
+    });
+
+    renderPage();
+    await screen.findByRole("table");
+
+    const quantityInput = screen.getByRole("spinbutton", { name: "Quantity for BIRDS-PARROTS-1" });
+    await userEvent.clear(quantityInput);
+
+    await userEvent.click(screen.getByRole("button", { name: "Update Cart" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Quantity for Parrots must be a number.",
+    );
+    const putCalls = fetchMock.mock.calls.filter(([, init]) => init?.method === "PUT");
+    expect(putCalls).toHaveLength(0);
+  });
+
+  it("CPT-11: removing the last remaining line leaves the screen in the empty state", async () => {
+    const singleItemCart: Cart = { items: [POPULATED_CART.items[0]!], count: 1, subtotal: 350 };
+
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/cart/items/BIRDS-PARROTS-1" && init?.method === "DELETE") {
+        return Promise.resolve(jsonResponse(EMPTY_CART));
+      }
+      if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(singleItemCart));
+      throw new Error(`unexpected fetch: ${url} ${init?.method}`);
+    });
+
+    renderPage();
+    const table = await screen.findByRole("table");
+    await userEvent.click(within(table).getByRole("button", { name: "Remove" }));
+
+    expect(await screen.findByText("Your Shopping Cart is Empty.")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 });
