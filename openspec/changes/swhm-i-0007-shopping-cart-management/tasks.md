@@ -41,14 +41,14 @@
 
 ## 6. Cart Display UI
 
-- [ ] 6.1 Create cart.jsp template (SWHM-T-0138)
-- [ ] 6.2 Implement conditional display: empty vs populated cart (SWHM-T-0138)
-- [ ] 6.3 Display "Your Shopping Cart is Empty." when cart.count == 0 (SWHM-T-0138)
-- [ ] 6.4 Create table for populated cart display (SWHM-T-0138)
-- [ ] 6.5 Add columns: Item Name, Unit Cost, Quantity, Line Total (SWHM-T-0138)
-- [ ] 6.6 Add remove link for each item (SWHM-T-0138)
-- [ ] 6.7 Display cart Subtotal (SWHM-T-0138)
-- [ ] 6.8 Add "Update Cart" button (SWHM-T-0138)
+- [x] 6.1 Create cart.jsp template (SWHM-T-0138)
+- [x] 6.2 Implement conditional display: empty vs populated cart (SWHM-T-0138)
+- [x] 6.3 Display "Your Shopping Cart is Empty." when cart.count == 0 (SWHM-T-0138)
+- [x] 6.4 Create table for populated cart display (SWHM-T-0138)
+- [x] 6.5 Add columns: Item Name, Unit Cost, Quantity, Line Total (SWHM-T-0138)
+- [x] 6.6 Add remove link for each item (SWHM-T-0138)
+- [x] 6.7 Display cart Subtotal (SWHM-T-0138)
+- [x] 6.8 Add "Update Cart" button (SWHM-T-0138)
 
 ## 7. Cart Form Handling
 
