@@ -25,6 +25,7 @@
     "admin",
     "cart",
     "order",
+    "payment",
     "e2e"
   ]
 }
