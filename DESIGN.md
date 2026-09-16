@@ -49,6 +49,16 @@ Both are absent until there is something to report. A form does not render an em
 
 Field length limits are `maxlength` attributes on the input. They are a constraint, not a validation state — the field stops accepting input rather than turning invalid — so they carry no message and no `aria-invalid`.
 
+## Pending actions
+
+A submit control that starts work the reader must not start twice is disabled from the moment it is pressed until the outcome is known, and its label changes to the present participle of what it is doing — "Authorizing…" rather than "Authorize payment". The label change is not decoration: a disabled control with its original label reads as refused rather than busy, and a reader who cannot see the pointer has nothing else to distinguish the two.
+
+Alongside it, an element with `role="status"` names what is happening in a full sentence. This is the same live-region mechanism as § Loading states and it is announced without stealing focus — which matters more here than on a loading screen, because the reader's focus is on the control they just pressed and moving it would lose their place.
+
+The distinction from § Loading states is what is pending. There, a screen has nothing to show until a fetch lands, so the indicator stands in for absent content. Here the content is present and unchanged; what is pending is an action the reader started, and the screen's job is to say so without appearing to have lost it. A screen that does neither invites a second press, and for an irreversible action a second press is the failure.
+
+Restore the control and remove the status region when the outcome arrives — do not leave a spent status region on the page. If the outcome is a refusal, it is reported through § Form validation states, not by leaving the control disabled.
+
 ## Tabular data
 
 A table renders `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` — never a grid of `<div>`s. The semantics are the accessibility: a screen reader announces a column header with each cell only where the real elements are present, and no `role` attribute reconstructs that as reliably as the element it imitates.

@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Checkout — Payment Details (validation and authorization states)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.87 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --radius: 0.625rem;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--background);}
+  body{
+    font-family:"Space Grotesk","Space Grotesk Fallback",ui-sans-serif,system-ui,sans-serif;
+    color:var(--foreground);
+    -webkit-font-smoothing:antialiased;
+  }
+  .caption{
+    background:var(--muted);
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:8px 24px;
+    font-size:12px;line-height:16px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-foreground);
+  }
+  .band:first-child .caption{border-top:none;}
+  .page{max-width:672px;margin:0 auto;padding:24px;}
+  .backlink{font-size:14px;line-height:20px;color:var(--muted-foreground);text-decoration:none;}
+  .backlink:hover{text-decoration:underline;}
+  h1{font-size:20px;line-height:28px;font-weight:700;margin-top:8px;letter-spacing:-0.01em;}
+  .meta{font-size:12px;line-height:16px;color:var(--muted-foreground);margin-top:4px;}
+  .alert{font-size:14px;line-height:20px;color:var(--destructive);margin-top:8px;}
+  .card{
+    border:1px solid var(--border);
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-top:12px;
+  }
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--border);
+    padding-bottom:8px;margin-bottom:10px;
+  }
+  .section-label{
+    font-size:12px;line-height:16px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-foreground);
+  }
+  .textlink{font-size:12px;line-height:16px;color:var(--muted-foreground);text-decoration:none;}
+  .textlink:hover{text-decoration:underline;}
+
+  .line{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:4px 0;}
+  .line-name{font-size:14px;line-height:20px;color:var(--foreground);}
+  .line-id{font-size:12px;line-height:16px;color:var(--muted-foreground);margin-top:2px;}
+  .line-qty{font-size:12px;line-height:16px;color:var(--muted-foreground);white-space:nowrap;}
+  .line-total{font-size:14px;line-height:20px;color:var(--foreground);white-space:nowrap;min-width:76px;text-align:right;}
+  .summary-foot{border-top:1px solid var(--border);margin-top:6px;padding-top:8px;}
+  .subtotal{display:flex;align-items:baseline;justify-content:space-between;}
+  .subtotal-label,.subtotal-value{font-size:14px;line-height:20px;font-weight:700;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .ro-label{font-size:12px;line-height:16px;color:var(--muted-foreground);}
+  .ro-value{font-size:14px;line-height:20px;color:var(--foreground);margin-top:2px;}
+  .span2{grid-column:span 2;}
+
+  .field{display:flex;flex-direction:column;}
+  label{font-size:14px;line-height:20px;font-weight:500;color:var(--foreground);margin-bottom:4px;}
+  .input,.select{
+    width:100%;
+    border:1px solid var(--input);
+    background:var(--background);
+    color:var(--foreground);
+    border-radius:calc(var(--radius) - 2px);
+    padding:8px 12px;
+    font-size:14px;line-height:20px;
+    font-family:inherit;
+  }
+  .select{
+    appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 10px center;
+    padding-right:32px;
+  }
+  .input.error,.select.error{border-color:var(--destructive);}
+  .input.placeholder,.select.placeholder{color:var(--muted-foreground);}
+  .input:disabled,.select:disabled{background:var(--muted);color:var(--muted-foreground);}
+  .err{font-size:12px;line-height:16px;color:var(--destructive);margin-top:4px;}
+  .hint{font-size:12px;line-height:16px;color:var(--muted-foreground);margin-top:6px;}
+  .actions{display:flex;align-items:center;gap:8px;margin-top:12px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    height:40px;padding:0 16px;
+    border-radius:calc(var(--radius) - 2px);
+    font-size:14px;line-height:20px;font-weight:500;font-family:inherit;
+    border:1px solid transparent;cursor:pointer;white-space:nowrap;
+  }
+  .btn-primary{background:var(--primary);color:var(--primary-foreground);}
+  .btn-outline{background:var(--background);color:var(--foreground);border-color:var(--input);}
+  .btn:disabled{opacity:0.5;pointer-events:none;}
+  .status{font-size:14px;line-height:20px;color:var(--muted-foreground);margin-left:4px;}
+</style>
+</head>
+<body>
+
+<!-- ============ STATE A — validation errors ============ -->
+<div class="band">
+  <div class="caption">State A · Validation errors — nothing is sent to the payment provider</div>
+  <div class="page">
+    <a class="backlink" href="#">← Order information</a>
+    <h1>Payment Details</h1>
+    <p class="meta">Step 2 of 3 · Your card is authorized when you submit the order.</p>
+    <p class="alert" role="alert">Check the highlighted fields before submitting.</p>
+
+    <section class="card" aria-label="Order summary">
+      <div class="card-head">
+        <h2 class="section-label">Order summary</h2>
+        <a class="textlink" href="#">Edit cart</a>
+      </div>
+      <div class="line">
+        <div><div class="line-name">African Grey</div><div class="line-id">BIRDS-PARROTS-1</div></div>
+        <div class="line-qty">1 × $599.99</div>
+        <div class="line-total">$599.99</div>
+      </div>
+      <div class="line">
+        <div><div class="line-name">Zebra Finch</div><div class="line-id">BIRDS-FINCHES-1</div></div>
+        <div class="line-qty">2 × $24.99</div>
+        <div class="line-total">$49.98</div>
+      </div>
+      <div class="line">
+        <div><div class="line-name">Siamese</div><div class="line-id">CATS-SHORTHAIR-2</div></div>
+        <div class="line-qty">1 × $129.99</div>
+        <div class="line-total">$129.99</div>
+      </div>
+      <div class="summary-foot">
+        <div class="subtotal">
+          <span class="subtotal-label">Subtotal (4 items)</span>
+          <span class="subtotal-value">$779.96</span>
+        </div>
+        <p class="hint">Tax and shipping are not calculated. This is the amount sent for authorization.</p>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Billing address">
+      <div class="card-head">
+        <h2 class="section-label">Billing address</h2>
+        <a class="textlink" href="#">Change</a>
+      </div>
+      <div class="grid2" style="grid-template-columns:1.85fr 1fr;">
+        <div>
+          <div class="ro-label">Ada Baxter</div>
+          <div class="ro-value">901 San Antonio Road, Palo Alto, California 94303, USA</div>
+        </div>
+        <div>
+          <div class="ro-label">Email</div>
+          <div class="ro-value">ada.baxter@example.com</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Payment method">
+      <div class="card-head"><h2 class="section-label">Payment method</h2></div>
+      <form class="grid2" aria-label="Payment details">
+        <div class="field">
+          <label for="a-name">Cardholder name</label>
+          <input id="a-name" class="input" maxlength="30" value="Ada Baxter" />
+        </div>
+        <div class="field">
+          <label for="a-type">Card type</label>
+          <select id="a-type" class="select error placeholder" aria-invalid="true">
+            <option>— Select —</option>
+          </select>
+          <p class="err">Select an accepted card type.</p>
+        </div>
+
+        <div class="field span2">
+          <label for="a-number">Card number</label>
+          <input id="a-number" class="input error" aria-invalid="true" value="" />
+          <p class="err">Card number is required.</p>
+        </div>
+
+        <div class="field">
+          <label for="a-month">Expiry month</label>
+          <select id="a-month" class="select error placeholder" aria-invalid="true">
+            <option>— Select —</option>
+          </select>
+          <p class="err">Expiry month and year are required.</p>
+        </div>
+        <div class="field">
+          <label for="a-year">Expiry year</label>
+          <select id="a-year" class="select error placeholder" aria-invalid="true">
+            <option>— Select —</option>
+          </select>
+        </div>
+      </form>
+      <p class="hint">Visa, MasterCard and American Express are accepted.</p>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Submit payment</button>
+      <button class="btn btn-outline" type="button">Back to order information</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STATE B — authorization in progress ============ -->
+<div class="band">
+  <div class="caption">State B · Authorization in progress — request sent to the payment provider</div>
+  <div class="page">
+    <a class="backlink" href="#">← Order information</a>
+    <h1>Payment Details</h1>
+    <p class="meta">Step 2 of 3 · Your card is authorized when you submit the order.</p>
+
+    <section class="card" aria-label="Order summary">
+      <div class="card-head">
+        <h2 class="section-label">Order summary</h2>
+        <a class="textlink" href="#">Edit cart</a>
+      </div>
+      <div class="line">
+        <div><div class="line-name">African Grey</div><div class="line-id">BIRDS-PARROTS-1</div></div>
+        <div class="line-qty">1 × $599.99</div>
+        <div class="line-total">$599.99</div>
+      </div>
+      <div class="line">
+        <div><div class="line-name">Zebra Finch</div><div class="line-id">BIRDS-FINCHES-1</div></div>
+        <div class="line-qty">2 × $24.99</div>
+        <div class="line-total">$49.98</div>
+      </div>
+      <div class="line">
+        <div><div class="line-name">Siamese</div><div class="line-id">CATS-SHORTHAIR-2</div></div>
+        <div class="line-qty">1 × $129.99</div>
+        <div class="line-total">$129.99</div>
+      </div>
+      <div class="summary-foot">
+        <div class="subtotal">
+          <span class="subtotal-label">Subtotal (4 items)</span>
+          <span class="subtotal-value">$779.96</span>
+        </div>
+        <p class="hint">Tax and shipping are not calculated. This is the amount sent for authorization.</p>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Billing address">
+      <div class="card-head">
+        <h2 class="section-label">Billing address</h2>
+        <a class="textlink" href="#">Change</a>
+      </div>
+      <div class="grid2" style="grid-template-columns:1.85fr 1fr;">
+        <div>
+          <div class="ro-label">Ada Baxter</div>
+          <div class="ro-value">901 San Antonio Road, Palo Alto, California 94303, USA</div>
+        </div>
+        <div>
+          <div class="ro-label">Email</div>
+          <div class="ro-value">ada.baxter@example.com</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Payment method">
+      <div class="card-head"><h2 class="section-label">Payment method</h2></div>
+      <form class="grid2" aria-label="Payment details">
+        <div class="field">
+          <label for="b-name">Cardholder name</label>
+          <input id="b-name" class="input" value="Ada Baxter" disabled />
+        </div>
+        <div class="field">
+          <label for="b-type">Card type</label>
+          <select id="b-type" class="select" disabled><option>Visa</option></select>
+        </div>
+        <div class="field span2">
+          <label for="b-number">Card number</label>
+          <input id="b-number" class="input" value="4539 8712 4460 1903" disabled />
+        </div>
+        <div class="field">
+          <label for="b-month">Expiry month</label>
+          <select id="b-month" class="select" disabled><option>09</option></select>
+        </div>
+        <div class="field">
+          <label for="b-year">Expiry year</label>
+          <select id="b-year" class="select" disabled><option>2029</option></select>
+        </div>
+      </form>
+      <p class="hint">Visa, MasterCard and American Express are accepted.</p>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="submit" disabled>Submit payment</button>
+      <button class="btn btn-outline" type="button" disabled>Back to order information</button>
+      <span class="status" role="status">Authorizing payment…</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ STATE C — authorization rejected ============ -->
+<div class="band">
+  <div class="caption">State C · Authorization rejected — expired card, order not created</div>
+  <div class="page">
+    <a class="backlink" href="#">← Order information</a>
+    <h1>Payment Details</h1>
+    <p class="meta">Step 2 of 3 · Your card is authorized when you submit the order.</p>
+    <p class="alert" role="alert">Payment was not authorized: the card expired 03/2024. Enter a card with a future expiry date.</p>
+
+    <section class="card" aria-label="Order summary">
+      <div class="card-head">
+        <h2 class="section-label">Order summary</h2>
+        <a class="textlink" href="#">Edit cart</a>
+      </div>
+      <div class="line">
+        <div><div class="line-name">African Grey</div><div class="line-id">BIRDS-PARROTS-1</div></div>
+        <div class="line-qty">1 × $599.99</div>
+        <div class="line-total">$599.99</div>
+      </div>
+      <div class="line">
+        <div><div class="line-name">Zebra Finch</div><div class="line-id">BIRDS-FINCHES-1</div></div>
+        <div class="line-qty">2 × $24.99</div>
+        <div class="line-total">$49.98</div>
+      </div>
+      <div class="line">
+        <div><div class="line-name">Siamese</div><div class="line-id">CATS-SHORTHAIR-2</div></div>
+        <div class="line-qty">1 × $129.99</div>
+        <div class="line-total">$129.99</div>
+      </div>
+      <div class="summary-foot">
+        <div class="subtotal">
+          <span class="subtotal-label">Subtotal (4 items)</span>
+          <span class="subtotal-value">$779.96</span>
+        </div>
+        <p class="hint">Tax and shipping are not calculated. This is the amount sent for authorization.</p>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Billing address">
+      <div class="card-head">
+        <h2 class="section-label">Billing address</h2>
+        <a class="textlink" href="#">Change</a>
+      </div>
+      <div class="grid2" style="grid-template-columns:1.85fr 1fr;">
+        <div>
+          <div class="ro-label">Ada Baxter</div>
+          <div class="ro-value">901 San Antonio Road, Palo Alto, California 94303, USA</div>
+        </div>
+        <div>
+          <div class="ro-label">Email</div>
+          <div class="ro-value">ada.baxter@example.com</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Payment method">
+      <div class="card-head"><h2 class="section-label">Payment method</h2></div>
+      <form class="grid2" aria-label="Payment details">
+        <div class="field">
+          <label for="c-name">Cardholder name</label>
+          <input id="c-name" class="input" value="Ada Baxter" />
+        </div>
+        <div class="field">
+          <label for="c-type">Card type</label>
+          <select id="c-type" class="select"><option>Visa</option></select>
+        </div>
+        <div class="field span2">
+          <label for="c-number">Card number</label>
+          <input id="c-number" class="input" value="4539 8712 4460 1903" />
+        </div>
+        <div class="field">
+          <label for="c-month">Expiry month</label>
+          <select id="c-month" class="select error" aria-invalid="true"><option>03</option></select>
+          <p class="err">This card expired 03/2024.</p>
+        </div>
+        <div class="field">
+          <label for="c-year">Expiry year</label>
+          <select id="c-year" class="select error" aria-invalid="true"><option>2024</option></select>
+        </div>
+      </form>
+      <p class="hint">Visa, MasterCard and American Express are accepted.</p>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="submit">Submit payment</button>
+      <button class="btn btn-outline" type="button">Back to order information</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
