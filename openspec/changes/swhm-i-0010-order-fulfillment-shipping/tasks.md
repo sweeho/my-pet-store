@@ -43,13 +43,13 @@
 
 ## 5. Invoice Generation
 
-- [ ] 5.1 Implement createInvoice(SupplierOrderLocal po, HashMap fulfilledItems) (SWHM-T-0189)
-- [ ] 5.2 Create TPAInvoiceXDE document instance (SWHM-T-0189)
-- [ ] 5.3 Set invoice metadata: poId, userId, poDate, shippingDate (SWHM-T-0189)
-- [ ] 5.4 Iterate fulfilled items from HashMap (SWHM-T-0189)
-- [ ] 5.5 Add each line item to invoice with: categoryId, productId, itemId, lineNumber, quantity, unitPrice (SWHM-T-0189)
-- [ ] 5.6 Generate and return serialized XML invoice string (SWHM-T-0189)
-- [ ] 5.7 Implement XMLDocumentException handling (SWHM-T-0189)
+- [x] 5.1 Implement createInvoice(SupplierOrderLocal po, HashMap fulfilledItems) (SWHM-T-0189)
+- [x] 5.2 Create TPAInvoiceXDE document instance (SWHM-T-0189)
+- [x] 5.3 Set invoice metadata: poId, userId, poDate, shippingDate (SWHM-T-0189)
+- [x] 5.4 Iterate fulfilled items from HashMap (SWHM-T-0189)
+- [x] 5.5 Add each line item to invoice with: categoryId, productId, itemId, lineNumber, quantity, unitPrice (SWHM-T-0189)
+- [x] 5.6 Generate and return serialized XML invoice string (SWHM-T-0189)
+- [x] 5.7 Implement XMLDocumentException handling (SWHM-T-0189)
 
 ## 6. Order Status Tracking
 
