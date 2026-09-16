@@ -35,6 +35,20 @@ Pattern (see `src/components/ui/button.tsx` + `button-variants.ts`):
 
 New shared components go in `src/components/ui/`, follow this pattern, get a `*.test.tsx`.
 
+A primitive with exactly one appearance is the documented exception: `src/components/ui/table.tsx` exports real semantic elements (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`) with no `*-variants.ts` file, because a CVA file whose only variant is the default adds a layer that expresses nothing. Add the variants file when a second appearance actually exists, not in anticipation of one.
+
+## Tabular data
+
+A table renders `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` — never a grid of `<div>`s. The semantics are the accessibility: a screen reader announces a column header with each cell only where the real elements are present, and no `role` attribute reconstructs that as reliably as the element it imitates.
+
+Where a table is read-only, it renders no control at all — no `<input>`, `<select>`, `<button>` or `contenteditable` inside the body. A disabled control still reads as a control the visitor has been denied; an absent one reads as information, which is what a read-only table is. Tests assert the absence directly rather than checking a disabled state.
+
+## Reported figures
+
+A magnitude is drawn from the tokens above, not from a charting dependency — a horizontal bar is a `<div>` whose width is a percentage of the largest value in the set, on a `bg-secondary` track (`src/components/ReportBars.tsx`). ARCHITECTURE.md § Stack records that no visualisation library is present and that adding one is an untaken decision.
+
+The bar is `aria-hidden`; the value it depicts is rendered beside it as text, and the rows are a `<ul>`. A bar conveys a comparison a sighted reader makes at a glance and carries nothing a screen reader can use, so labelling it would announce the same number twice. Where the figure is a magnitude of the same kind rendered in several places, the component takes a formatter rather than assuming money or a count — the same bar serves revenue and order counts.
+
 ## Brand mark
 
 `src/components/StoreMark.tsx` is the store's mark — an inline SVG plus the `STORE_NAME` wordmark, both drawn in `currentColor` so the mark takes its colour from whatever surface it sits on. It is deliberately not a `ui/` primitive and does not follow the variants pattern above: it has no variants, only an optional `className` for sizing, and it sits in `src/components/` with the other behavioural components.

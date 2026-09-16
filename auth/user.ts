@@ -7,7 +7,7 @@ import { db } from "../db/client";
 import { authUsers } from "../db/schema";
 import { validateNewUser } from "./validation";
 
-export type AuthUser = { userName: string; password: string };
+export type AuthUser = { userName: string; password: string; role: string | null };
 
 const SCRYPT_KEY_LENGTH = 64;
 
@@ -21,9 +21,13 @@ export function findUser(userName: string): AuthUser | undefined {
   return db.select().from(authUsers).where(eq(authUsers.userName, userName)).get();
 }
 
+export function findUserRole(userName: string): string | null {
+  return findUser(userName)?.role ?? null;
+}
+
 export function insertUser(userName: string, password: string): AuthUser {
   validateNewUser(userName, password);
-  const user: AuthUser = { userName, password: hashPassword(password) };
+  const user: AuthUser = { userName, password: hashPassword(password), role: null };
   db.insert(authUsers).values(user).run();
   createCustomer(userName);
   return user;

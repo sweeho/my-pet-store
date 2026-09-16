@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Admin Home — wireframe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fff; color: #3f3f46;
+    font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .frame { min-height: 576px; display: flex; align-items: center; justify-content: center; padding: 32px; }
+  .col { width: 100%; max-width: 384px; }
+  .h1 { height: 22px; width: 52%; background: #52525b; border-radius: 3px; }
+  .cap { font-size: 11px; color: #a1a1aa; margin-top: 6px; letter-spacing: .04em; }
+  .actions { margin-top: 30px; display: flex; flex-direction: column; gap: 12px; }
+  .btn-primary {
+    height: 40px; border-radius: 6px; background: #3f3f46; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+  }
+  .btn-outline {
+    height: 40px; border-radius: 6px; border: 1px solid #d4d4d8; background: #fff; color: #3f3f46;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="col">
+      <div class="h1"></div>
+      <div class="cap">heading — signed-in admin home</div>
+
+      <div class="actions">
+        <div class="btn-primary">Launch Order Management</div>
+        <div class="btn-outline">Log Out</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

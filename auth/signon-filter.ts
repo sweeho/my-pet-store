@@ -1,13 +1,30 @@
-import { isProtectedResource, SIGN_ON_PAGE } from "./protected-resources";
+import { findProtectedResource, SIGN_ON_PAGE } from "./protected-resources";
 import type { SignOnSession } from "./session";
 
-export type AccessVerdict = { allowed: true } | { allowed: false; redirectTo: string };
+export type AccessVerdict =
+  | { allowed: true }
+  | { allowed: false; reason: "not-signed-on"; redirectTo: string }
+  | { allowed: false; reason: "role-required"; requiredRole: string };
 
-export function evaluateAccess(session: SignOnSession, requestedPath: string): AccessVerdict {
-  if (session.j_signon || !isProtectedResource(requestedPath)) {
+export function evaluateAccess(
+  session: SignOnSession,
+  requestedPath: string,
+  role?: string | null,
+): AccessVerdict {
+  const resource = findProtectedResource(requestedPath);
+  if (!resource) {
     return { allowed: true };
   }
-  return { allowed: false, redirectTo: SIGN_ON_PAGE };
+
+  if (!session.j_signon) {
+    return { allowed: false, reason: "not-signed-on", redirectTo: SIGN_ON_PAGE };
+  }
+
+  if (resource.requiresRole !== undefined && resource.requiresRole !== role) {
+    return { allowed: false, reason: "role-required", requiredRole: resource.requiresRole };
+  }
+
+  return { allowed: true };
 }
 
 // Only a navigation may set the post-sign-on return address (design.md D5):

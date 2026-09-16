@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>My Pet Store — Administration</title>
+<style>
+:root{
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.87 0 0);
+  --radius: 0.625rem;
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+*{box-sizing:border-box;margin:0;padding:0;border-color:var(--border);}
+html,body{height:100%;}
+body{
+  background:var(--background);color:var(--foreground);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1{font-size:1.5rem;line-height:2rem;font-weight:700;}
+h2{font-size:1.25rem;line-height:1.75rem;font-weight:700;}
+label{font-size:.875rem;line-height:1.25rem;font-weight:500;}
+input[type=text],input[type=password]{
+  width:100%;border:1px solid var(--input);background:var(--background);color:var(--foreground);
+  border-radius:var(--radius-md);padding:.5rem .75rem;font-size:.875rem;line-height:1.25rem;font-family:inherit;
+}
+.btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+  border-radius:var(--radius-md);font-size:.875rem;font-weight:500;height:2.5rem;padding:0 1rem;border:1px solid transparent;}
+.btn-default{background:var(--primary);color:var(--primary-foreground);}
+.btn-outline{background:var(--background);color:var(--foreground);border-color:var(--input);}
+.muted{color:var(--muted-foreground);}
+.sm{font-size:.875rem;line-height:1.25rem;}
+.xs{font-size:.75rem;line-height:1rem;}
+a.link{color:var(--foreground);font-size:.875rem;text-decoration:none;text-underline-offset:4px;}
+</style>
+  <style>
+    .topbar{border-bottom:1px solid var(--border);}
+    .topbar-inner{margin:0 auto;max-width:52rem;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .brand{display:flex;align-items:center;gap:.5rem;}
+    .brand-dot{width:1.75rem;height:1.75rem;border-radius:var(--radius-sm);background:var(--primary);color:var(--primary-foreground);
+      display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;}
+    .wrap{margin:0 auto;max-width:52rem;padding:4rem 1.5rem;}
+    .col{max-width:38rem;}
+    ul.caps{margin-top:1rem;display:flex;flex-direction:column;gap:.5rem;list-style:none;}
+    ul.caps li{display:flex;gap:.625rem;font-size:.875rem;line-height:1.35rem;}
+    ul.caps li::before{content:"";flex:none;width:.375rem;height:.375rem;margin-top:.5rem;border-radius:9999px;background:var(--muted-foreground);}
+    .actions{margin-top:2rem;display:flex;gap:.75rem;align-items:center;}
+    .panel{margin-top:2.5rem;border:1px solid var(--border);border-radius:var(--radius);background:var(--secondary);padding:1rem 1.25rem;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-dot">MPS</div>
+        <span class="sm muted">My Pet Store · Administration</span>
+      </div>
+      <span class="sm muted">Signed in as <span style="color:var(--foreground);font-weight:500">jps_admin</span></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+   <div class="col">
+    <h1>Administration</h1>
+    <p class="sm muted" style="margin-top:.75rem;line-height:1.4rem">
+      The administration client manages orders and gives visibility of sales across the catalog.
+    </p>
+
+    <ul class="caps">
+      <li>Review approved, completed and denied orders.</li>
+      <li>Approve or deny pending orders, several at a time.</li>
+      <li>Report revenue by category over a date range.</li>
+      <li>Report order counts by category over a date range.</li>
+    </ul>
+
+    <div class="actions">
+      <button class="btn btn-default" type="submit">Launch Rich Client</button>
+      <button class="btn btn-outline" type="submit">Logout</button>
+    </div>
+
+    <div class="panel">
+      <p class="sm muted">Your session ends after 54 minutes without activity. Signing out ends it immediately.</p>
+    </div>
+   </div>
+  </div>
+</body>
+</html>

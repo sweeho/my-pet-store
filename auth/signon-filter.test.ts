@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { evaluateAccess, isNavigationRequest } from "./signon-filter";
-import { SIGN_ON_PAGE } from "./protected-resources";
+import { ADMIN_ROLE, SIGN_ON_PAGE } from "./protected-resources";
 import type { SignOnSession } from "./session";
 
 function session(overrides: Partial<SignOnSession> = {}): SignOnSession {
@@ -18,7 +18,7 @@ describe("auth/signon-filter", () => {
   it("SF-01: a protected resource is denied for an unsigned-on session", () => {
     const verdict = evaluateAccess(session({ j_signon: false }), "/customer");
 
-    expect(verdict).toEqual({ allowed: false, redirectTo: SIGN_ON_PAGE });
+    expect(verdict).toEqual({ allowed: false, reason: "not-signed-on", redirectTo: SIGN_ON_PAGE });
   });
 
   it("SF-02: a protected resource is allowed for a signed-on session", () => {
@@ -29,6 +29,50 @@ describe("auth/signon-filter", () => {
 
   it("SF-03: an unprotected resource is allowed for an unsigned-on session", () => {
     const verdict = evaluateAccess(session({ j_signon: false }), "/about");
+
+    expect(verdict).toEqual({ allowed: true });
+  });
+
+  it("SF-11: an admin resource is denied not-signed-on for an unsigned-on session, same as any other protected resource", () => {
+    const verdict = evaluateAccess(session({ j_signon: false }), "/admin");
+
+    expect(verdict).toEqual({ allowed: false, reason: "not-signed-on", redirectTo: SIGN_ON_PAGE });
+  });
+
+  it("SF-12: a signed-on session without the administrator role is denied role-required on an admin resource — no return address in the verdict", () => {
+    const verdict = evaluateAccess(session({ j_signon: true }), "/admin", null);
+
+    expect(verdict).toEqual({
+      allowed: false,
+      reason: "role-required",
+      requiredRole: ADMIN_ROLE,
+    });
+  });
+
+  it("SF-13: a signed-on session holding the administrator role is allowed on an admin resource", () => {
+    const verdict = evaluateAccess(session({ j_signon: true }), "/admin", ADMIN_ROLE);
+
+    expect(verdict).toEqual({ allowed: true });
+  });
+
+  it("SF-14: a signed-on session without the role is denied role-required on an admin subtree page", () => {
+    const verdict = evaluateAccess(session({ j_signon: true }), "/admin/orders", null);
+
+    expect(verdict).toEqual({
+      allowed: false,
+      reason: "role-required",
+      requiredRole: ADMIN_ROLE,
+    });
+  });
+
+  it("SF-15: the admin sign-on page is never protected, even for an unsigned-on session", () => {
+    const verdict = evaluateAccess(session({ j_signon: false }), "/admin/signon");
+
+    expect(verdict).toEqual({ allowed: true });
+  });
+
+  it("SF-16: the admin sign-on-failed page is never protected, even for an unsigned-on session", () => {
+    const verdict = evaluateAccess(session({ j_signon: false }), "/admin/signon-failed");
 
     expect(verdict).toEqual({ allowed: true });
   });

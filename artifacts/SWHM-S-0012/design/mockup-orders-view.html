@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>My Pet Store — Administration</title>
+<style>
+:root{
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.87 0 0);
+  --radius: 0.625rem;
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+*{box-sizing:border-box;margin:0;padding:0;border-color:var(--border);}
+html,body{height:100%;}
+body{
+  background:var(--background);color:var(--foreground);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1{font-size:1.5rem;line-height:2rem;font-weight:700;}
+h2{font-size:1.25rem;line-height:1.75rem;font-weight:700;}
+label{font-size:.875rem;line-height:1.25rem;font-weight:500;}
+input[type=text],input[type=password]{
+  width:100%;border:1px solid var(--input);background:var(--background);color:var(--foreground);
+  border-radius:var(--radius-md);padding:.5rem .75rem;font-size:.875rem;line-height:1.25rem;font-family:inherit;
+}
+.btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+  border-radius:var(--radius-md);font-size:.875rem;font-weight:500;height:2.5rem;padding:0 1rem;border:1px solid transparent;}
+.btn-default{background:var(--primary);color:var(--primary-foreground);}
+.btn-outline{background:var(--background);color:var(--foreground);border-color:var(--input);}
+.muted{color:var(--muted-foreground);}
+.sm{font-size:.875rem;line-height:1.25rem;}
+.xs{font-size:.75rem;line-height:1rem;}
+a.link{color:var(--foreground);font-size:.875rem;text-decoration:none;text-underline-offset:4px;}
+</style>
+  <style>
+    .topbar{border-bottom:1px solid var(--border);}
+    .topbar-inner{margin:0 auto;max-width:64rem;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .brand{display:flex;align-items:center;gap:.5rem;}
+    .brand-dot{width:1.75rem;height:1.75rem;border-radius:var(--radius-sm);background:var(--primary);color:var(--primary-foreground);
+      display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;}
+    .wrap{margin:0 auto;max-width:64rem;padding:2rem 1.5rem;}
+    .head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;}
+    table{width:100%;border-collapse:collapse;margin-top:1.25rem;font-size:.875rem;}
+    thead th{
+      text-align:left;font-size:.75rem;line-height:1rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+      color:var(--muted-foreground);padding:0 1rem .625rem;border-bottom:1px solid var(--border);
+    }
+    tbody td{padding:.75rem 1rem;border-bottom:1px solid var(--border);line-height:1.25rem;}
+    tbody tr:nth-child(even){background:var(--secondary);}
+    .num{text-align:right;font-variant-numeric:tabular-nums;}
+    .mono{font-variant-numeric:tabular-nums;}
+    .badge{display:inline-flex;align-items:center;gap:.375rem;border:1px solid var(--border);border-radius:9999px;
+      padding:.125rem .5rem;font-size:.75rem;line-height:1rem;font-weight:500;background:var(--background);}
+    .badge .dot{width:.375rem;height:.375rem;border-radius:9999px;background:var(--muted-foreground);}
+    .badge.denied{color:var(--destructive);}
+    .badge.denied .dot{background:var(--destructive);}
+    .badge.approved .dot{background:var(--foreground);}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-dot">MPS</div>
+        <span class="sm muted">My Pet Store · Administration</span>
+      </div>
+      <span class="sm muted">Signed in as <span style="color:var(--foreground);font-weight:500">jps_admin</span></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <a class="link muted" href="#">← Back to admin home</a>
+    <div class="head" style="margin-top:1rem">
+      <div>
+        <h1>Orders</h1>
+        <p class="sm muted" style="margin-top:.375rem">Approved, completed and denied orders. Read-only.</p>
+      </div>
+      <span class="sm muted">12 orders</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">Order ID</th>
+          <th style="width:28%">User ID</th>
+          <th style="width:20%">Order Date</th>
+          <th style="width:20%" class="num">Order Amount</th>
+          <th style="width:18%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">1024</td><td>j2ee</td><td class="mono">09/12/2026</td><td class="num">$146.50</td><td><span class="badge approved"><span class="dot"></span>APPROVED</span></td></tr>
+        <tr><td class="mono">1023</td><td>marion.hall</td><td class="mono">09/12/2026</td><td class="num">$18.50</td><td><span class="badge"><span class="dot"></span>COMPLETED</span></td></tr>
+        <tr><td class="mono">1022</td><td>dsanchez</td><td class="mono">09/11/2026</td><td class="num">$1,240.00</td><td><span class="badge approved"><span class="dot"></span>APPROVED</span></td></tr>
+        <tr><td class="mono">1021</td><td>k_okafor</td><td class="mono">09/11/2026</td><td class="num">$62.25</td><td><span class="badge denied"><span class="dot"></span>DENIED</span></td></tr>
+        <tr><td class="mono">1020</td><td>j2ee</td><td class="mono">09/10/2026</td><td class="num">$210.00</td><td><span class="badge"><span class="dot"></span>COMPLETED</span></td></tr>
+        <tr><td class="mono">1019</td><td>tanaka.h</td><td class="mono">09/09/2026</td><td class="num">$85.75</td><td><span class="badge"><span class="dot"></span>COMPLETED</span></td></tr>
+        <tr><td class="mono">1018</td><td>bwilliams</td><td class="mono">09/08/2026</td><td class="num">$399.99</td><td><span class="badge approved"><span class="dot"></span>APPROVED</span></td></tr>
+        <tr><td class="mono">1017</td><td>marion.hall</td><td class="mono">09/06/2026</td><td class="num">$47.00</td><td><span class="badge"><span class="dot"></span>COMPLETED</span></td></tr>
+        <tr><td class="mono">1016</td><td>lucia.ferrari</td><td class="mono">09/05/2026</td><td class="num">$1,875.40</td><td><span class="badge denied"><span class="dot"></span>DENIED</span></td></tr>
+        <tr><td class="mono">1015</td><td>p.novak</td><td class="mono">09/03/2026</td><td class="num">$129.95</td><td><span class="badge"><span class="dot"></span>COMPLETED</span></td></tr>
+        <tr><td class="mono">1014</td><td>dsanchez</td><td class="mono">09/01/2026</td><td class="num">$24.99</td><td><span class="badge approved"><span class="dot"></span>APPROVED</span></td></tr>
+        <tr><td class="mono">1013</td><td>aisha.rahman</td><td class="mono">08/28/2026</td><td class="num">$530.00</td><td><span class="badge"><span class="dot"></span>COMPLETED</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

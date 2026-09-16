@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Orders View — wireframe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fff; color: #3f3f46;
+    font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .frame { min-height: 576px; padding: 24px; }
+  .col { max-width: 672px; margin: 0 auto; }
+  .h1 { height: 20px; width: 26%; background: #52525b; border-radius: 3px; }
+  .cap { font-size: 11px; color: #a1a1aa; margin-top: 6px; letter-spacing: .04em; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+  th {
+    text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: #a1a1aa; padding: 0 10px 8px 10px;
+    border-bottom: 1px solid #d4d4d8;
+  }
+  td { padding: 11px 10px; border-bottom: 1px solid #f4f4f5; vertical-align: middle; }
+  .bar { height: 8px; background: #d4d4d8; border-radius: 2px; }
+  .num { margin-left: auto; }
+  .right { text-align: right; }
+  .pill {
+    display: inline-block; border: 1px solid #d4d4d8; border-radius: 999px;
+    padding: 2px 9px; font-size: 10px; font-weight: 600; letter-spacing: .04em;
+    color: #52525b; background: #fafafa;
+  }
+  .foot { margin-top: 14px; font-size: 11px; color: #a1a1aa; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="col">
+      <div class="h1"></div>
+      <div class="cap">heading — “Orders”</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:17%">Order ID</th>
+            <th style="width:22%">User ID</th>
+            <th style="width:22%">Order Date</th>
+            <th style="width:19%" class="right">Order Amount</th>
+            <th style="width:20%">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="bar" style="width:58%"></div></td>
+            <td><div class="bar" style="width:72%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:54%"></div></td>
+            <td><span class="pill">APPROVED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:62%"></div></td>
+            <td><div class="bar" style="width:58%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:68%"></div></td>
+            <td><span class="pill">COMPLETED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:58%"></div></td>
+            <td><div class="bar" style="width:84%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:41%"></div></td>
+            <td><span class="pill">DENIED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:60%"></div></td>
+            <td><div class="bar" style="width:65%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:76%"></div></td>
+            <td><span class="pill">APPROVED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:58%"></div></td>
+            <td><div class="bar" style="width:52%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:49%"></div></td>
+            <td><span class="pill">COMPLETED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:61%"></div></td>
+            <td><div class="bar" style="width:78%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:62%"></div></td>
+            <td><span class="pill">COMPLETED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:59%"></div></td>
+            <td><div class="bar" style="width:63%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:37%"></div></td>
+            <td><span class="pill">DENIED</span></td>
+          </tr>
+          <tr>
+            <td><div class="bar" style="width:60%"></div></td>
+            <td><div class="bar" style="width:70%"></div></td>
+            <td><div class="bar" style="width:80%"></div></td>
+            <td><div class="bar num" style="width:58%"></div></td>
+            <td><span class="pill">APPROVED</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="foot">read-only — all approved, completed and denied orders</div>
+    </div>
+  </div>
+</body>
+</html>
