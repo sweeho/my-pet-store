@@ -37,6 +37,18 @@ New shared components go in `src/components/ui/`, follow this pattern, get a `*.
 
 A primitive with exactly one appearance is the documented exception: `src/components/ui/table.tsx` exports real semantic elements (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`) with no `*-variants.ts` file, because a CVA file whose only variant is the default adds a layer that expresses nothing. Add the variants file when a second appearance actually exists, not in anticipation of one.
 
+## Form validation states
+
+A form reports a problem in two places, and they say different things.
+
+**At the field.** The invalid input carries `aria-invalid="true"` and a destructive border, and the message sits directly beneath it as an element with `role="alert"`, naming what is wrong with that field. `aria-invalid` is what makes the state available to a screen reader — the border alone conveys it to sighted readers only, which is why the attribute is not optional and is not a styling hook. Keep the message to the correction the reader has to make; it is read out as soon as it appears, so a long one is heard before the field it belongs to is reached.
+
+**At the form.** One `role="alert"` above the form says a submission was refused, without enumerating the fields. It exists because a screen reader's focus is on the submit control at that moment and may never travel far enough to encounter a field-level message, and because a long form can refuse on a field that is scrolled out of view. Where a submission fails for a reason no single field owns — the server rejected it, a precondition was not met — this is the only place it can be said.
+
+Both are absent until there is something to report. A form does not render an empty alert region waiting to be filled: an alert that is always present is announced as a state change when its text arrives only if it is a live region, and one that renders empty on first paint has already spent that announcement. Tests locate both by role, never by class name.
+
+Field length limits are `maxlength` attributes on the input. They are a constraint, not a validation state — the field stops accepting input rather than turning invalid — so they carry no message and no `aria-invalid`.
+
 ## Tabular data
 
 A table renders `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` — never a grid of `<div>`s. The semantics are the accessibility: a screen reader announces a column header with each cell only where the real elements are present, and no `role` attribute reconstructs that as reliably as the element it imitates.

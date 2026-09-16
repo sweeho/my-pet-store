@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Order Confirmation — wireframe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #ffffff;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #3f3f46;
+  }
+  .page { max-width: 672px; margin: 0 auto; padding: 24px; }
+
+  h1 { font-size: 20px; line-height: 28px; font-weight: 700; color: #27272a; margin: 0; }
+
+  .card {
+    border: 1px solid #e4e4e7;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 16px;
+    background: #fafafa;
+  }
+  .card-head {
+    border-bottom: 1px solid #e4e4e7;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .card-head h2 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #71717a;
+  }
+
+  .row { display: flex; flex-direction: column; gap: 4px; }
+  .row + .row { margin-top: 14px; }
+  .row-label { font-size: 11px; color: #71717a; }
+  .row-value {
+    font-size: 15px;
+    color: #27272a;
+    font-weight: 600;
+  }
+  .line {
+    font-size: 13px;
+    color: #3f3f46;
+    line-height: 20px;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>Order Confirmation</h1>
+
+    <section class="card">
+      <div class="card-head"><h2>Order placed</h2></div>
+
+      <div class="row">
+        <span class="row-label">Order ID</span>
+        <span class="row-value">Your order Id is 1005</span>
+      </div>
+
+      <div class="row">
+        <span class="row-label">Confirmation email</span>
+        <span class="line">You should receive a confirmation e-mail soon at user@example.com</span>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
