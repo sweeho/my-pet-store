@@ -11,13 +11,13 @@
 
 ## 2. Message-Driven Bean Setup
 
-- [ ] 2.1 Implement SupplierOrderMDB with MessageDrivenBean interface (SWHM-T-0193)
-- [ ] 2.2 Implement MessageListener interface with onMessage(Message msg) (SWHM-T-0193)
-- [ ] 2.3 Configure message-driven-destination in ejb-jar.xml with destination-type javax.jms.Queue (SWHM-T-0193)
-- [ ] 2.4 Configure transaction-type Container in ejb-jar.xml (SWHM-T-0193)
-- [ ] 2.5 Wire JMS resource-ref in web.xml for OPC queue (SWHM-T-0193)
-- [ ] 2.6 Extract TextMessage content in onMessage() (SWHM-T-0193)
-- [ ] 2.7 Parse serialized purchase order XML from message (SWHM-T-0193)
+- [x] 2.1 Implement SupplierOrderMDB with MessageDrivenBean interface (SWHM-T-0193)
+- [x] 2.2 Implement MessageListener interface with onMessage(Message msg) (SWHM-T-0193)
+- [x] 2.3 Configure message-driven-destination in ejb-jar.xml with destination-type javax.jms.Queue (SWHM-T-0193)
+- [x] 2.4 Configure transaction-type Container in ejb-jar.xml (SWHM-T-0193)
+- [x] 2.5 Wire JMS resource-ref in web.xml for OPC queue (SWHM-T-0193)
+- [x] 2.6 Extract TextMessage content in onMessage() (SWHM-T-0193)
+- [x] 2.7 Parse serialized purchase order XML from message (SWHM-T-0193)
 
 ## 3. Order Fulfillment Processing
 
