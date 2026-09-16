@@ -53,11 +53,11 @@
 
 ## 6. Order Status Tracking
 
-- [ ] 6.1 Implement order status field with valid values PENDING, COMPLETED (SWHM-T-0190)
-- [ ] 6.2 Set order status to PENDING when order is created (SWHM-T-0190)
-- [ ] 6.3 Transition order status to COMPLETED after fulfillment (SWHM-T-0190)
-- [ ] 6.4 Prevent status changes for already-completed orders (SWHM-T-0190)
-- [ ] 6.5 Implement getPoStatus() and setPoStatus() accessor methods (SWHM-T-0190)
+- [x] 6.1 Implement order status field with valid values PENDING, COMPLETED (SWHM-T-0190)
+- [x] 6.2 Set order status to PENDING when order is created (SWHM-T-0190)
+- [x] 6.3 Transition order status to COMPLETED after fulfillment (SWHM-T-0190)
+- [x] 6.4 Prevent status changes for already-completed orders (SWHM-T-0190)
+- [x] 6.5 Implement getPoStatus() and setPoStatus() accessor methods (SWHM-T-0190)
 
 ## 7. Line Item Shipment Tracking
 
