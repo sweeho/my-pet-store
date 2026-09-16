@@ -130,4 +130,20 @@ describe("cart/checkout", () => {
     expect(getCart(sessionA).count).toBe(0);
     expect(getCart(sessionB).count).toBe(1);
   });
+
+  it("CO-07: each line carries the catid and productid resolved from the catalogue, alongside the fields already asserted above", () => {
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    addItem(sessionId, itemA, 1);
+
+    const lines = toOrderLineItems(sessionId);
+
+    expect(lines).toEqual([
+      expect.objectContaining({
+        itemid: itemA,
+        catid: "checkout-cat",
+        productid: `checkout-product-${itemCounter}`,
+      }),
+    ]);
+  });
 });
