@@ -186,9 +186,14 @@ export default function CartPage() {
           </Table>
 
           <div className="mt-6 flex items-start justify-between gap-6">
-            <Button type="submit" onClick={handleUpdateCart}>
-              Update Cart
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" onClick={handleUpdateCart}>
+                Update Cart
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/enter-order-information">Proceed to Checkout</Link>
+              </Button>
+            </div>
             <div className="text-right">
               <div className="flex items-baseline justify-end gap-6">
                 <span className="text-muted-foreground text-sm">Subtotal</span>

@@ -170,6 +170,13 @@ export const itemDetails = sqliteTable(
 // above, which share the customer's key (ARCHITECTURE.md § Key Decisions).
 // Indexed on status and order_date: the queue query filters on status, the
 // report queries filter on the date range, and both are the whole read.
+//
+// billing_*/shipping_* reuse account/types.ts's Address and ContactInfo field
+// sets under each prefix (design.md § Spec discrepancies S6, § Decisions D2):
+// an order copies both addresses at placement rather than referencing the
+// account's single one, so it stays a record of what was agreed. All are
+// nullable, matching the account tables' own columns, so the existing demo
+// seed in db/client.ts (which sets none of them) keeps inserting unchanged.
 export const orders = sqliteTable(
   "orders",
   {
@@ -180,6 +187,26 @@ export const orders = sqliteTable(
     orderDate: integer("order_date", { mode: "timestamp" }).notNull(),
     orderAmount: real("order_amount").notNull(),
     status: text("status").notNull(),
+    billingGivenName: text("billing_given_name"),
+    billingFamilyName: text("billing_family_name"),
+    billingTelephone: text("billing_telephone"),
+    billingEmail: text("billing_email"),
+    billingStreetName1: text("billing_street_name1"),
+    billingStreetName2: text("billing_street_name2"),
+    billingCity: text("billing_city"),
+    billingState: text("billing_state"),
+    billingZipCode: text("billing_zip_code"),
+    billingCountry: text("billing_country"),
+    shippingGivenName: text("shipping_given_name"),
+    shippingFamilyName: text("shipping_family_name"),
+    shippingTelephone: text("shipping_telephone"),
+    shippingEmail: text("shipping_email"),
+    shippingStreetName1: text("shipping_street_name1"),
+    shippingStreetName2: text("shipping_street_name2"),
+    shippingCity: text("shipping_city"),
+    shippingState: text("shipping_state"),
+    shippingZipCode: text("shipping_zip_code"),
+    shippingCountry: text("shipping_country"),
   },
   (t) => [index("orders_status_idx").on(t.status), index("orders_order_date_idx").on(t.orderDate)],
 );
@@ -188,7 +215,10 @@ export const orders = sqliteTable(
 // never exists without its order. unitPrice is the price PAID, written at
 // order creation and never joined back to item.listPrice (design.md D4): a
 // join to the current price would silently restate history every time a
-// price changes.
+// price changes. catid/productid are resolved from the catalogue and stored
+// at placement time, same as unitPrice (design.md § Decisions D5); nullable
+// because the existing demo seed in db/client.ts does not set them.
+// quantityShipped starts at 0 (design.md's extracted entity structure).
 export const orderLineItem = sqliteTable(
   "order_line_item",
   {
@@ -201,6 +231,9 @@ export const orderLineItem = sqliteTable(
       .references(() => item.itemid),
     quantity: integer("quantity").notNull(),
     unitPrice: real("unit_price").notNull(),
+    catid: text("catid").references(() => category.catid),
+    productid: text("productid").references(() => product.productid),
+    quantityShipped: integer("quantity_shipped").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
 );
