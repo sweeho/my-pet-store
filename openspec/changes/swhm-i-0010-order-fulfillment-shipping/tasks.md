@@ -69,14 +69,14 @@
 
 ## 8. Inventory Management UI
 
-- [ ] 8.1 Build DisplayInventoryBean to retrieve inventory items (SWHM-T-0195)
-- [ ] 8.2 Implement getInventory() to return InventoryLocal collection (SWHM-T-0195)
-- [ ] 8.3 Create displayinventory.jsp with inventory table display (SWHM-T-0195)
-- [ ] 8.4 Render item ID, existing quantity columns (SWHM-T-0195)
-- [ ] 8.5 Add text input fields for new quantities (name: qty\_<itemId>) (SWHM-T-0195)
-- [ ] 8.6 Add checkboxes for item selection (name: item\_<itemId>) (SWHM-T-0195)
-- [ ] 8.7 Wire form submission to RcvrRequestProcessor with action=updateinventory (SWHM-T-0195)
-- [ ] 8.8 Implement request.isUserInRole("administrator") authorization check (SWHM-T-0195)
+- [x] 8.1 Build DisplayInventoryBean to retrieve inventory items (SWHM-T-0195)
+- [x] 8.2 Implement getInventory() to return InventoryLocal collection (SWHM-T-0195)
+- [x] 8.3 Create displayinventory.jsp with inventory table display (SWHM-T-0195)
+- [x] 8.4 Render item ID, existing quantity columns (SWHM-T-0195)
+- [x] 8.5 Add text input fields for new quantities (name: qty\_<itemId>) (SWHM-T-0195)
+- [x] 8.6 Add checkboxes for item selection (name: item\_<itemId>) (SWHM-T-0195)
+- [x] 8.7 Wire form submission to RcvrRequestProcessor with action=updateinventory (SWHM-T-0195)
+- [x] 8.8 Implement request.isUserInRole("administrator") authorization check (SWHM-T-0195)
 
 ## 9. Supplier Home Page
 
