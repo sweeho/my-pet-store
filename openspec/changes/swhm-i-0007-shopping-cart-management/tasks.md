@@ -34,10 +34,10 @@
 
 ## 5. Cart Operations - Clear
 
-- [ ] 5.1 Implement clearCart() method (SWHM-T-0137)
-- [ ] 5.2 Remove all CartItems from collection (SWHM-T-0137)
-- [ ] 5.3 Set cart.count = 0 (SWHM-T-0137)
-- [ ] 5.4 Set cart.subtotal = 0.00 (SWHM-T-0137)
+- [x] 5.1 Implement clearCart() method (SWHM-T-0137)
+- [x] 5.2 Remove all CartItems from collection (SWHM-T-0137)
+- [x] 5.3 Set cart.count = 0 (SWHM-T-0137)
+- [x] 5.4 Set cart.subtotal = 0.00 (SWHM-T-0137)
 
 ## 6. Cart Display UI
 
