@@ -26,11 +26,11 @@
 
 ## 4. Cart Operations - Update
 
-- [ ] 4.1 Implement updateItem(itemId, newQuantity) method (SWHM-T-0136)
-- [ ] 4.2 If newQuantity <= 0: call removeItem() (SWHM-T-0136)
-- [ ] 4.3 If newQuantity > 0: update CartItem.quantity (SWHM-T-0136)
-- [ ] 4.4 Recalculate line total (quantity × unitCost) (SWHM-T-0136)
-- [ ] 4.5 Recalculate cart subtotal (SWHM-T-0136)
+- [x] 4.1 Implement updateItem(itemId, newQuantity) method (SWHM-T-0136)
+- [x] 4.2 If newQuantity <= 0: call removeItem() (SWHM-T-0136)
+- [x] 4.3 If newQuantity > 0: update CartItem.quantity (SWHM-T-0136)
+- [x] 4.4 Recalculate line total (quantity × unitCost) (SWHM-T-0136)
+- [x] 4.5 Recalculate cart subtotal (SWHM-T-0136)
 
 ## 5. Cart Operations - Clear
 
