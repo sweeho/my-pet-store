@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { db } from "../db/client";
 import { category, item, itemDetails, product, productDetails, sessions } from "../db/schema";
-import { addItem, getCart, removeItem, UnknownItemError } from "./cart";
+import { addItem, getCart, removeItem, updateItem, updateItems, UnknownItemError } from "./cart";
 
 let sessionCounter = 0;
 function seedSession(): string {
@@ -188,5 +188,101 @@ describe("cart/cart", () => {
 
     expect(cart).toEqual(getCart(sessionId));
     expect(cart.items).toEqual([expect.objectContaining({ itemId, quantity: 1 })]);
+  });
+
+  it("UT-01: updateItem to a positive value sets the quantity to that value", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 2);
+
+    const cart = updateItem(sessionId, itemId, 5);
+
+    expect(cart.items).toEqual([expect.objectContaining({ itemId, quantity: 5, lineTotal: 50 })]);
+  });
+
+  it("UT-02: updateItem to 0 removes the line from the cart", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 2);
+
+    const cart = updateItem(sessionId, itemId, 0);
+
+    expect(cart).toEqual({ items: [], count: 0, subtotal: 0 });
+  });
+
+  it("UT-03: updateItem to a negative value removes the line from the cart", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 2);
+
+    const cart = updateItem(sessionId, itemId, -1);
+
+    expect(cart).toEqual({ items: [], count: 0, subtotal: 0 });
+  });
+
+  it("UT-04: updateItems applies a mixed batch — one line removed by 0, another set positive — in one request", () => {
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    const itemB = seedFullItem(5);
+    addItem(sessionId, itemA, 2);
+    addItem(sessionId, itemB, 1);
+
+    const cart = updateItems(sessionId, [
+      { itemId: itemA, quantity: 0 },
+      { itemId: itemB, quantity: 4 },
+    ]);
+
+    expect(cart.count).toBe(1);
+    expect(cart.items).toEqual([expect.objectContaining({ itemId: itemB, quantity: 4 })]);
+  });
+
+  it("UT-05: the subtotal recalculates to reflect a changed quantity", () => {
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    const itemB = seedFullItem(5);
+    addItem(sessionId, itemA, 2);
+    addItem(sessionId, itemB, 4);
+    expect(getCart(sessionId).subtotal).toBe(40);
+
+    const cart = updateItem(sessionId, itemA, 3);
+
+    expect(cart.subtotal).toBe(3 * 10 + 4 * 5);
+  });
+
+  it("UT-06: a write failing partway through a batch rolls back every quantity to its original value", () => {
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    const itemB = seedFullItem(5);
+    addItem(sessionId, itemA, 1);
+    addItem(sessionId, itemB, 1);
+
+    const originalInsert = db.insert.bind(db);
+    let callCount = 0;
+    vi.spyOn(db, "insert").mockImplementation((table) => {
+      callCount += 1;
+      if (callCount === 2) {
+        throw new Error("simulated write failure");
+      }
+      return originalInsert(table);
+    });
+
+    try {
+      expect(() =>
+        updateItems(sessionId, [
+          { itemId: itemA, quantity: 9 },
+          { itemId: itemB, quantity: 9 },
+        ]),
+      ).toThrow("simulated write failure");
+    } finally {
+      vi.restoreAllMocks();
+    }
+
+    const cart = getCart(sessionId);
+    expect(cart.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ itemId: itemA, quantity: 1 }),
+        expect.objectContaining({ itemId: itemB, quantity: 1 }),
+      ]),
+    );
   });
 });
