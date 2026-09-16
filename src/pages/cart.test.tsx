@@ -51,6 +51,14 @@ function renderPage() {
   );
 }
 
+function renderPageWithState(state: unknown) {
+  return render(
+    <MemoryRouter initialEntries={[{ pathname: "/cart", state }]}>
+      <CartPage />
+    </MemoryRouter>,
+  );
+}
+
 describe("CartPage (/cart)", () => {
   beforeEach(() => {
     fetchMock.mockReset();
@@ -270,6 +278,21 @@ describe("CartPage (/cart)", () => {
     expect(putCalls).toHaveLength(0);
   });
 
+  it("CPT-12: a populated cart shows a control that navigates to /enter-order-information", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderPage();
+    await screen.findByRole("table");
+
+    expect(screen.getByRole("link", { name: "Proceed to Checkout" })).toHaveAttribute(
+      "href",
+      "/enter-order-information",
+    );
+  });
+
   it("CPT-11: removing the last remaining line leaves the screen in the empty state", async () => {
     const singleItemCart: Cart = { items: [POPULATED_CART.items[0]!], count: 1, subtotal: 350 };
 
@@ -287,5 +310,32 @@ describe("CartPage (/cart)", () => {
 
     expect(await screen.findByText("Your Shopping Cart is Empty.")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
+  });
+
+  it("CPT-13: arriving from a refused empty-cart placement shows its own alert with the fixed message", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderPageWithState({ emptyCart: true });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your shopping cart is empty. Please add items before ordering.",
+    );
+    // The existing empty-state copy is untouched — the two are distinct (PLAN.md step 5).
+    expect(screen.getByText("Your Shopping Cart is Empty.")).toBeInTheDocument();
+  });
+
+  it("CPT-14: arriving normally (no navigation state) shows no empty-cart alert", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderPageWithState(undefined);
+
+    await screen.findByRole("table");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

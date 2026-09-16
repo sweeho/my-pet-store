@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Enter Order Information — My Pet Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* Tokens: src/index.css :root, converted from OKLCH */
+      :root {
+        --background: #ffffff;
+        --foreground: #0a0a0a;
+        --card: #ffffff;
+        --primary: #171717;
+        --primary-foreground: #fafafa;
+        --secondary: #f5f5f5;
+        --muted: #f5f5f5;
+        --muted-foreground: #737373;
+        --destructive: #e7000b;
+        --border: #e5e5e5;
+        --input: #e5e5e5;
+        --ring: #d4d4d4;
+        --radius: 0.625rem;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        width: 1440px; height: 900px;
+        background: var(--background);
+        color: var(--foreground);
+        /* Tailwind default sans stack; Inter only as a fallback that matches system-ui metrics */
+        font-family: ui-sans-serif, system-ui, "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .page { max-width: 1160px; margin: 0 auto; padding: 32px 24px; }
+      .crumb { font-size: 12px; color: var(--muted-foreground); }
+      .crumb a { color: var(--muted-foreground); text-decoration: none; }
+      .crumb .sep { margin: 0 6px; }
+      .crumb .now { color: var(--foreground); }
+      h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-top: 6px; }
+      .sub { font-size: 14px; color: var(--muted-foreground); margin-top: 4px; }
+
+      .alert {
+        display: flex; gap: 8px; align-items: center;
+        margin-top: 16px; padding: 10px 12px;
+        border: 1px solid var(--destructive); border-radius: 8px;
+        color: var(--destructive); font-size: 13px; background: #fff;
+      }
+
+      .layout { display: grid; grid-template-columns: 1fr 1fr 340px; gap: 24px; margin-top: 20px; align-items: stretch; }
+
+      .card { border: 1px solid var(--border); background: var(--card); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; }
+      .card > header {
+        display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px;
+      }
+      .card h2 { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); }
+      .badge {
+        border: 1px solid var(--border); background: var(--secondary); color: var(--muted-foreground);
+        border-radius: 999px; padding: 2px 8px; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+      }
+
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field.full { grid-column: span 2; }
+      label { font-size: 13px; font-weight: 500; color: var(--foreground); }
+      input, select {
+        border: 1px solid var(--input); background: var(--background); color: var(--foreground);
+        border-radius: 8px; padding: 8px 12px; font-size: 13px; font-family: inherit; height: 36px; width: 100%;
+      }
+      input::placeholder { color: var(--muted-foreground); }
+      select { appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+        background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px;
+      }
+      .field.error input { border-color: var(--destructive); }
+      .msg { font-size: 12px; color: var(--destructive); }
+
+      /* summary */
+      .summary li { list-style: none; display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+      .summary li > span { display: block; }
+      .itemtext { min-width: 0; }
+      .summary li:last-of-type { border-bottom: 0; }
+      .qty {
+        flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--secondary);
+        border: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--foreground);
+        display: flex; align-items: center; justify-content: center;
+      }
+      .name { display: block; font-size: 13px; font-weight: 500; line-height: 1.35; }
+      .meta { display: block; font-size: 11px; color: var(--muted-foreground); margin-top: 3px; }
+      .line { margin-left: auto; flex: none; font-size: 13px; font-variant-numeric: tabular-nums; }
+      .totals { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+      .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted-foreground); }
+      .row.total { font-size: 15px; font-weight: 700; color: var(--foreground); }
+      .note { font-size: 11px; color: var(--muted-foreground); margin-top: 10px; line-height: 1.5; }
+
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        height: 40px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 500;
+        font-family: inherit; border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+      }
+      .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+      .btn-outline { background: var(--background); color: var(--foreground); border-color: var(--input); }
+      .btn.block { width: 100%; }
+      .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav class="crumb">
+        <a href="#">Shopping Cart</a><span class="sep">/</span><span class="now">Order Information</span><span class="sep">/</span><span>Confirmation</span>
+      </nav>
+      <h1>Enter Order Information</h1>
+      <p class="sub">Tell us where to bill this order and where to send it. Order date is recorded when you submit.</p>
+
+      <div class="alert" role="alert">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        Please correct the highlighted field before submitting your order.
+      </div>
+
+      <div class="layout">
+        <!-- BILLING -->
+        <section class="card">
+          <header>
+            <h2>Billing Information</h2>
+            <span class="badge">Address A</span>
+          </header>
+          <div class="grid">
+            <div class="field">
+              <label for="b-given">First name</label>
+              <input id="b-given" maxlength="30" value="Maya" />
+            </div>
+            <div class="field">
+              <label for="b-family">Last name</label>
+              <input id="b-family" maxlength="30" value="Chen" />
+            </div>
+            <div class="field full">
+              <label for="b-street1">Street address line 1</label>
+              <input id="b-street1" maxlength="70" value="1150 Alder Street" />
+            </div>
+            <div class="field full">
+              <label for="b-street2">Street address line 2</label>
+              <input id="b-street2" maxlength="70" value="Apartment 4B" />
+            </div>
+            <div class="field">
+              <label for="b-city">City</label>
+              <input id="b-city" maxlength="30" value="San Francisco" />
+            </div>
+            <div class="field">
+              <label for="b-state">State / Province</label>
+              <select id="b-state">
+                <option>California</option><option>New York</option><option>Texas</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="b-zip">Postal code</label>
+              <input id="b-zip" maxlength="20" value="94117" />
+            </div>
+            <div class="field">
+              <label for="b-country">Country</label>
+              <select id="b-country">
+                <option>USA</option><option>Canada</option><option>Japan</option><option>China</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="b-phone">Telephone</label>
+              <input id="b-phone" maxlength="20" value="415-555-0132" />
+            </div>
+            <div class="field full">
+              <label for="b-email">Email</label>
+              <input id="b-email" type="email" maxlength="50" value="maya.chen@example.com" />
+            </div>
+          </div>
+        </section>
+
+        <!-- SHIPPING -->
+        <section class="card">
+          <header>
+            <h2>Shipping Information</h2>
+            <span class="badge">Address B</span>
+          </header>
+          <div class="grid">
+            <div class="field">
+              <label for="s-given">First name</label>
+              <input id="s-given" maxlength="30" value="Maya" />
+            </div>
+            <div class="field">
+              <label for="s-family">Last name</label>
+              <input id="s-family" maxlength="30" value="Chen" />
+            </div>
+            <div class="field full">
+              <label for="s-street1">Street address line 1</label>
+              <input id="s-street1" maxlength="70" value="88 Junction Row" />
+            </div>
+            <div class="field full">
+              <label for="s-street2">Street address line 2</label>
+              <input id="s-street2" maxlength="70" value="" placeholder="Optional" />
+            </div>
+            <div class="field">
+              <label for="s-city">City</label>
+              <input id="s-city" maxlength="30" value="Brooklyn" />
+            </div>
+            <div class="field">
+              <label for="s-state">State / Province</label>
+              <select id="s-state">
+                <option>New York</option><option>California</option><option>Texas</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="s-zip">Postal code</label>
+              <input id="s-zip" maxlength="20" value="11222" />
+            </div>
+            <div class="field">
+              <label for="s-country">Country</label>
+              <select id="s-country">
+                <option>USA</option><option>Canada</option><option>Japan</option><option>China</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="s-phone">Telephone</label>
+              <input id="s-phone" maxlength="20" value="718-555-0117" />
+            </div>
+            <div class="field full error">
+              <label for="s-email">Email</label>
+              <input id="s-email" type="email" maxlength="50" value="maya.chen@example" aria-invalid="true" />
+              <span class="msg">Enter a valid email address.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ORDER SUMMARY -->
+        <aside class="card summary">
+          <header>
+            <h2>Your Order</h2>
+            <span class="badge">3 items</span>
+          </header>
+          <ul>
+            <li>
+              <span class="qty">1</span>
+              <span class="itemtext">
+                <span class="name">Persian</span>
+                <span class="meta">CATS-LONGHAIR-1 · $199.99 each</span>
+              </span>
+              <span class="line">$199.99</span>
+            </li>
+            <li>
+              <span class="qty">1</span>
+              <span class="itemtext">
+                <span class="name">Standard Poodle</span>
+                <span class="meta">DOGS-POODLES-1 · $399.99 each</span>
+              </span>
+              <span class="line">$399.99</span>
+            </li>
+            <li>
+              <span class="qty">2</span>
+              <span class="itemtext">
+                <span class="name">Silver Angelfish</span>
+                <span class="meta">FISH-ANGELFISH-1 · $14.99 each</span>
+              </span>
+              <span class="line">$29.98</span>
+            </li>
+          </ul>
+          <div class="totals">
+            <div class="row"><span>Subtotal</span><span>$629.96</span></div>
+            <div class="row total"><span>Order total</span><span>$629.96</span></div>
+          </div>
+          <p class="note" style="margin-top: auto; padding-top: 12px;">Tax and shipping are not calculated at this stage. Your cart is emptied once the order is submitted.</p>
+          <div class="actions">
+            <button class="btn btn-primary block">Submit Order</button>
+            <button class="btn btn-outline block">Return to Cart</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </body>
+</html>

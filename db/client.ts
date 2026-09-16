@@ -8,6 +8,7 @@ import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
 import { seedCatalog } from "../catalog/seed";
 import { ADMIN_ROLE } from "../auth/protected-resources";
+import { seedOrderIdSequence } from "../order/id";
 
 import { authUsers, category, orderLineItem, orders, users } from "./schema";
 
@@ -41,6 +42,12 @@ const sqlite = new Database(
 export const db = drizzle(sqlite, { schema: { users } });
 
 migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
+
+// Seeds the orders autoincrement sequence so the first order allocated gets
+// 1001 (order/id.ts, design.md § Decisions D3). Runs before the demo orders
+// below so a fresh development database gives 1001 to the first of those,
+// not to a row that follows them (design.md § Codebase findings F6).
+seedOrderIdSequence(db);
 
 // Seed the same two users the mock API used to hardcode, so the demo data
 // (and the existing route tests) keep working out of the box.

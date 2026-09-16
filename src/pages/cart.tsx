@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components";
 
+import { EMPTY_CART_MESSAGE } from "../../order/errors";
 import type { Cart } from "../../cart/types";
 
 const CURRENCY_FORMAT = new Intl.NumberFormat("en-US", {
@@ -28,6 +29,13 @@ function quantitiesFrom(cart: Cart): Record<string, string> {
 }
 
 export default function CartPage() {
+  const location = useLocation();
+  // Set only by a redirect from the order form's own empty-cart refusal
+  // (SWHM-T-0161) — a distinct message from the empty-state copy below, so
+  // it renders as its own alert rather than reworded into that copy
+  // (PLAN.md step 5).
+  const emptyCartNotice = (location.state as { emptyCart?: boolean } | null)?.emptyCart === true;
+
   const [cart, setCart] = useState<Cart | null>(null);
   const [quantities, setQuantities] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -101,6 +109,15 @@ export default function CartPage() {
         ← Continue shopping
       </Link>
       <h1 className="text-foreground mt-2 text-xl font-bold">Shopping Cart</h1>
+
+      {emptyCartNotice && (
+        <p
+          role="alert"
+          className="border-destructive bg-background text-destructive mt-3 rounded-md border px-3 py-2 text-sm"
+        >
+          {EMPTY_CART_MESSAGE}
+        </p>
+      )}
 
       {cart === null ? (
         <p role="status" className="text-muted-foreground mt-6 text-sm">
@@ -186,9 +203,14 @@ export default function CartPage() {
           </Table>
 
           <div className="mt-6 flex items-start justify-between gap-6">
-            <Button type="submit" onClick={handleUpdateCart}>
-              Update Cart
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" onClick={handleUpdateCart}>
+                Update Cart
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/enter-order-information">Proceed to Checkout</Link>
+              </Button>
+            </div>
             <div className="text-right">
               <div className="flex items-baseline justify-end gap-6">
                 <span className="text-muted-foreground text-sm">Subtotal</span>

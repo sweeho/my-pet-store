@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Enter Order Information — wireframe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #ffffff;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #3f3f46;
+  }
+  .page { max-width: 672px; margin: 0 auto; padding: 24px; }
+
+  h1 { font-size: 20px; line-height: 28px; font-weight: 700; color: #27272a; margin: 0; }
+
+  /* section card — mirrors the bordered bg-card + uppercase header rule */
+  .card {
+    border: 1px solid #e4e4e7;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 16px;
+    background: #fafafa;
+  }
+  .card-head {
+    border-bottom: 1px solid #e4e4e7;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .card-head h2 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #71717a;
+  }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .full { grid-column: span 2; }
+
+  label { font-size: 12px; font-weight: 500; color: #3f3f46; }
+
+  .input {
+    height: 34px;
+    border: 1px solid #d4d4d8;
+    border-radius: 6px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+  }
+  /* typed value shown as a grey bar, not lorem text */
+  .val { height: 7px; border-radius: 3px; background: #d4d4d8; }
+  .w40 { width: 40%; } .w55 { width: 55%; } .w70 { width: 70%; } .w85 { width: 85%; }
+
+  .select { justify-content: space-between; }
+  .select .chev {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #a1a1aa;
+  }
+  .opts {
+    font-size: 10px;
+    color: #a1a1aa;
+    margin-top: 3px;
+  }
+
+  /* validation state — one field shown in error to represent "all fields validated" */
+  .input.err { border-color: #71717a; border-width: 2px; }
+  .err-msg { font-size: 11px; color: #52525b; font-weight: 600; }
+
+  .actions { margin-top: 20px; display: flex; }
+  .btn {
+    height: 38px;
+    padding: 0 20px;
+    border-radius: 6px;
+    background: #3f3f46;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .note { font-size: 10px; color: #a1a1aa; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <h1>Enter Order Information</h1>
+
+    <!-- ================= BILLING ================= -->
+    <section class="card">
+      <div class="card-head"><h2>Billing Information</h2></div>
+      <div class="grid">
+        <div class="field">
+          <label>First name</label>
+          <div class="input"><span class="val w55"></span></div>
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <div class="input"><span class="val w40"></span></div>
+        </div>
+
+        <div class="field full">
+          <label>Street address line 1</label>
+          <div class="input"><span class="val w70"></span></div>
+        </div>
+        <div class="field full">
+          <label>Street address line 2</label>
+          <div class="input"></div>
+        </div>
+
+        <div class="field">
+          <label>City</label>
+          <div class="input"><span class="val w55"></span></div>
+        </div>
+        <div class="field">
+          <label>State / Province</label>
+          <div class="input select"><span class="val w40"></span><span class="chev"></span></div>
+          <div class="opts">CA · NY · TX</div>
+        </div>
+
+        <div class="field">
+          <label>Postal code</label>
+          <div class="input"><span class="val w40"></span></div>
+        </div>
+        <div class="field">
+          <label>Country</label>
+          <div class="input select"><span class="val w55"></span><span class="chev"></span></div>
+          <div class="opts">United States · Canada · Japan · China</div>
+        </div>
+
+        <div class="field">
+          <label>Telephone</label>
+          <div class="input"><span class="val w70"></span></div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <div class="input err"></div>
+          <div class="err-msg">Field validation message</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SHIPPING ================= -->
+    <section class="card">
+      <div class="card-head"><h2>Shipping Information</h2></div>
+      <div class="grid">
+        <div class="field">
+          <label>First name</label>
+          <div class="input"><span class="val w55"></span></div>
+        </div>
+        <div class="field">
+          <label>Last name</label>
+          <div class="input"><span class="val w40"></span></div>
+        </div>
+
+        <div class="field full">
+          <label>Street address line 1</label>
+          <div class="input"><span class="val w85"></span></div>
+        </div>
+        <div class="field full">
+          <label>Street address line 2</label>
+          <div class="input"><span class="val w40"></span></div>
+        </div>
+
+        <div class="field">
+          <label>City</label>
+          <div class="input"><span class="val w55"></span></div>
+        </div>
+        <div class="field">
+          <label>State / Province</label>
+          <div class="input select"><span class="val w40"></span><span class="chev"></span></div>
+          <div class="opts">CA · NY · TX</div>
+        </div>
+
+        <div class="field">
+          <label>Postal code</label>
+          <div class="input"><span class="val w40"></span></div>
+        </div>
+        <div class="field">
+          <label>Country</label>
+          <div class="input select"><span class="val w55"></span><span class="chev"></span></div>
+          <div class="opts">United States · Canada · Japan · China</div>
+        </div>
+
+        <div class="field">
+          <label>Telephone</label>
+          <div class="input"><span class="val w70"></span></div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <div class="input"><span class="val w85"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <span class="btn">Place order</span>
+    </div>
+    <p class="note">All fields validated on submit; invalid fields marked inline as shown on Billing → Email.</p>
+  </div>
+</body>
+</html>
