@@ -1,6 +1,7 @@
 import { defineHandler, readBody, setResponseStatus } from "nitro/h3";
 
 import { useSignOnSession } from "../../../auth/session";
+import { ShoppingCartEmptyOrderError } from "../../../order/errors";
 import { placeOrder, type PlaceOrderResult as OrderResult } from "../../../order/order";
 import {
   OrderValidationError,
@@ -8,7 +9,7 @@ import {
   type OrderSubmission,
 } from "../../../order/validation";
 
-type OrderErrorResult = { error: string; section?: string; field?: string };
+type OrderErrorResult = { error: string; section?: string; field?: string; emptyCart?: true };
 type PlaceOrderResult = OrderErrorResult | OrderResult;
 
 export default defineHandler(async (event): Promise<PlaceOrderResult> => {
@@ -30,9 +31,16 @@ export default defineHandler(async (event): Promise<PlaceOrderResult> => {
     return { error: error.message, section: error.section, field: error.field };
   }
 
-  // placeOrder (order/order.ts) wraps the order insert, the line item
-  // inserts and the cart clear in one transaction (SWHM-T-0158). The
-  // shopper's cart is keyed by session id, never username, so that id
-  // travels alongside userName from the same resolved session.
-  return placeOrder(userName, submission, session.id);
+  try {
+    // placeOrder (order/order.ts) wraps the order insert, the line item
+    // inserts and the cart clear in one transaction (SWHM-T-0158). The
+    // shopper's cart is keyed by session id, never username, so that id
+    // travels alongside userName from the same resolved session. It also
+    // refuses an empty cart before any write (SWHM-T-0161).
+    return placeOrder(userName, submission, session.id);
+  } catch (error) {
+    if (!(error instanceof ShoppingCartEmptyOrderError)) throw error;
+    setResponseStatus(event, 400);
+    return { error: error.message, emptyCart: true };
+  }
 });

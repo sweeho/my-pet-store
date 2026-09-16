@@ -6,9 +6,11 @@
 // design.md § Decisions D4).
 import { eq } from "drizzle-orm";
 
+import { getCart } from "../cart/cart";
 import { clearCartAfterOrder, toOrderLineItems } from "../cart/checkout";
 import { db } from "../db/client";
 import { orderLineItem, orders } from "../db/schema";
+import { ShoppingCartEmptyOrderError } from "./errors";
 import type { OrderAddress } from "./types";
 import type { OrderSubmission } from "./validation";
 
@@ -69,6 +71,15 @@ export function placeOrder(
   submission: OrderSubmission,
   sessionId: string,
 ): PlaceOrderResult {
+  // Checked before any write, so a refusal leaves orders/order_line_item
+  // untouched (design.md § Spec discrepancies S5; PLAN.md step 2) — cheaper
+  // than relying on the transaction below to roll back a write that never
+  // needed to happen. count is derived on read (cart/cart.ts's getCart), so
+  // there is no separate emptiness flag to consult.
+  if (getCart(sessionId).count === 0) {
+    throw new ShoppingCartEmptyOrderError();
+  }
+
   return db.transaction(() => {
     const { orderId } = db
       .insert(orders)

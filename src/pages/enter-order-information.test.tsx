@@ -263,6 +263,28 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
       expect(navigateMock).not.toHaveBeenCalled();
     });
 
+    it("EOI-16: an empty-cart refusal sends the shopper back to /cart flagged, rather than showing a form alert", async () => {
+      const { default: userEvent } = await import("@testing-library/user-event");
+      mockOrderResponse(
+        jsonResponse(
+          {
+            error: "Your shopping cart is empty. Please add items before ordering.",
+            emptyCart: true,
+          },
+          { ok: false, status: 400 },
+        ),
+      );
+      renderPage();
+      await screen.findByText("Persian");
+
+      await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
+
+      await vi.waitFor(() => {
+        expect(navigateMock).toHaveBeenCalledWith("/cart", { state: { emptyCart: true } });
+      });
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
     it("EOI-15: a refused submission leaves every entered value intact", async () => {
       const { default: userEvent } = await import("@testing-library/user-event");
       mockOrderResponse(
