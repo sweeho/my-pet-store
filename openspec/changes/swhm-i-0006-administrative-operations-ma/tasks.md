@@ -82,9 +82,9 @@
 
 ## 10. Error Handling & Validation
 
-- [ ] 10.1 Validate administrator role on all protected endpoints (SWHM-T-0123)
-- [ ] 10.2 Check for null session and deny unauthenticated requests (SWHM-T-0123)
-- [ ] 10.3 Return descriptive error messages for invalid request types (SWHM-T-0123)
-- [ ] 10.4 Return error messages for failed order updates (SWHM-T-0123)
-- [ ] 10.5 Handle RemoteException from EJB calls (SWHM-T-0123)
-- [ ] 10.6 Handle ServiceLocatorException for EJB lookup failures (SWHM-T-0123)
+- [x] 10.1 Validate administrator role on all protected endpoints (SWHM-T-0123)
+- [x] 10.2 Check for null session and deny unauthenticated requests (SWHM-T-0123)
+- [x] 10.3 Return descriptive error messages for invalid request types (SWHM-T-0123)
+- [x] 10.4 Return error messages for failed order updates (SWHM-T-0123)
+- [x] 10.5 Handle RemoteException from EJB calls (SWHM-T-0123)
+- [x] 10.6 Handle ServiceLocatorException for EJB lookup failures (SWHM-T-0123)
