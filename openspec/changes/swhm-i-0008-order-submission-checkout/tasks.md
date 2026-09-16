@@ -44,14 +44,14 @@
 
 ## 5. Line Item Creation
 
-- [ ] 5.1 Iterate through cart.items (SWHM-T-0157)
-- [ ] 5.2 For each CartItem, create LineItem entity (SWHM-T-0157)
-- [ ] 5.3 Set LineItem.itemId, quantity, unitPrice from CartItem (SWHM-T-0157)
-- [ ] 5.4 Set LineItem.quantityShipped to 0 initially (SWHM-T-0157)
-- [ ] 5.5 Extract categoryId, productId from item metadata (SWHM-T-0157)
-- [ ] 5.6 Set LineItem.lineNumber sequentially (1, 2, 3...) (SWHM-T-0157)
-- [ ] 5.7 Associate all LineItems with Order (SWHM-T-0157)
-- [ ] 5.8 Calculate Order.totalPrice as sum of (quantity × unitPrice) (SWHM-T-0157)
+- [x] 5.1 Iterate through cart.items (SWHM-T-0157)
+- [x] 5.2 For each CartItem, create LineItem entity (SWHM-T-0157)
+- [x] 5.3 Set LineItem.itemId, quantity, unitPrice from CartItem (SWHM-T-0157)
+- [x] 5.4 Set LineItem.quantityShipped to 0 initially (SWHM-T-0157)
+- [x] 5.5 Extract categoryId, productId from item metadata (SWHM-T-0157)
+- [x] 5.6 Set LineItem.lineNumber sequentially (1, 2, 3...) (SWHM-T-0157)
+- [x] 5.7 Associate all LineItems with Order (SWHM-T-0157)
+- [x] 5.8 Calculate Order.totalPrice as sum of (quantity × unitPrice) (SWHM-T-0157)
 
 ## 6. Cart Clearing
 
