@@ -270,6 +270,21 @@ describe("CartPage (/cart)", () => {
     expect(putCalls).toHaveLength(0);
   });
 
+  it("CPT-12: a populated cart shows a control that navigates to /enter-order-information", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderPage();
+    await screen.findByRole("table");
+
+    expect(screen.getByRole("link", { name: "Proceed to Checkout" })).toHaveAttribute(
+      "href",
+      "/enter-order-information",
+    );
+  });
+
   it("CPT-11: removing the last remaining line leaves the screen in the empty state", async () => {
     const singleItemCart: Cart = { items: [POPULATED_CART.items[0]!], count: 1, subtotal: 350 };
 
