@@ -32,14 +32,14 @@
 
 ## 4. Inventory Verification & Reduction
 
-- [ ] 4.1 Implement checkInventory(LineItemLocal item) method (SWHM-T-0188)
-- [ ] 4.2 Query InventoryLocal by item.getItemId() (SWHM-T-0188)
-- [ ] 4.3 Compare inventory quantity against ordered quantity (SWHM-T-0188)
-- [ ] 4.4 Call inv.reduceQuantity() for available items (SWHM-T-0188)
-- [ ] 4.5 Return boolean success/failure (SWHM-T-0188)
-- [ ] 4.6 Implement InventoryEJB.reduceQuantity(int quantity) (SWHM-T-0188)
-- [ ] 4.7 Retrieve current quantity and decrement atomically (SWHM-T-0188)
-- [ ] 4.8 Declare reduceQuantity with Required transaction attribute in ejb-jar.xml (SWHM-T-0188)
+- [x] 4.1 Implement checkInventory(LineItemLocal item) method (SWHM-T-0188)
+- [x] 4.2 Query InventoryLocal by item.getItemId() (SWHM-T-0188)
+- [x] 4.3 Compare inventory quantity against ordered quantity (SWHM-T-0188)
+- [x] 4.4 Call inv.reduceQuantity() for available items (SWHM-T-0188)
+- [x] 4.5 Return boolean success/failure (SWHM-T-0188)
+- [x] 4.6 Implement InventoryEJB.reduceQuantity(int quantity) (SWHM-T-0188)
+- [x] 4.7 Retrieve current quantity and decrement atomically (SWHM-T-0188)
+- [x] 4.8 Declare reduceQuantity with Required transaction attribute in ejb-jar.xml (SWHM-T-0188)
 
 ## 5. Invoice Generation
 
