@@ -10,12 +10,12 @@
 
 ## 2. Cart Operations - Add
 
-- [ ] 2.1 Implement addItem(itemId, quantity) method (SWHM-T-0134)
-- [ ] 2.2 Handle default quantity (1) if not specified (SWHM-T-0134)
-- [ ] 2.3 Check if item already exists and increment quantity (SWHM-T-0134)
-- [ ] 2.4 Recalculate cartItem lineTotal (SWHM-T-0134)
-- [ ] 2.5 Recalculate cart subtotal (SWHM-T-0134)
-- [ ] 2.6 Increment cart.count (SWHM-T-0134)
+- [x] 2.1 Implement addItem(itemId, quantity) method (SWHM-T-0134)
+- [x] 2.2 Handle default quantity (1) if not specified (SWHM-T-0134)
+- [x] 2.3 Check if item already exists and increment quantity (SWHM-T-0134)
+- [x] 2.4 Recalculate cartItem lineTotal (SWHM-T-0134)
+- [x] 2.5 Recalculate cart subtotal (SWHM-T-0134)
+- [x] 2.6 Increment cart.count (SWHM-T-0134)
 
 ## 3. Cart Operations - Remove
 
