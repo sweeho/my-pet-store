@@ -3,7 +3,7 @@
 // SWHM-T-0137 in that order — leave this module easy to extend.
 import { getItem } from "../catalog/item";
 import { DEFAULT_LOCALE } from "../catalog/locale";
-import { readCartRows, upsertCartRow } from "./repository";
+import { deleteCartRow, readCartRows, upsertCartRow } from "./repository";
 import type { Cart, CartItem } from "./types";
 
 export class UnknownItemError extends Error {}
@@ -48,5 +48,12 @@ export function addItem(sessionId: string, itemId: string, quantity = 1): Cart {
   const existing = readCartRows(sessionId).find((row) => row.itemid === itemId);
   upsertCartRow(sessionId, itemId, (existing?.quantity ?? 0) + quantity);
 
+  return getCart(sessionId);
+}
+
+// A no-op for an item the cart does not hold — the delete matches zero rows,
+// so there is nothing to probe for first (design.md, PLAN.md step 2).
+export function removeItem(sessionId: string, itemId: string): Cart {
+  deleteCartRow(sessionId, itemId);
   return getCart(sessionId);
 }

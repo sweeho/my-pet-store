@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { db } from "../db/client";
 import { category, item, itemDetails, product, productDetails, sessions } from "../db/schema";
-import { addItem, getCart, UnknownItemError } from "./cart";
+import { addItem, getCart, removeItem, UnknownItemError } from "./cart";
 
 let sessionCounter = 0;
 function seedSession(): string {
@@ -152,5 +152,41 @@ describe("cart/cart", () => {
     addItem(sessionA, itemId, 5);
 
     expect(getCart(sessionB)).toEqual({ items: [], count: 0, subtotal: 0 });
+  });
+
+  it("CT-11: removeItem removes the line and leaves the remaining lines untouched", () => {
+    const sessionId = seedSession();
+    const itemA = seedFullItem(10);
+    const itemB = seedFullItem(5);
+    const itemC = seedFullItem(2);
+    addItem(sessionId, itemA, 1);
+    addItem(sessionId, itemB, 1);
+    addItem(sessionId, itemC, 1);
+
+    const cart = removeItem(sessionId, itemA);
+
+    expect(cart.count).toBe(2);
+    expect(cart.items.map((cartItem) => cartItem.itemId).sort()).toEqual([itemB, itemC].sort());
+  });
+
+  it("CT-12: removing the only line leaves count 0, items empty and subtotal 0", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 3);
+
+    const cart = removeItem(sessionId, itemId);
+
+    expect(cart).toEqual({ items: [], count: 0, subtotal: 0 });
+  });
+
+  it("CT-13: removing an item the cart does not hold is a no-op, not an error", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 1);
+
+    const cart = removeItem(sessionId, "no-such-item-in-cart");
+
+    expect(cart).toEqual(getCart(sessionId));
+    expect(cart.items).toEqual([expect.objectContaining({ itemId, quantity: 1 })]);
   });
 });
