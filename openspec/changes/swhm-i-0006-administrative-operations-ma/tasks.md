@@ -73,12 +73,12 @@
 
 ## 9. Rich Client UI — Orders View
 
-- [ ] 9.1 Implement OrdersViewPanel in rich client (SWHM-T-0122)
-- [ ] 9.2 Create OrdersViewTableModel extending DefaultTableModel (SWHM-T-0122)
-- [ ] 9.3 Define columns: Order ID, User ID, Order Date, Order Amount, Status (SWHM-T-0122)
-- [ ] 9.4 Set isCellEditable() to return false (read-only) (SWHM-T-0122)
-- [ ] 9.5 Implement DataSource.loadOrdersByStatus() to fetch from server (SWHM-T-0122)
-- [ ] 9.6 Display approved, completed, and denied orders in table (SWHM-T-0122)
+- [x] 9.1 Implement OrdersViewPanel in rich client (SWHM-T-0122)
+- [x] 9.2 Create OrdersViewTableModel extending DefaultTableModel (SWHM-T-0122)
+- [x] 9.3 Define columns: Order ID, User ID, Order Date, Order Amount, Status (SWHM-T-0122)
+- [x] 9.4 Set isCellEditable() to return false (read-only) (SWHM-T-0122)
+- [x] 9.5 Implement DataSource.loadOrdersByStatus() to fetch from server (SWHM-T-0122)
+- [x] 9.6 Display approved, completed, and denied orders in table (SWHM-T-0122)
 
 ## 10. Error Handling & Validation
 
