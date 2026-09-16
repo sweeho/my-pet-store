@@ -1,7 +1,16 @@
+import { eq } from "drizzle-orm";
 import { H3Event } from "nitro/h3";
 import { describe, expect, it } from "vitest";
 
-import { SESSION_COOKIE, setOriginalUrl, setSignedOn, useSignOnSession } from "./session";
+import { db } from "../db/client";
+import { sessions } from "../db/schema";
+import {
+  invalidateSession,
+  SESSION_COOKIE,
+  setOriginalUrl,
+  setSignedOn,
+  useSignOnSession,
+} from "./session";
 
 function cookieValueFrom(event: H3Event, name: string): string {
   const setCookieHeader = event.res.headers.get("set-cookie");
@@ -70,5 +79,38 @@ describe("auth/session", () => {
     const updated = setOriginalUrl(session, "/customer");
 
     expect(updated.original_url).toBe("/customer");
+  });
+
+  it("ST-06: invalidateSession deletes the session row", () => {
+    const event = new H3Event(new Request("http://localhost/api/signon/session"));
+    const session = useSignOnSession(event);
+
+    invalidateSession(event, session);
+
+    const row = db.select().from(sessions).where(eq(sessions.id, session.id)).get();
+    expect(row).toBeUndefined();
+  });
+
+  it("ST-07: invalidateSession clears the bp_session cookie with the same attributes it was set with", () => {
+    const event = new H3Event(new Request("http://localhost/api/signon/session"));
+    const session = useSignOnSession(event);
+
+    invalidateSession(event, session);
+
+    const setCookieHeader = event.res.headers.get("set-cookie");
+    expect(setCookieHeader).toMatch(new RegExp(`${SESSION_COOKIE}=;`));
+    expect(setCookieHeader).toMatch(/Max-Age=0/);
+    expect(setCookieHeader).toMatch(/HttpOnly/i);
+    expect(setCookieHeader).toMatch(/SameSite=Lax/i);
+    expect(setCookieHeader).toMatch(/Path=\//i);
+  });
+
+  it("ST-08: invalidating the same session id twice does not throw", () => {
+    const event = new H3Event(new Request("http://localhost/api/signon/session"));
+    const session = useSignOnSession(event);
+
+    invalidateSession(event, session);
+
+    expect(() => invalidateSession(event, session)).not.toThrow();
   });
 });
