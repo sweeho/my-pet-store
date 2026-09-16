@@ -34,13 +34,13 @@
 
 ## 4. Order Creation
 
-- [ ] 4.1 Implement Order entity with poId, poDate, customerId, contactInfo (SWHM-T-0156)
-- [ ] 4.2 Create Order with current date (poDate) (SWHM-T-0156)
-- [ ] 4.3 Set Order with unique ID from UniqueIdGenerator (seed: 1001) (SWHM-T-0156)
-- [ ] 4.4 Store billing address (address_a) as OrderAddress (SWHM-T-0156)
-- [ ] 4.5 Store shipping address (address_b) as OrderAddress (SWHM-T-0156)
-- [ ] 4.6 Link Order to authenticated customer (SWHM-T-0156)
-- [ ] 4.7 Initialize order status to PENDING (SWHM-T-0156)
+- [x] 4.1 Implement Order entity with poId, poDate, customerId, contactInfo (SWHM-T-0156)
+- [x] 4.2 Create Order with current date (poDate) (SWHM-T-0156)
+- [x] 4.3 Set Order with unique ID from UniqueIdGenerator (seed: 1001) (SWHM-T-0156)
+- [x] 4.4 Store billing address (address_a) as OrderAddress (SWHM-T-0156)
+- [x] 4.5 Store shipping address (address_b) as OrderAddress (SWHM-T-0156)
+- [x] 4.6 Link Order to authenticated customer (SWHM-T-0156)
+- [x] 4.7 Initialize order status to PENDING (SWHM-T-0156)
 
 ## 5. Line Item Creation
 
