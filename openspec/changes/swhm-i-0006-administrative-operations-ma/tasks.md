@@ -22,11 +22,11 @@
 
 ## 3. Rich Client Deployment (Java Web Start)
 
-- [ ] 3.1 Implement AdminRequestProcessor.doPost to handle manageorders screen (SWHM-T-0116)
-- [ ] 3.2 Generate JNLP file in buildJNLP() method (SWHM-T-0116)
-- [ ] 3.3 Include session ID (jsessionid) in JNLP server URL (SWHM-T-0116)
-- [ ] 3.4 Set response content type to application/x-java-jnlp-file (SWHM-T-0116)
-- [ ] 3.5 Implement logout handling in AdminRequestProcessor (SWHM-T-0116)
+- [x] 3.1 Implement AdminRequestProcessor.doPost to handle manageorders screen (SWHM-T-0116)
+- [x] 3.2 Generate JNLP file in buildJNLP() method (SWHM-T-0116)
+- [x] 3.3 Include session ID (jsessionid) in JNLP server URL (SWHM-T-0116)
+- [x] 3.4 Set response content type to application/x-java-jnlp-file (SWHM-T-0116)
+- [x] 3.5 Implement logout handling in AdminRequestProcessor (SWHM-T-0116)
 
 ## 4. Rich Client Request Handler (ApplRequestProcessor)
 
