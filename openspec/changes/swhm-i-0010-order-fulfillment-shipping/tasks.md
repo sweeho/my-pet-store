@@ -88,9 +88,9 @@
 
 ## 10. Integration & Exception Handling
 
-- [ ] 10.1 Configure message selector for OPC queue messages (SWHM-T-0196)
-- [ ] 10.2 Implement retry logic for failed PO processing (SWHM-T-0196)
-- [ ] 10.3 Handle XMLDocumentException during parsing/generation (SWHM-T-0196)
-- [ ] 10.4 Handle ServiceLocator exceptions for EJB lookup (SWHM-T-0196)
-- [ ] 10.5 Implement proper error logging (SWHM-T-0196)
-- [ ] 10.6 Test message consumption and processing (SWHM-T-0196)
+- [x] 10.1 Configure message selector for OPC queue messages (SWHM-T-0196)
+- [x] 10.2 Implement retry logic for failed PO processing (SWHM-T-0196)
+- [x] 10.3 Handle XMLDocumentException during parsing/generation (SWHM-T-0196)
+- [x] 10.4 Handle ServiceLocator exceptions for EJB lookup (SWHM-T-0196)
+- [x] 10.5 Implement proper error logging (SWHM-T-0196)
+- [x] 10.6 Test message consumption and processing (SWHM-T-0196)
