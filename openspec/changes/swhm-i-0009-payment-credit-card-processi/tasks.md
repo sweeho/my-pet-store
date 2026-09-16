@@ -19,6 +19,6 @@
 
 ## 4. Testing
 
-- [ ] 4.1 Test card validation with valid/invalid cards (SWHM-T-0178)
-- [ ] 4.2 Test expiry validation (SWHM-T-0178)
-- [ ] 4.3 Test authorization flow (SWHM-T-0178)
+- [x] 4.1 Test card validation with valid/invalid cards (SWHM-T-0178)
+- [x] 4.2 Test expiry validation (SWHM-T-0178)
+- [x] 4.3 Test authorization flow (SWHM-T-0178)
