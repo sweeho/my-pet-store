@@ -256,3 +256,16 @@ export const cartItems = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.sessionId, t.itemid] })],
 );
+
+// How many of an item the store holds — nothing else. No reservation
+// column, no ledger, no history: the product records what is held now,
+// never how it came to be that (design.md § Decisions D5;
+// ARCHITECTURE.md § Data model). An item with no row here reads as
+// quantity 0, not an error, so stocking an item is one write and adding a
+// catalogue item stays a one-table operation.
+export const inventory = sqliteTable("inventory", {
+  itemid: text("itemid")
+    .primaryKey()
+    .references(() => item.itemid),
+  quantity: integer("quantity").notNull(),
+});

@@ -8,9 +8,10 @@ import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
 import { seedCatalog } from "../catalog/seed";
 import { ADMIN_ROLE } from "../auth/protected-resources";
+import { seedInventory } from "../fulfillment/seed";
 import { seedOrderIdSequence } from "../order/id";
 
-import { authUsers, category, orderLineItem, orders, users } from "./schema";
+import { authUsers, category, inventory, orderLineItem, orders, users } from "./schema";
 
 // Same scrypt format auth/user.ts's hashPassword/matchPassword use
 // ("scrypt$salt$derived"). Not imported from there: auth/user.ts pulls in
@@ -76,6 +77,16 @@ if (db.select().from(authUsers).all().length === 0) {
 // Planning record, D9).
 if (db.select().from(category).all().length === 0 && !process.env.VITEST) {
   seedCatalog();
+}
+
+// Development stock (fulfillment/seed.ts), seeded only alongside the rest
+// of the demo data and only after the catalog exists — inventory.itemid is
+// a real foreign key, so an id the catalogue seed never created fails at
+// insert. Same guard and emptiness check as the catalog seed above
+// (design.md § Spec discrepancies S14; § Codebase findings F14): a
+// database built under Vitest gains no inventory rows.
+if (db.select().from(inventory).all().length === 0 && !process.env.VITEST) {
+  seedInventory();
 }
 
 // Demo orders (design.md D1/D4), seeded only alongside the rest of the demo
