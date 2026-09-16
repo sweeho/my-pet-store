@@ -68,11 +68,11 @@
 
 ## 9. Session Management
 
-- [ ] 9.1 Initialize empty ShoppingCart on session creation (SWHM-T-0141)
-- [ ] 9.2 Store cart in HttpSession.cart attribute (SWHM-T-0141)
-- [ ] 9.3 Retrieve cart from session for all cart operations (SWHM-T-0141)
-- [ ] 9.4 Ensure cart persists across page navigation (SWHM-T-0141)
-- [ ] 9.5 Clear cart on logout or session timeout (SWHM-T-0141)
+- [x] 9.1 Initialize empty ShoppingCart on session creation (SWHM-T-0141)
+- [x] 9.2 Store cart in HttpSession.cart attribute (SWHM-T-0141)
+- [x] 9.3 Retrieve cart from session for all cart operations (SWHM-T-0141)
+- [x] 9.4 Ensure cart persists across page navigation (SWHM-T-0141)
+- [x] 9.5 Clear cart on logout or session timeout (SWHM-T-0141)
 
 ## 10. Testing
 
