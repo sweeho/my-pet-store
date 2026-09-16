@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { deleteCookie, getCookie, setCookie, type H3Event } from "nitro/h3";
 
+import { clearCart } from "../cart/cart";
 import { db } from "../db/client";
 import { sessions } from "../db/schema";
 
@@ -60,7 +61,13 @@ export function setSignedOn(session: SignOnSession, userName: string): SignOnSes
 // marked invalid is a second state every read would have to know about, and
 // nothing in the product needs one (PLAN.md step 1). Idempotent — deleting a
 // row that is already gone matches zero rows without throwing.
+//
+// The cart is cleared explicitly, before the session row goes, because
+// PRAGMA foreign_keys is never set here — SQLite's default (off) applies, so
+// the declared ON DELETE CASCADE on cart_items.session_id enforces nothing
+// and the rows would otherwise be orphaned (design.md F4, D4).
 export function invalidateSession(event: H3Event, session: SignOnSession): void {
+  clearCart(session.id);
   db.delete(sessions).where(eq(sessions.id, session.id)).run();
   deleteCookie(event, SESSION_COOKIE, { httpOnly: true, sameSite: "lax", path: "/" });
 }

@@ -1,6 +1,10 @@
+import { eq } from "drizzle-orm";
 import { H3Event } from "nitro/h3";
 import { describe, expect, it } from "vitest";
 
+import { getCart } from "../../../cart/cart";
+import { db } from "../../../db/client";
+import { cartItems } from "../../../db/schema";
 import { SESSION_COOKIE, setSignedOn, useSignOnSession } from "../../../auth/session";
 import logout from "./logout.post";
 
@@ -54,5 +58,23 @@ describe("POST /api/signon/logout", () => {
     const result = await logout(event);
 
     expect(result).toEqual({ signedOut: true });
+  });
+
+  it("LO-04: a cart built up before logout does not survive it — no orphaned cart_items row, and the old cookie sees an empty cart afterward", async () => {
+    const setup = new H3Event(new Request("http://localhost/api/signon/session"));
+    const session = useSignOnSession(setup);
+    const sessionCookie = cookieValue(setup, SESSION_COOKIE)!;
+    db.insert(cartItems)
+      .values({ sessionId: session.id, itemid: "logout-test-item", quantity: 3 })
+      .run();
+
+    await logout(requestWithCookie(sessionCookie));
+
+    const orphaned = db.select().from(cartItems).where(eq(cartItems.sessionId, session.id)).all();
+    expect(orphaned).toEqual([]);
+
+    const followUp = requestWithCookie(sessionCookie);
+    const nextSession = useSignOnSession(followUp);
+    expect(getCart(nextSession.id)).toEqual({ items: [], count: 0, subtotal: 0 });
   });
 });
