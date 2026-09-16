@@ -46,13 +46,13 @@
 
 ## 6. Order Status Updates
 
-- [ ] 6.1 Implement AdminRequestBD.updateOrders(OrderApproval oa) (SWHM-T-0119)
-- [ ] 6.2 Delegate to AsyncSender EJB via ServiceLocator (SWHM-T-0119)
-- [ ] 6.3 Implement ApplRequestProcessor.updateOrders() to parse XML (SWHM-T-0119)
-- [ ] 6.4 Extract order IDs and new status from XML (SWHM-T-0119)
-- [ ] 6.5 Create ChangedOrder objects for each order (SWHM-T-0119)
-- [ ] 6.6 Support multiple orders in single batch update (SWHM-T-0119)
-- [ ] 6.7 Return SUCCESS or error message in XML response (SWHM-T-0119)
+- [x] 6.1 Implement AdminRequestBD.updateOrders(OrderApproval oa) (SWHM-T-0119)
+- [x] 6.2 Delegate to AsyncSender EJB via ServiceLocator (SWHM-T-0119)
+- [x] 6.3 Implement ApplRequestProcessor.updateOrders() to parse XML (SWHM-T-0119)
+- [x] 6.4 Extract order IDs and new status from XML (SWHM-T-0119)
+- [x] 6.5 Create ChangedOrder objects for each order (SWHM-T-0119)
+- [x] 6.6 Support multiple orders in single batch update (SWHM-T-0119)
+- [x] 6.7 Return SUCCESS or error message in XML response (SWHM-T-0119)
 
 ## 7. Revenue Reporting
 
