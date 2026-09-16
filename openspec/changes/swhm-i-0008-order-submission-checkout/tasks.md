@@ -26,11 +26,11 @@
 
 ## 3. Order ID Generation
 
-- [ ] 3.1 Implement UniqueIdGenerator EJB (SWHM-T-0155)
-- [ ] 3.2 Initialize sequence with seed value: 1001 (SWHM-T-0155)
-- [ ] 3.3 Implement getUniqueId() to return next sequential ID (SWHM-T-0155)
-- [ ] 3.4 Ensure thread-safe ID generation (SWHM-T-0155)
-- [ ] 3.5 Store generated ID in persistent storage (SWHM-T-0155)
+- [x] 3.1 Implement UniqueIdGenerator EJB (SWHM-T-0155)
+- [x] 3.2 Initialize sequence with seed value: 1001 (SWHM-T-0155)
+- [x] 3.3 Implement getUniqueId() to return next sequential ID (SWHM-T-0155)
+- [x] 3.4 Ensure thread-safe ID generation (SWHM-T-0155)
+- [x] 3.5 Store generated ID in persistent storage (SWHM-T-0155)
 
 ## 4. Order Creation
 
