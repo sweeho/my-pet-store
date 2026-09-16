@@ -56,8 +56,15 @@ test.describe("Shopping cart journey", () => {
     await page.getByRole("button", { name: "Update Cart" }).click();
 
     await expect(quantityInput).toHaveValue("3");
-    const expectedSubtotal = UNIT_COST * 3;
-    await expect(page.getByText(`$${expectedSubtotal.toFixed(2)}`)).toBeVisible();
+    // Matches src/pages/cart.tsx's own formatCurrency exactly — a plain
+    // toFixed(2) omits the thousands separator Intl.NumberFormat adds
+    // ("$1,050.00", not "$1050.00"), which is the assertion that timed out
+    // against the real page in CI (this ticket's first real execution).
+    const expectedSubtotal = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(UNIT_COST * 3);
+    await expect(page.getByText(expectedSubtotal)).toBeVisible();
   });
 
   test("sets a quantity to 0, activates Update Cart, and finds that row gone from the table", async ({

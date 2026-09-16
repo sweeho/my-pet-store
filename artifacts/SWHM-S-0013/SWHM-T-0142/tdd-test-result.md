@@ -52,6 +52,25 @@ at INTEGRATION_QA.
 `bun run lint` and `bun run typecheck` both passed clean against the new file before this was
 written up.
 
+CI's first run on this branch (which does have a browser) executed all six tests: five passed,
+and one — "edits a quantity, activates Update Cart, and finds the new quantity and a consistent
+subtotal" — failed for real, three times (initial + 2 retries):
+
+```
+Error: Timed out 5000ms waiting for expect(locator).toBeVisible()
+Locator: getByText('$1050.00')
+Expected: visible
+Received: <element(s) not found>
+1 failed, 33 passed (28.5s)
+```
+
+Genuine test bug, not a product bug: the assertion built its expected string with
+`(UNIT_COST * 3).toFixed(2)` → `"1050.00"`, but `src/pages/cart.tsx`'s own `formatCurrency` uses
+`Intl.NumberFormat("en-US", {style: "currency", currency: "USD"})`, which renders `"$1,050.00"`
+with a thousands separator. Fixed by building the expected string with the same
+`Intl.NumberFormat` call instead of `toFixed`. No app code changed. This is the real red→green
+this ticket's spec produced — the five other tests passed on the first real execution.
+
 ## Green run
 
 `bun run verify` — this stack's full pre-commit gate (`eslint . --ext ts,tsx
@@ -71,8 +90,9 @@ $ NODE_ENV=test bun --bun vitest run
 
 `bun run verify:full` was attempted; lint, typecheck and the full 497-test unit suite all passed,
 then its `pretest:e2e` preflight reported Chromium genuinely not installed (same message as
-above) — fell back to `bun run verify` per AGENTS.md's notes for this container (F12). The six
-`e2e/cart.spec.ts` tests this ticket adds have not executed anywhere yet; they will run for the
-first time when CI picks up this branch, and again at INTEGRATION_QA.
+above) — fell back to `bun run verify` per AGENTS.md's notes for this container (F12).
+
+The fix above was pushed for CI to re-run; see the ticket comment for the resulting verdict and
+run link — that is the real execution AC-7 asks for, and it happens in CI, not this container.
 
 TDD-RESULT: 497 passed, 0 failed

@@ -32,7 +32,7 @@ anonymous-access case. No app code, route or page was touched — every surface 
 - AC-4 (remove the last line, empty-cart message, no table) — "removes the last remaining line...".
 - AC-5 (persists across navigation) — "persists across navigation...".
 - AC-6 (`/cart` reachable without signing on) — "reaches /cart without signing on...".
-- AC-7 (executed, or the log states why not) — see `tdd-test-result.md`: the preflight confirmed Chromium is genuinely not installed in this container; the spec is unexecuted here and runs first in CI on this branch.
+- AC-7 (executed, or the log states why not) — see `tdd-test-result.md`: the preflight confirmed Chromium is genuinely not installed in this container, so this spec's first real execution was CI on this branch. CI caught a genuine test bug (a `toFixed(2)` string not matching the page's `Intl.NumberFormat`-rendered subtotal), fixed and re-pushed.
 
 ## Verification
 
@@ -56,4 +56,7 @@ own AC-7. Full detail in `tdd-test-result.md`.
   the `list_price` (`599.99`) the item screen shows — design.md S1/S12.
 - Locates the quantity inputs by their `aria-label="Quantity for <itemId>"` (SWHM-T-0138's fixed
   contract), the stable handle PLAN.md names for the update/remove cases.
-- No defect found in the landed cart modules/pages while writing this spec against their source.
+- CI's first run (this container has no Chromium) found one genuine test bug: the subtotal
+  assertion built its expected string with `toFixed(2)`, which omits the thousands separator
+  `Intl.NumberFormat` renders. Fixed in the spec; no app code changed. No defect found in the
+  landed cart modules/pages themselves.
