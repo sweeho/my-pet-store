@@ -2,11 +2,11 @@
 
 ## 1. Data Model
 
-- [ ] 1.1 Implement ShoppingCart class with cartItems collection and count property (SWHM-T-0133)
-- [ ] 1.2 Implement CartItem class with itemId, quantity, unitCost properties (SWHM-T-0133)
-- [ ] 1.3 Add lineTotal property to CartItem (quantity × unitCost) (SWHM-T-0133)
-- [ ] 1.4 Add subtotal property to ShoppingCart (SWHM-T-0133)
-- [ ] 1.5 Make ShoppingCart session-scoped (HttpSession storage) (SWHM-T-0133)
+- [x] 1.1 Implement ShoppingCart class with cartItems collection and count property (SWHM-T-0133)
+- [x] 1.2 Implement CartItem class with itemId, quantity, unitCost properties (SWHM-T-0133)
+- [x] 1.3 Add lineTotal property to CartItem (quantity × unitCost) (SWHM-T-0133)
+- [x] 1.4 Add subtotal property to ShoppingCart (SWHM-T-0133)
+- [x] 1.5 Make ShoppingCart session-scoped (HttpSession storage) (SWHM-T-0133)
 
 ## 2. Cart Operations - Add
 
