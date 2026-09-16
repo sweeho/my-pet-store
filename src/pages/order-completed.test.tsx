@@ -61,4 +61,37 @@ describe("OrderCompleted (/order-completed)", () => {
     expect(screen.queryByRole("group", { name: /Your order Id is/ })).not.toBeInTheDocument();
     expect(screen.getByText("Thank you, your order has been submitted.")).toBeInTheDocument();
   });
+
+  it("OC-06: tells the shopper a confirmation e-mail is coming, interpolating the address the order was placed with", () => {
+    renderWithState({ orderId: 1005, email: "priya.k@example.com" });
+
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "You should receive a confirmation e-mail soon at priya.k@example.com.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("OC-07: a different email address is what gets interpolated, not a hard-coded one", () => {
+    renderWithState({ orderId: 2042, email: "someone.else@example.org" });
+
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "You should receive a confirmation e-mail soon at someone.else@example.org.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/priya\.k@example\.com/)).not.toBeInTheDocument();
+  });
+
+  it("OC-08: no confirmation e-mail message is shown when no navigation state is present", () => {
+    renderWithState(undefined);
+
+    expect(screen.queryByText(/confirmation e-mail/)).not.toBeInTheDocument();
+  });
 });

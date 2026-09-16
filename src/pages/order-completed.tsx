@@ -1,13 +1,11 @@
-import { Check } from "lucide-react";
+import { Check, Mail } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import { Button, RequireSignOn } from "@/components";
 
 // The { orderId, email } shape SWHM-T-0156's placement route returns
 // (PLAN.md step 4) — this screen renders from it and issues no fetch to
-// read an order back. email is not rendered here: SWHM-T-0160 (which
-// depends on this ticket) owns the "confirmation e-mail soon" line, per
-// its own PLAN.md step 1.
+// read an order back.
 type OrderCompletedState = { orderId: number; email: string };
 
 function isOrderCompletedState(value: unknown): value is OrderCompletedState {
@@ -56,24 +54,37 @@ export function OrderCompleted() {
         </p>
 
         {state && (
-          <div
-            role="group"
-            aria-label={`Your order Id is ${state.orderId}`}
-            className="border-border bg-secondary mt-[22px] rounded-[10px] border px-[18px] py-4"
-          >
+          <>
             <div
-              aria-hidden="true"
-              className="text-muted-foreground text-[11px] font-bold tracking-wide uppercase"
+              role="group"
+              aria-label={`Your order Id is ${state.orderId}`}
+              className="border-border bg-secondary mt-[22px] rounded-[10px] border px-[18px] py-4"
             >
-              Your order Id is
+              <div
+                aria-hidden="true"
+                className="text-muted-foreground text-[11px] font-bold tracking-wide uppercase"
+              >
+                Your order Id is
+              </div>
+              <div
+                aria-hidden="true"
+                className="mt-1 text-[28px] font-bold tracking-tight tabular-nums"
+              >
+                {state.orderId}
+              </div>
             </div>
-            <div
-              aria-hidden="true"
-              className="mt-1 text-[28px] font-bold tracking-tight tabular-nums"
-            >
-              {state.orderId}
+
+            <div className="mt-5 flex items-start gap-2.5">
+              <Mail
+                aria-hidden="true"
+                className="text-muted-foreground mt-0.5 h-[17px] w-[17px] flex-none"
+              />
+              <p className="text-foreground text-sm leading-relaxed">
+                You should receive a confirmation e-mail soon at{" "}
+                <strong className="font-semibold">{state.email}</strong>.
+              </p>
             </div>
-          </div>
+          </>
         )}
 
         <div className="mt-[26px] flex gap-2">
