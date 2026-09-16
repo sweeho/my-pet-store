@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inventory update</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.145 0 0);
+        --card: oklch(1 0 0);
+        --primary: oklch(0.205 0 0);
+        --primary-foreground: oklch(0.985 0 0);
+        --secondary: oklch(0.97 0 0);
+        --muted-foreground: oklch(0.556 0 0);
+        --border: oklch(0.922 0 0);
+        --input: oklch(0.922 0 0);
+        --radius: 0.625rem;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background: var(--background);
+        color: var(--foreground);
+        font-family: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+      .nav {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 24px; border-bottom: 1px solid var(--border);
+      }
+      .brand { display: flex; align-items: center; gap: 10px; }
+      .mark {
+        width: 28px; height: 28px; border-radius: calc(var(--radius) - 2px);
+        background: var(--primary); color: var(--primary-foreground);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700; letter-spacing: -0.02em;
+      }
+      .brandname { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+      .tag {
+        font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+        color: var(--muted-foreground); border: 1px solid var(--border);
+        background: var(--secondary); border-radius: 999px; padding: 3px 8px;
+      }
+      .page { max-width: 672px; margin: 0 auto; padding: 24px; }
+      h1 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+      .lede { font-size: 14px; color: var(--muted-foreground); margin: 8px 0 0; line-height: 1.55; }
+      .card {
+        border: 1px solid var(--border); background: var(--card);
+        border-radius: var(--radius); padding: 16px; margin-top: 16px;
+      }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th {
+        font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+        color: var(--muted-foreground); text-align: left; padding: 0 0 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      th.num, td.num { text-align: right; }
+      th.mid, td.mid { text-align: center; }
+      td {
+        font-size: 14px; padding: 7px 0; border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      tbody tr:last-child td { border-bottom: 0; }
+      td.id { font-weight: 500; }
+      input[type="text"] {
+        width: 88px; border: 1px solid var(--input); background: var(--background);
+        color: var(--foreground); border-radius: calc(var(--radius) - 2px);
+        padding: 8px 12px; font-size: 14px; font-family: inherit; text-align: right;
+      }
+      input[type="text"]::placeholder { color: var(--muted-foreground); }
+      input[type="checkbox"] { width: 16px; height: 16px; accent-color: oklch(0.205 0 0); margin: 0; }
+      .foot {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 16px; gap: 24px;
+      }
+      .hint { font-size: 12px; color: var(--muted-foreground); margin: 0; }
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        height: 40px; padding: 8px 16px; border-radius: calc(var(--radius) - 2px);
+        font-size: 14px; font-weight: 500; white-space: nowrap; border: 1px solid transparent;
+        font-family: inherit;
+      }
+      .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+    </style>
+  </head>
+  <body>
+    <div class="nav">
+      <div class="brand">
+        <div class="mark">M</div>
+        <div class="brandname">My Pet Store</div>
+      </div>
+      <div class="tag">Supplier</div>
+    </div>
+
+    <div class="page">
+      <h1>Inventory</h1>
+      <p class="lede">
+        Enter a new quantity and tick Update for every item you want to change, then submit the form.
+      </p>
+
+      <div class="card">
+        <table>
+          <colgroup>
+            <col style="width: 38%" />
+            <col style="width: 25%" />
+            <col style="width: 22%" />
+            <col style="width: 15%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Item ID</th>
+              <th class="num">Existing quantity</th>
+              <th class="num">New quantity</th>
+              <th class="mid">Update</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="id">BIRDS-PARROTS-1</td><td class="num">24</td><td class="num"><input type="text" placeholder="24" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">BIRDS-PARROTS-2</td><td class="num">7</td><td class="num"><input type="text" value="40" /></td><td class="mid"><input type="checkbox" checked /></td></tr>
+            <tr><td class="id">BIRDS-FINCHES-1</td><td class="num">112</td><td class="num"><input type="text" placeholder="112" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">BIRDS-FINCHES-2</td><td class="num">86</td><td class="num"><input type="text" placeholder="86" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">CATS-SHORTHAIR-1</td><td class="num">38</td><td class="num"><input type="text" placeholder="38" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">CATS-SHORTHAIR-2</td><td class="num">0</td><td class="num"><input type="text" value="15" /></td><td class="mid"><input type="checkbox" checked /></td></tr>
+            <tr><td class="id">CATS-LONGHAIR-1</td><td class="num">12</td><td class="num"><input type="text" placeholder="12" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">CATS-LONGHAIR-2</td><td class="num">9</td><td class="num"><input type="text" placeholder="9" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">DOGS-BULLDOGS-1</td><td class="num">16</td><td class="num"><input type="text" placeholder="16" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">DOGS-BULLDOGS-2</td><td class="num">21</td><td class="num"><input type="text" placeholder="21" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">DOGS-POODLES-1</td><td class="num">5</td><td class="num"><input type="text" placeholder="5" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">DOGS-POODLES-2</td><td class="num">33</td><td class="num"><input type="text" placeholder="33" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">FISH-ANGELFISH-1</td><td class="num">240</td><td class="num"><input type="text" placeholder="240" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">FISH-ANGELFISH-2</td><td class="num">186</td><td class="num"><input type="text" placeholder="186" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">FISH-GOLDFISH-1</td><td class="num">318</td><td class="num"><input type="text" placeholder="318" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">FISH-GOLDFISH-2</td><td class="num">274</td><td class="num"><input type="text" placeholder="274" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">REPTILES-LIZARDS-1</td><td class="num">11</td><td class="num"><input type="text" placeholder="11" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">REPTILES-LIZARDS-2</td><td class="num">4</td><td class="num"><input type="text" value="30" /></td><td class="mid"><input type="checkbox" checked /></td></tr>
+            <tr><td class="id">REPTILES-SNAKES-1</td><td class="num">8</td><td class="num"><input type="text" placeholder="8" /></td><td class="mid"><input type="checkbox" /></td></tr>
+            <tr><td class="id">REPTILES-SNAKES-2</td><td class="num">3</td><td class="num"><input type="text" placeholder="3" /></td><td class="mid"><input type="checkbox" /></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="foot">
+        <p class="hint">Only ticked rows are updated. Every other row keeps its existing quantity.</p>
+        <button class="btn btn-primary">Update Inventory</button>
+      </div>
+    </div>
+  </body>
+</html>

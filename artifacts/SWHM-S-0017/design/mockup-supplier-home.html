@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Supplier home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.145 0 0);
+        --card: oklch(1 0 0);
+        --primary: oklch(0.205 0 0);
+        --primary-foreground: oklch(0.985 0 0);
+        --secondary: oklch(0.97 0 0);
+        --muted: oklch(0.97 0 0);
+        --muted-foreground: oklch(0.556 0 0);
+        --border: oklch(0.922 0 0);
+        --input: oklch(0.922 0 0);
+        --radius: 0.625rem;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background: var(--background);
+        color: var(--foreground);
+        font-family: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+      .nav {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 24px; border-bottom: 1px solid var(--border);
+      }
+      .brand { display: flex; align-items: center; gap: 10px; }
+      .mark {
+        width: 28px; height: 28px; border-radius: calc(var(--radius) - 2px);
+        background: var(--primary); color: var(--primary-foreground);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700; letter-spacing: -0.02em;
+      }
+      .brandname { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+      .tag {
+        font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+        color: var(--muted-foreground); border: 1px solid var(--border);
+        background: var(--secondary); border-radius: 999px; padding: 3px 8px;
+      }
+      .page { max-width: 672px; margin: 0 auto; padding: 24px; }
+      h1 { font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+      .lede { font-size: 14px; color: var(--muted-foreground); margin: 8px 0 0; line-height: 1.55; }
+      .card {
+        border: 1px solid var(--border); background: var(--card);
+        border-radius: var(--radius); padding: 16px; margin-top: 16px;
+      }
+      .cardtitle {
+        font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+        text-transform: uppercase; color: var(--muted-foreground); margin: 0 0 12px;
+      }
+      ul.does { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+      ul.does li { font-size: 14px; line-height: 1.5; padding-left: 18px; position: relative; }
+      ul.does li::before {
+        content: ""; position: absolute; left: 0; top: 8px;
+        width: 5px; height: 5px; border-radius: 999px; background: var(--muted-foreground);
+      }
+      .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+      .row p { margin: 0; font-size: 14px; line-height: 1.5; }
+      .meta { font-size: 12px; color: var(--muted-foreground); margin-top: 6px; }
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        height: 40px; padding: 8px 16px; border-radius: calc(var(--radius) - 2px);
+        font-size: 14px; font-weight: 500; white-space: nowrap; border: 1px solid transparent;
+        font-family: inherit;
+      }
+      .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+      .btn-outline { background: var(--background); color: var(--foreground); border-color: var(--input); }
+      .actions { margin-top: 16px; }
+    </style>
+  </head>
+  <body>
+    <div class="nav">
+      <div class="brand">
+        <div class="mark">M</div>
+        <div class="brandname">My Pet Store</div>
+      </div>
+      <div class="tag">Supplier</div>
+    </div>
+
+    <div class="page">
+      <h1>Supplier</h1>
+      <p class="lede">
+        This module receives purchase orders from the store, checks each line item against stock,
+        ships what is available, and returns an invoice for the items that shipped.
+      </p>
+
+      <div class="card">
+        <p class="cardtitle">What this module does</p>
+        <ul class="does">
+          <li>Receives purchase orders from the store as customers place them.</li>
+          <li>Checks every line item against inventory before anything ships.</li>
+          <li>Ships the available quantity and deducts it from inventory.</li>
+          <li>Leaves an order pending until every line item has shipped, then marks it completed.</li>
+          <li>Returns an invoice listing the items shipped, their quantities and unit prices.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <p class="cardtitle">Inventory</p>
+        <div class="row">
+          <div>
+            <p>Review the quantity held for every item and set new quantities in bulk.</p>
+            <p class="meta">Administrators only.</p>
+          </div>
+          <button class="btn btn-primary">Display Inventory</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline">Logout</button>
+      </div>
+    </div>
+  </body>
+</html>
