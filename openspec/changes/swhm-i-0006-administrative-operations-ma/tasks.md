@@ -56,13 +56,13 @@
 
 ## 7. Revenue Reporting
 
-- [ ] 7.1 Implement AdminRequestBD.getChartInfo(REVENUE, start, end, category) (SWHM-T-0120)
-- [ ] 7.2 Delegate to OPCAdminFacade.getChartInfo() with request type REVENUE (SWHM-T-0120)
-- [ ] 7.3 Implement ApplRequestProcessor.getChartInfo() for REVENUE type (SWHM-T-0120)
-- [ ] 7.4 Parse date range from Start/End parameters in MM/dd/yyyy format (SWHM-T-0120)
-- [ ] 7.5 Retrieve revenue Map from EJB (SWHM-T-0120)
-- [ ] 7.6 Marshal results to XML with Category or Item elements (conditional on category parameter) (SWHM-T-0120)
-- [ ] 7.7 Include revenue amounts and TotalSales in response (SWHM-T-0120)
+- [x] 7.1 Implement AdminRequestBD.getChartInfo(REVENUE, start, end, category) (SWHM-T-0120)
+- [x] 7.2 Delegate to OPCAdminFacade.getChartInfo() with request type REVENUE (SWHM-T-0120)
+- [x] 7.3 Implement ApplRequestProcessor.getChartInfo() for REVENUE type (SWHM-T-0120)
+- [x] 7.4 Parse date range from Start/End parameters in MM/dd/yyyy format (SWHM-T-0120)
+- [x] 7.5 Retrieve revenue Map from EJB (SWHM-T-0120)
+- [x] 7.6 Marshal results to XML with Category or Item elements (conditional on category parameter) (SWHM-T-0120)
+- [x] 7.7 Include revenue amounts and TotalSales in response (SWHM-T-0120)
 
 ## 8. Order Count Reporting
 
