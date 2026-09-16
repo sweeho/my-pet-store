@@ -65,6 +65,14 @@ A table renders `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` — neve
 
 Where a table is read-only, it renders no control at all — no `<input>`, `<select>`, `<button>` or `contenteditable` inside the body. A disabled control still reads as a control the visitor has been denied; an absent one reads as information, which is what a read-only table is. Tests assert the absence directly rather than checking a disabled state.
 
+**Where a table is editable**, the controls live in the row and the submit control does not. Three things follow, and none is optional:
+
+- **Every control in a row carries an accessible name that names that row's subject** — `aria-label="New quantity for BIRDS-PARROTS-1"`, not "New quantity". A column header labels a cell for a reader moving through the table; it does not reach a control inside one, so an input named only by its column is announced identically in every row and a screen reader user cannot tell which row they are editing. This is the cell-level counterpart of the naming rule in § Form validation states, and it is what a test locates the control by.
+- **Selecting a row and editing it are separate controls**, and the selection is what decides what is written. A typed value in an unticked row is not submitted. The alternative — inferring intent from whether a field was touched — makes a screen that cannot distinguish "I typed this and changed my mind" from "I meant it", and makes every row the screen was rendered with a candidate for overwriting with a stale value.
+- **The submit control sits outside the table**, after it, with a line of text beside it stating what will be written. One control writes the selected rows together; a per-row save button turns one intention into many actions with no way to see what is still outstanding.
+
+The form's outcome is reported as § Form validation states describes, at the form rather than the field, and its in-flight state as § Pending actions describes — an editable table is a form that happens to be laid out as a table, and inherits both.
+
 ## Reported figures
 
 A magnitude is drawn from the tokens above, not from a charting dependency — a horizontal bar is a `<div>` whose width is a percentage of the largest value in the set, on a `bg-secondary` track (`src/components/ReportBars.tsx`). ARCHITECTURE.md § Stack records that no visualisation library is present and that adding one is an untaken decision.

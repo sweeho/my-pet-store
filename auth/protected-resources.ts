@@ -26,6 +26,16 @@ export const PROTECTED_RESOURCES: ProtectedResource[] = [
   { legacy: "index.jsp", path: ADMIN_HOME_PAGE, requiresRole: ADMIN_ROLE },
   { legacy: "AdminRequestProcessor", path: "/api/admin", requiresRole: ADMIN_ROLE },
   { legacy: "orders.jsp", path: "/admin/orders", requiresRole: ADMIN_ROLE },
+  // The three entries the fulfilment capability needs (design.md D1, S8,
+  // S9): SupplierOrderMDB's queue reception becomes this request endpoint,
+  // and the supplier home/inventory screens and their endpoints all sit
+  // under these two subtrees. A requiresRole entry protects by prefix, so
+  // no screen or endpoint added later under them defaults to public
+  // (ARCHITECTURE.md § Routing) — this is why the two screen tickets
+  // depend on this one rather than adding a fourth entry concurrently.
+  { legacy: "SupplierOrderMDB", path: "/api/fulfillment", requiresRole: ADMIN_ROLE },
+  { legacy: "index.jsp", path: "/supplier", requiresRole: ADMIN_ROLE },
+  { legacy: "RcvrRequestProcessor", path: "/api/supplier", requiresRole: ADMIN_ROLE },
 ];
 
 function normalizePath(path: string): string {
