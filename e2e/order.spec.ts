@@ -185,7 +185,7 @@ test.describe("Order placement journey", () => {
   test("a refused submission for an invalid field shows the error against that input, not only a page-level message", async ({
     page,
   }) => {
-    await signOn(page, uniqueUsername("order-invalid"));
+    await signOn(page, uniqueUsername("order-bad"));
     await addItemToCart(page);
     await reachCheckoutForm(page);
 
