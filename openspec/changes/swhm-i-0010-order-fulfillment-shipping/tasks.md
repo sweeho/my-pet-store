@@ -61,11 +61,11 @@
 
 ## 7. Line Item Shipment Tracking
 
-- [ ] 7.1 Implement quantityShipped field on LineItem entity (SWHM-T-0191)
-- [ ] 7.2 Initialize quantityShipped to 0 on line item creation (SWHM-T-0191)
-- [ ] 7.3 Track partial shipments by updating quantityShipped (SWHM-T-0191)
-- [ ] 7.4 Implement logic to skip re-processing already-shipped items (SWHM-T-0191)
-- [ ] 7.5 Support multiple shipment updates for partial fulfillment (SWHM-T-0191)
+- [x] 7.1 Implement quantityShipped field on LineItem entity (SWHM-T-0191)
+- [x] 7.2 Initialize quantityShipped to 0 on line item creation (SWHM-T-0191)
+- [x] 7.3 Track partial shipments by updating quantityShipped (SWHM-T-0191)
+- [x] 7.4 Implement logic to skip re-processing already-shipped items (SWHM-T-0191)
+- [x] 7.5 Support multiple shipment updates for partial fulfillment (SWHM-T-0191)
 
 ## 8. Inventory Management UI
 
