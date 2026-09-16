@@ -23,6 +23,7 @@
     "account",
     "catalog",
     "admin",
+    "cart",
     "e2e"
   ]
 }
