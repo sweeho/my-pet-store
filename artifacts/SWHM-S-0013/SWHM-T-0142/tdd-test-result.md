@@ -109,7 +109,8 @@ $ NODE_ENV=test bun --bun vitest run
 then its `pretest:e2e` preflight reported Chromium genuinely not installed (same message as
 above) — fell back to `bun run verify` per AGENTS.md's notes for this container (F12).
 
-The fix above was pushed for CI to re-run; see the ticket comment for the resulting verdict and
-run link — that is the real execution AC-7 asks for, and it happens in CI, not this container.
+After both fixes above, CI's third run on this branch reported a green verdict for the full
+suite, `e2e/cart.spec.ts`'s 6 tests included — the real execution AC-7 asks for, which happens in
+CI (a browser-equipped runner), not this container.
 
 TDD-RESULT: 497 passed, 0 failed
