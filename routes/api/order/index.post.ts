@@ -12,7 +12,8 @@ type OrderErrorResult = { error: string; section?: string; field?: string };
 type PlaceOrderResult = OrderErrorResult | OrderResult;
 
 export default defineHandler(async (event): Promise<PlaceOrderResult> => {
-  const { j_signon_username: userName } = useSignOnSession(event);
+  const session = useSignOnSession(event);
+  const userName = session.j_signon_username;
 
   if (!userName) {
     setResponseStatus(event, 401);
@@ -29,8 +30,9 @@ export default defineHandler(async (event): Promise<PlaceOrderResult> => {
     return { error: error.message, section: error.section, field: error.field };
   }
 
-  // Line item creation and cart clearing are wired in here by SWHM-T-0157
-  // and SWHM-T-0158 (design.md § Phases 5-6), inside the transaction that
-  // arrives with SWHM-T-0158.
-  return placeOrder(userName, submission);
+  // placeOrder (order/order.ts) wraps the order insert, the line item
+  // inserts and the cart clear in one transaction (SWHM-T-0158). The
+  // shopper's cart is keyed by session id, never username, so that id
+  // travels alongside userName from the same resolved session.
+  return placeOrder(userName, submission, session.id);
 });

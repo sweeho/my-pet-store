@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createUser } from "../auth/authenticate";
 import { addItem, getCart } from "../cart/cart";
+import * as checkout from "../cart/checkout";
 import { db } from "../db/client";
 import {
   addresses,
@@ -75,6 +76,14 @@ function readLineItems(orderId: number) {
     .all();
 }
 
+function countOrders(): number {
+  return db.select().from(orders).all().length;
+}
+
+function countLineItems(): number {
+  return db.select().from(orderLineItem).all().length;
+}
+
 let sessionCounter = 0;
 function seedSession(): string {
   sessionCounter += 1;
@@ -133,6 +142,7 @@ function seedAccountAddress(userName: string): void {
 describe("placeOrder", () => {
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("OT-01: records the user_name passed in, never one supplied in the submission body", () => {
@@ -141,7 +151,7 @@ describe("placeOrder", () => {
     // client tried to place an order on someone else's account.
     const submission = { ...validSubmission(), userName: "someone-else" } as OrderSubmission;
 
-    const { orderId } = placeOrder(userName, submission);
+    const { orderId } = placeOrder(userName, submission, seedSession());
 
     expect(readOrder(orderId).userName).toBe(userName);
   });
@@ -149,7 +159,7 @@ describe("placeOrder", () => {
   it("OT-02: copies every billing address field onto the order's billing_* columns", () => {
     const userName = seedUser();
 
-    const { orderId } = placeOrder(userName, validSubmission());
+    const { orderId } = placeOrder(userName, validSubmission(), seedSession());
     const row = readOrder(orderId);
 
     expect(row.billingGivenName).toBe("Maya");
@@ -167,7 +177,7 @@ describe("placeOrder", () => {
   it("OT-03: copies every shipping address field onto the order's shipping_* columns, independent of billing", () => {
     const userName = seedUser();
 
-    const { orderId } = placeOrder(userName, validSubmission());
+    const { orderId } = placeOrder(userName, validSubmission(), seedSession());
     const row = readOrder(orderId);
 
     expect(row.shippingStreetName1).toBe("88 Junction Row");
@@ -184,7 +194,7 @@ describe("placeOrder", () => {
     const userName = seedUser();
     seedAccountAddress(userName);
 
-    const { orderId } = placeOrder(userName, validSubmission());
+    const { orderId } = placeOrder(userName, validSubmission(), seedSession());
 
     // The account's address is untouched by placement (design.md § Decisions D2)...
     const accountAddress = db
@@ -200,7 +210,7 @@ describe("placeOrder", () => {
   it("OT-05: a new order's status is PENDING", () => {
     const userName = seedUser();
 
-    const { orderId } = placeOrder(userName, validSubmission());
+    const { orderId } = placeOrder(userName, validSubmission(), seedSession());
 
     expect(readOrder(orderId).status).toBe("PENDING");
   });
@@ -211,7 +221,7 @@ describe("placeOrder", () => {
     vi.useFakeTimers();
     vi.setSystemTime(now);
 
-    const { orderId } = placeOrder(userName, validSubmission());
+    const { orderId } = placeOrder(userName, validSubmission(), seedSession());
 
     expect(readOrder(orderId).orderDate).toEqual(now);
   });
@@ -219,16 +229,116 @@ describe("placeOrder", () => {
   it("OT-07: returns the new order's id and its contact email", () => {
     const userName = seedUser();
 
-    const result = placeOrder(userName, validSubmission());
+    const result = placeOrder(userName, validSubmission(), seedSession());
 
     expect(result.orderId).toBe(readOrder(result.orderId).orderId);
     expect(result.email).toBe("maya.chen@example.com");
   });
 });
 
+describe("placeOrder — cart clearing and transaction (SWHM-T-0158)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("CC-01: a successful placement empties the session's cart", () => {
+    const userName = seedUser();
+    const sessionId = seedSession();
+    addItem(sessionId, seedFullItem(10), 2);
+    addItem(sessionId, seedFullItem(5), 1);
+    expect(getCart(sessionId).count).toBe(2);
+
+    placeOrder(userName, validSubmission(), sessionId);
+
+    expect(getCart(sessionId)).toEqual({ items: [], count: 0, subtotal: 0 });
+  });
+
+  it("CC-02: clearing one session's cart at placement leaves another session's cart untouched", () => {
+    const sessionA = seedSession();
+    const sessionB = seedSession();
+    addItem(sessionA, seedFullItem(10), 1);
+    const itemB = seedFullItem(7);
+    addItem(sessionB, itemB, 3);
+
+    placeOrder(seedUser(), validSubmission(), sessionA);
+
+    expect(getCart(sessionA).count).toBe(0);
+    const cartB = getCart(sessionB);
+    expect(cartB.count).toBe(1);
+    expect(cartB.items[0]).toMatchObject({ itemId: itemB, quantity: 3 });
+  });
+
+  it("CC-03: when the order insert fails, no order is created and the cart is left exactly as it was", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 2);
+    const ordersBefore = countOrders();
+
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw new Error("simulated order insert failure");
+    });
+
+    expect(() => placeOrder(seedUser(), validSubmission(), sessionId)).toThrow(
+      "simulated order insert failure",
+    );
+
+    expect(countOrders()).toBe(ordersBefore);
+    expect(getCart(sessionId)).toEqual({
+      items: [expect.objectContaining({ itemId, quantity: 2 })],
+      count: 1,
+      subtotal: 20,
+    });
+  });
+
+  it("CC-04: when a line item insert fails, the order that was inserted moments before is rolled back too, and the cart is left exactly as it was", () => {
+    const sessionId = seedSession();
+    const itemId = seedFullItem(10);
+    addItem(sessionId, itemId, 2);
+    const ordersBefore = countOrders();
+    const lineItemsBefore = countLineItems();
+
+    const originalInsert = db.insert.bind(db);
+    let insertCount = 0;
+    vi.spyOn(db, "insert").mockImplementation((table) => {
+      insertCount += 1;
+      if (insertCount === 2) {
+        throw new Error("simulated line item insert failure");
+      }
+      return originalInsert(table);
+    });
+
+    expect(() => placeOrder(seedUser(), validSubmission(), sessionId)).toThrow(
+      "simulated line item insert failure",
+    );
+
+    // No partial order and no orphaned line item survive the rollback.
+    expect(countOrders()).toBe(ordersBefore);
+    expect(countLineItems()).toBe(lineItemsBefore);
+    // A failed placement leaves the cart intact for a retry
+    // (legacy-analysis/rebuild-guidance.md:98, design.md § Decisions D4).
+    expect(getCart(sessionId)).toEqual({
+      items: [expect.objectContaining({ itemId, quantity: 2 })],
+      count: 1,
+      subtotal: 20,
+    });
+  });
+
+  it("CC-05: the cart is cleared by calling clearCartAfterOrder from cart/checkout.ts, not by a delete order/ issues itself", () => {
+    const sessionId = seedSession();
+    addItem(sessionId, seedFullItem(10), 1);
+    const clearSpy = vi.spyOn(checkout, "clearCartAfterOrder");
+
+    placeOrder(seedUser(), validSubmission(), sessionId);
+
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+    expect(clearSpy).toHaveBeenCalledWith(sessionId);
+    expect(getCart(sessionId).count).toBe(0);
+  });
+});
+
 describe("createLineItems", () => {
   it("LI-01: creates one line item per cart line, carrying its quantity and unit price from the cart", () => {
-    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const { orderId } = placeOrder(seedUser(), validSubmission(), seedSession());
     const sessionId = seedSession();
     const itemA = seedFullItem(10);
     const itemB = seedFullItem(5);
@@ -251,7 +361,7 @@ describe("createLineItems", () => {
   });
 
   it("LI-02: each line item carries the catid and productid resolved from the catalogue, alongside itemid", () => {
-    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const { orderId } = placeOrder(seedUser(), validSubmission(), seedSession());
     const sessionId = seedSession();
     const itemA = seedFullItem(10);
     addItem(sessionId, itemA, 1);
@@ -268,7 +378,7 @@ describe("createLineItems", () => {
   });
 
   it("LI-03: line numbers are assigned from 1 upward, contiguous, matching the (order_id, line_number) key", () => {
-    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const { orderId } = placeOrder(seedUser(), validSubmission(), seedSession());
     const sessionId = seedSession();
     addItem(sessionId, seedFullItem(10), 1);
     addItem(sessionId, seedFullItem(5), 1);
@@ -280,7 +390,7 @@ describe("createLineItems", () => {
   });
 
   it("LI-04: unit_price is the price captured at placement — a later catalogue price change leaves it unchanged", () => {
-    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const { orderId } = placeOrder(seedUser(), validSubmission(), seedSession());
     const sessionId = seedSession();
     const itemId = seedFullItem(10);
     addItem(sessionId, itemId, 1);
@@ -293,7 +403,7 @@ describe("createLineItems", () => {
   });
 
   it("LI-05: quantity_shipped is 0 on a newly created line item", () => {
-    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const { orderId } = placeOrder(seedUser(), validSubmission(), seedSession());
     const sessionId = seedSession();
     addItem(sessionId, seedFullItem(10), 1);
 
@@ -303,7 +413,7 @@ describe("createLineItems", () => {
   });
 
   it("LI-06: order_amount is the sum of quantity times unit price across the line items, matching the cart's subtotal", () => {
-    const { orderId } = placeOrder(seedUser(), validSubmission());
+    const { orderId } = placeOrder(seedUser(), validSubmission(), seedSession());
     const sessionId = seedSession();
     addItem(sessionId, seedFullItem(10), 3);
     addItem(sessionId, seedFullItem(5), 2);

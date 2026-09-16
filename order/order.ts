@@ -1,11 +1,12 @@
 // Order creation — writes the order row (design.md § Decisions D2, D4;
-// § Spec discrepancies S6, S10, S11, S14). Leave this module easy to
-// extend: SWHM-T-0157 appends line item creation and SWHM-T-0158 appends
-// cart clearing, both inside the transaction that arrives with SWHM-T-0158
-// (§ Scope boundary — no partial transaction here).
+// § Spec discrepancies S6, S10, S11, S14), and (SWHM-T-0158) wraps the
+// whole placement — order insert, line item inserts, cart clear — in one
+// db.transaction() so a failure partway leaves neither a partial order nor
+// a cleared cart behind (legacy-analysis/rebuild-guidance.md:98,
+// design.md § Decisions D4).
 import { eq } from "drizzle-orm";
 
-import { toOrderLineItems } from "../cart/checkout";
+import { clearCartAfterOrder, toOrderLineItems } from "../cart/checkout";
 import { db } from "../db/client";
 import { orderLineItem, orders } from "../db/schema";
 import type { OrderAddress } from "./types";
@@ -53,30 +54,53 @@ function shippingColumns(address: Partial<OrderAddress>) {
 
 // userName comes from the caller (the route's resolved session), never from
 // the submission body — an order placed on someone else's account is the
-// failure this prevents (design.md § Steps 3).
-export function placeOrder(userName: string, submission: OrderSubmission): PlaceOrderResult {
-  const { orderId } = db
-    .insert(orders)
-    .values({
-      userName,
-      orderDate: new Date(),
-      orderAmount: ORDER_AMOUNT_PLACEHOLDER,
-      status: "PENDING",
-      ...billingColumns(submission.billingAddress),
-      ...shippingColumns(submission.shippingAddress),
-    })
-    .returning({ orderId: orders.orderId })
-    .get();
+// failure this prevents (design.md § Steps 3). sessionId identifies the
+// shopper's cart (cart_items is keyed on session id, never username) — the
+// route's caller resolves it the same way it resolves userName, from the
+// signed-on session.
+//
+// One db.transaction covers all three writes (PLAN.md step 3; F11
+// precedent: cart/cart.ts's updateItems, admin/order-status.ts). If the
+// order insert or a line item insert throws, the whole transaction rolls
+// back — no partial order, no orphaned line item, and clearCartAfterOrder
+// never runs, so a failed placement leaves the cart intact for a retry.
+export function placeOrder(
+  userName: string,
+  submission: OrderSubmission,
+  sessionId: string,
+): PlaceOrderResult {
+  return db.transaction(() => {
+    const { orderId } = db
+      .insert(orders)
+      .values({
+        userName,
+        orderDate: new Date(),
+        orderAmount: ORDER_AMOUNT_PLACEHOLDER,
+        status: "PENDING",
+        ...billingColumns(submission.billingAddress),
+        ...shippingColumns(submission.shippingAddress),
+      })
+      .returning({ orderId: orders.orderId })
+      .get();
 
-  return { orderId, email: submission.billingAddress.email! };
+    createLineItems(orderId, sessionId);
+
+    // Cleared only after creation succeeds, and only through the cart
+    // capability's own seam — order/ issues no delete against cart_items
+    // of its own (§ Codebase findings F3; PLAN.md step 1).
+    clearCartAfterOrder(sessionId);
+
+    return { orderId, email: submission.billingAddress.email! };
+  });
 }
 
 // Turns the cart into the order's line items and totals the order from
 // them (design.md § Steps 2, 5; § Decisions D5, D9). Calls the seam
 // cart/checkout.ts already exports rather than re-reading cart_items or
-// reimplementing the mapping (PLAN.md step 1); the caller still owns
-// wrapping this with placeOrder and clearing the cart in one transaction
-// (SWHM-T-0158 — § Scope boundary, no partial transaction here).
+// reimplementing the mapping (PLAN.md step 1). Called by placeOrder inside
+// its transaction, and kept independently exported and callable (as the
+// createLineItems tests below exercise directly) — SWHM-T-0157's original
+// design this ticket builds on rather than replaces.
 export function createLineItems(orderId: number, sessionId: string): void {
   const lines = toOrderLineItems(sessionId);
 
