@@ -52,12 +52,12 @@
 
 ## 7. Cart Form Handling
 
-- [ ] 7.1 Create CartAction to handle cart.do requests (SWHM-T-0139)
-- [ ] 7.2 Implement quantity update handling (SWHM-T-0139)
-- [ ] 7.3 Implement item remove handling (SWHM-T-0139)
-- [ ] 7.4 Validate quantity values (reject negative/non-numeric) (SWHM-T-0139)
-- [ ] 7.5 Recalculate totals after updates (SWHM-T-0139)
-- [ ] 7.6 Redirect back to cart display (SWHM-T-0139)
+- [x] 7.1 Create CartAction to handle cart.do requests (SWHM-T-0139)
+- [x] 7.2 Implement quantity update handling (SWHM-T-0139)
+- [x] 7.3 Implement item remove handling (SWHM-T-0139)
+- [x] 7.4 Validate quantity values (reject negative/non-numeric) (SWHM-T-0139)
+- [x] 7.5 Recalculate totals after updates (SWHM-T-0139)
+- [x] 7.6 Redirect back to cart display (SWHM-T-0139)
 
 ## 8. Integration with Checkout
 
