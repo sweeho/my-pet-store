@@ -2,12 +2,12 @@
 
 ## 1. Data Model & Entities
 
-- [ ] 1.1 Implement SupplierOrder entity with poId, userId, poDate, poStatus fields (SWHM-T-0187)
-- [ ] 1.2 Implement LineItem entity with itemId, quantity, quantityShipped, categoryId, productId, unitPrice (SWHM-T-0187)
-- [ ] 1.3 Implement Inventory entity with itemId, quantity fields (SWHM-T-0187)
-- [ ] 1.4 Establish relationships: SupplierOrder → LineItem (one-to-many) (SWHM-T-0187)
-- [ ] 1.5 Establish relationships: SupplierOrder → Inventory (via LineItem → Item) (SWHM-T-0187)
-- [ ] 1.6 Define order status enumeration: PENDING, COMPLETED (SWHM-T-0187)
+- [x] 1.1 Implement SupplierOrder entity with poId, userId, poDate, poStatus fields (SWHM-T-0187)
+- [x] 1.2 Implement LineItem entity with itemId, quantity, quantityShipped, categoryId, productId, unitPrice (SWHM-T-0187)
+- [x] 1.3 Implement Inventory entity with itemId, quantity fields (SWHM-T-0187)
+- [x] 1.4 Establish relationships: SupplierOrder → LineItem (one-to-many) (SWHM-T-0187)
+- [x] 1.5 Establish relationships: SupplierOrder → Inventory (via LineItem → Item) (SWHM-T-0187)
+- [x] 1.6 Define order status enumeration: PENDING, COMPLETED (SWHM-T-0187)
 
 ## 2. Message-Driven Bean Setup
 
