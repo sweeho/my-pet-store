@@ -217,16 +217,25 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
   });
 
   describe("submitting the order", () => {
-    it("EOI-13: an accepted submission reaches the placement path rather than the form's error branch", async () => {
+    it("EOI-13: an accepted submission carries { orderId, email } to the confirmation screen", async () => {
+      // The state is the assertion, not an extra. /api/order returns
+      // PlaceOrderResult and /order-completed renders the order-id block and the
+      // e-mail line from `location.state` — so navigating without it produced a
+      // confirmation screen with its headline and nothing else, and the e2e
+      // journey failed on the missing order-id block while every unit test here
+      // stayed green. This test asserted only the path, which is exactly the gap
+      // that let it through.
       const { default: userEvent } = await import("@testing-library/user-event");
-      mockOrderResponse(jsonResponse({ accepted: true }));
+      mockOrderResponse(jsonResponse({ orderId: 1042, email: "shopper@example.com" }));
       renderPage();
       await screen.findByText("Persian");
 
       await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
 
       await vi.waitFor(() => {
-        expect(navigateMock).toHaveBeenCalledWith("/order-completed");
+        expect(navigateMock).toHaveBeenCalledWith("/order-completed", {
+          state: { orderId: 1042, email: "shopper@example.com" },
+        });
       });
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });

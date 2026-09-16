@@ -5,6 +5,7 @@ import { Button, RequireSignOn } from "@/components";
 
 import { COUNTRIES, STATES } from "../../account/vocabulary";
 import type { Cart } from "../../cart/types";
+import type { PlaceOrderResult } from "../../order/order";
 
 const inputClassName =
   "border-input bg-background text-foreground rounded-md border px-3 py-2 text-sm";
@@ -362,7 +363,18 @@ export function EnterOrderInformation() {
     setFormError(null);
     setBillingError(null);
     setShippingError(null);
-    navigate("/order-completed");
+
+    // Carry the placement result to the confirmation screen as router state.
+    // `/api/order` already returns exactly `{ orderId, email }` (PlaceOrderResult)
+    // and `order-completed.tsx` already renders from `location.state` — this
+    // navigate was the only link missing, so the confirmation rendered its
+    // headline and silently omitted the order-id block and the e-mail line.
+    //
+    // Router state rather than a query string or a refetch: the id is not a
+    // shareable address, and the screen is documented to issue no fetch to read
+    // an order back.
+    const placement = (await response.json()) as PlaceOrderResult;
+    navigate("/order-completed", { state: placement });
   }
 
   return (
