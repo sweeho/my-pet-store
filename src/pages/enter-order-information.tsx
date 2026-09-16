@@ -5,6 +5,7 @@ import { Button, RequireSignOn } from "@/components";
 
 import { COUNTRIES, STATES } from "../../account/vocabulary";
 import type { Cart } from "../../cart/types";
+import { OrderValidationError, validateOrderSubmission } from "../../order/validation";
 
 const inputClassName =
   "border-input bg-background text-foreground rounded-md border px-3 py-2 text-sm";
@@ -317,54 +318,37 @@ export function EnterOrderInformation() {
     setShipping((current) => ({ ...current, [field]: value }));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const response = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        billingAddress: toOrderAddress(billing),
-        shippingAddress: toOrderAddress(shipping),
-      }),
-    });
+    const submission = {
+      billingAddress: toOrderAddress(billing),
+      shippingAddress: toOrderAddress(shipping),
+    };
 
-    if (!response.ok) {
-      const body = (await response.json()) as {
-        error: string;
-        section?: "billing" | "shipping";
-        field?: keyof SectionForm;
-        emptyCart?: boolean;
-      };
-
-      // An empty cart isn't a field problem the shopper can fix on this
-      // form — send them back to /cart, where the message they're refused
-      // for is shown (design.md § Spec discrepancies S5; SWHM-T-0161).
-      if (body.emptyCart) {
-        navigate("/cart", { state: { emptyCart: true } });
-        return;
-      }
-
+    // Validated here, with the same function the server runs
+    // (order/validation.ts, imported not reimplemented), rather than
+    // deferred to /api/order: that call now happens only after payment
+    // authorization succeeds (design.md § Decisions D6), so it must never
+    // run merely to discover a bad address field.
+    try {
+      validateOrderSubmission(submission);
+    } catch (error) {
+      if (!(error instanceof OrderValidationError)) throw error;
       setFormError(SUBMISSION_REFUSED_MESSAGE);
       setBillingError(
-        body.section === "billing" && body.field
-          ? { field: body.field, message: body.error }
-          : null,
+        error.section === "billing" ? { field: error.field, message: error.message } : null,
       );
       setShippingError(
-        body.section === "shipping" && body.field
-          ? { field: body.field, message: body.error }
-          : null,
+        error.section === "shipping" ? { field: error.field, message: error.message } : null,
       );
       return;
     }
 
-    const result = (await response.json()) as { orderId: number; email: string };
-
     setFormError(null);
     setBillingError(null);
     setShippingError(null);
-    navigate("/order-completed", { state: { orderId: result.orderId, email: result.email } });
+    navigate("/payment", { state: submission });
   }
 
   return (

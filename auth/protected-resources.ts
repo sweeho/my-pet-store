@@ -18,6 +18,10 @@ export const PROTECTED_RESOURCES: ProtectedResource[] = [
   { legacy: "customer.do", path: "/api/customer" },
   { legacy: "enter_order_information.screen", path: "/enter-order-information" },
   { legacy: "order_completed.jsp", path: "/order-completed" },
+  // Payment authorization has no counterpart in the legacy app (design.md §
+  // Codebase findings F8) — these two are new, not ported.
+  { legacy: "payment.screen", path: "/payment" },
+  { legacy: "payment.authorize", path: "/api/payment" },
   { legacy: "signon_welcome.screen", path: "/signon-welcome" },
   { legacy: "index.jsp", path: ADMIN_HOME_PAGE, requiresRole: ADMIN_ROLE },
   { legacy: "AdminRequestProcessor", path: "/api/admin", requiresRole: ADMIN_ROLE },

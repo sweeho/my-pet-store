@@ -63,14 +63,31 @@ function renderPage() {
   );
 }
 
-// Only /api/cart is mocked unless a test also calls mockOrderResponse to
-// answer a POST to /api/order — the two default tests here never submit.
-function mockOrderResponse(response: ReturnType<typeof jsonResponse>) {
-  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
-    if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
-    if (url === "/api/order" && init?.method === "POST") return Promise.resolve(response);
-    throw new Error(`unexpected fetch: ${url}`);
-  });
+// Submission is validated client-side (order/validation.ts, imported not
+// reimplemented) and never fetches /api/order directly any more — that call
+// moves to /payment, after authorization (design.md § Decisions D6). Every
+// test here only ever needs the /api/cart mock the top-level beforeEach
+// already sets up.
+const VALID_FIELDS: Record<string, string> = {
+  "First name": "Maya",
+  "Last name": "Chen",
+  "Street address line 1": "1150 Alder Street",
+  City: "San Francisco",
+  "Postal code": "94117",
+  Telephone: "415-555-0132",
+  Email: "maya.chen@example.com",
+};
+
+async function fillValidSection(
+  sectionName: string,
+  userEvent: typeof import("@testing-library/user-event").default,
+  overrides: Record<string, string> = {},
+) {
+  const section = within(screen.getByRole("region", { name: sectionName }));
+  const values = { ...VALID_FIELDS, ...overrides };
+  for (const [label, value] of Object.entries(values)) {
+    await userEvent.type(section.getByLabelText(label), value);
+  }
 }
 
 describe("EnterOrderInformation (/enter-order-information)", () => {
@@ -217,17 +234,21 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
   });
 
   describe("submitting the order", () => {
-    it("EOI-13: an accepted submission reaches the placement path rather than the form's error branch, carrying the order id and email forward", async () => {
+    it("EOI-13: a fully valid submission carries the validated addresses to /payment rather than the form's error branch", async () => {
       const { default: userEvent } = await import("@testing-library/user-event");
-      mockOrderResponse(jsonResponse({ orderId: 1005, email: "maya.chen@example.com" }));
       renderPage();
       await screen.findByText("Persian");
 
+      await fillValidSection("Billing Information", userEvent);
+      await fillValidSection("Shipping Information", userEvent);
       await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
 
       await vi.waitFor(() => {
-        expect(navigateMock).toHaveBeenCalledWith("/order-completed", {
-          state: { orderId: 1005, email: "maya.chen@example.com" },
+        expect(navigateMock).toHaveBeenCalledWith("/payment", {
+          state: {
+            billingAddress: expect.objectContaining({ email: "maya.chen@example.com" }),
+            shippingAddress: expect.objectContaining({ email: "maya.chen@example.com" }),
+          },
         });
       });
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -235,23 +256,11 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
 
     it("EOI-14: a refused submission shows one form-level alert and marks the offending field invalid with its own message", async () => {
       const { default: userEvent } = await import("@testing-library/user-event");
-      mockOrderResponse(
-        jsonResponse(
-          {
-            error: "Shipping email must be a valid email address.",
-            section: "shipping",
-            field: "email",
-          },
-          { ok: false, status: 400 },
-        ),
-      );
       renderPage();
       await screen.findByText("Persian");
 
-      const shipping = within(screen.getByRole("region", { name: "Shipping Information" }));
-      const shippingEmail = shipping.getByLabelText("Email");
-      await userEvent.type(shippingEmail, "maya.chen@example");
-
+      await fillValidSection("Billing Information", userEvent);
+      await fillValidSection("Shipping Information", userEvent, { Email: "maya.chen@example" });
       await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
 
       const alerts = await screen.findAllByRole("alert");
@@ -259,45 +268,23 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
       expect(
         screen.getByText("Please correct the highlighted field before submitting your order."),
       ).toBeInTheDocument();
+      const shipping = within(screen.getByRole("region", { name: "Shipping Information" }));
+      const shippingEmail = shipping.getByLabelText("Email");
       expect(shippingEmail).toHaveAttribute("aria-invalid", "true");
       const fieldAlert = screen.getByText("Shipping email must be a valid email address.");
       expect(fieldAlert).toHaveAttribute("role", "alert");
       expect(navigateMock).not.toHaveBeenCalled();
     });
 
-    it("EOI-16: an empty-cart refusal sends the shopper back to /cart flagged, rather than showing a form alert", async () => {
-      const { default: userEvent } = await import("@testing-library/user-event");
-      mockOrderResponse(
-        jsonResponse(
-          {
-            error: "Your shopping cart is empty. Please add items before ordering.",
-            emptyCart: true,
-          },
-          { ok: false, status: 400 },
-        ),
-      );
-      renderPage();
-      await screen.findByText("Persian");
-
-      await userEvent.click(screen.getByRole("button", { name: "Submit Order" }));
-
-      await vi.waitFor(() => {
-        expect(navigateMock).toHaveBeenCalledWith("/cart", { state: { emptyCart: true } });
-      });
-      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    });
-
     it("EOI-15: a refused submission leaves every entered value intact", async () => {
       const { default: userEvent } = await import("@testing-library/user-event");
-      mockOrderResponse(
-        jsonResponse(
-          { error: "Billing first name is required.", section: "billing", field: "givenName" },
-          { ok: false, status: 400 },
-        ),
-      );
       renderPage();
       await screen.findByText("Persian");
 
+      // Billing is left entirely empty, so validateOrderSubmission refuses
+      // on its first required field (order/validation.ts checks billing
+      // before shipping) — this is the "nothing filled in yet" case, distinct
+      // from EOI-14's "only the email is wrong" case.
       const billing = within(screen.getByRole("region", { name: "Billing Information" }));
       const billingFamilyName = billing.getByLabelText("Last name");
       await userEvent.type(billingFamilyName, "Chen");
@@ -306,6 +293,7 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
       await screen.findAllByRole("alert");
 
       expect(billingFamilyName).toHaveValue("Chen");
+      expect(navigateMock).not.toHaveBeenCalled();
     });
   });
 });

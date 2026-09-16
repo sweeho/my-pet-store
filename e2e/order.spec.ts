@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { CARD_TYPES } from "../account/vocabulary";
+
 /**
  * UI / E2E TEST
  *
@@ -116,6 +118,23 @@ async function submitOrderForm(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Submit Order" }).click();
 }
 
+// Since SWHM-T-0177, a valid order form submission lands on /payment rather
+// than placing the order directly (design.md § Decisions D6) — every
+// happy-path journey now authorizes a card here before /api/order is ever
+// called. A last four of "1111" never matches the stub processor's decline
+// sentinel (payment/processor.ts), so this always approves.
+async function fillPaymentAndSubmit(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/payment$/);
+  await page.getByLabel("Cardholder name").fill("Maya Chen");
+  await page.getByRole("combobox", { name: "Card type" }).selectOption(CARD_TYPES[0]);
+  await page.getByLabel("Card number").fill("4111111111111111");
+  await page.getByRole("combobox", { name: "Expiry month" }).selectOption("09");
+  const expiryYear = page.getByRole("combobox", { name: "Expiry year" });
+  const years = await expiryYear.locator("option").allTextContents();
+  await expiryYear.selectOption(years[years.length - 1]);
+  await page.getByRole("button", { name: "Submit payment" }).click();
+}
+
 function orderIdFrom(ariaLabel: string): number {
   const match = /(\d+)$/.exec(ariaLabel);
   if (!match) throw new Error(`test bug: "${ariaLabel}" does not end in a number`);
@@ -133,6 +152,7 @@ test.describe("Order placement journey", () => {
     await fillAddress(page, "Billing Information", BILLING);
     await fillAddress(page, "Shipping Information", SHIPPING);
     await submitOrderForm(page);
+    await fillPaymentAndSubmit(page);
 
     await expect(page).toHaveURL(/\/order-completed$/);
     const firstIdBlock = page.getByRole("group", { name: /^Your order Id is \d+$/ });
@@ -151,6 +171,7 @@ test.describe("Order placement journey", () => {
     await fillAddress(page, "Billing Information", BILLING);
     await fillAddress(page, "Shipping Information", SHIPPING);
     await submitOrderForm(page);
+    await fillPaymentAndSubmit(page);
 
     await expect(page).toHaveURL(/\/order-completed$/);
     const secondIdBlock = page.getByRole("group", { name: /^Your order Id is \d+$/ });
@@ -166,15 +187,19 @@ test.describe("Order placement journey", () => {
     await addItemToCart(page);
     await reachCheckoutForm(page);
 
-    // The cart empties between reaching the form and submitting it — as if
-    // another tab cleared it — so it is the server's guard that refuses
-    // this, not a client-side check the form never performs.
-    const deleteResponse = await page.request.delete(`/api/cart/items/${ITEM_ID}`);
-    expect(deleteResponse.ok()).toBe(true);
-
     await fillAddress(page, "Billing Information", BILLING);
     await fillAddress(page, "Shipping Information", SHIPPING);
     await submitOrderForm(page);
+
+    // The cart empties after reaching /payment but before authorizing — as
+    // if another tab cleared it — so it is the server's guard inside
+    // POST /api/order that refuses this (called only once authorization
+    // approves, design.md § Decisions D6), not a client-side check the
+    // payment form performs itself.
+    const deleteResponse = await page.request.delete(`/api/cart/items/${ITEM_ID}`);
+    expect(deleteResponse.ok()).toBe(true);
+
+    await fillPaymentAndSubmit(page);
 
     await expect(page).toHaveURL(/\/cart$/);
     await expect(
