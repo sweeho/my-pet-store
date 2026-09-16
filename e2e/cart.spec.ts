@@ -48,7 +48,10 @@ test.describe("Shopping cart journey", () => {
   test("edits a quantity, activates Update Cart, and finds the new quantity and a consistent subtotal", async ({
     page,
   }) => {
+    const otherItemId = "BIRDS-FINCHES-1";
+    const otherUnitCost = 12.0;
     await page.request.post("/api/cart", { data: { itemId: ITEM_ID, quantity: 1 } });
+    await page.request.post("/api/cart", { data: { itemId: otherItemId, quantity: 1 } });
     await page.goto("/cart");
 
     const quantityInput = page.getByRole("spinbutton", { name: `Quantity for ${ITEM_ID}` });
@@ -56,14 +59,17 @@ test.describe("Shopping cart journey", () => {
     await page.getByRole("button", { name: "Update Cart" }).click();
 
     await expect(quantityInput).toHaveValue("3");
-    // Matches src/pages/cart.tsx's own formatCurrency exactly — a plain
-    // toFixed(2) omits the thousands separator Intl.NumberFormat adds
-    // ("$1,050.00", not "$1050.00"), which is the assertion that timed out
-    // against the real page in CI (this ticket's first real execution).
+    // Two lines, deliberately: a subtotal equal to either line's own total
+    // (single-item cart) can't disambiguate the two "$1,050.00" cells CI's
+    // first real execution found — the line-total cell and the subtotal
+    // both render it. Summing two distinct lines produces a subtotal no
+    // single cell repeats. Matches src/pages/cart.tsx's own formatCurrency
+    // exactly — a plain toFixed(2) omits the thousands separator
+    // Intl.NumberFormat adds.
     const expectedSubtotal = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-    }).format(UNIT_COST * 3);
+    }).format(UNIT_COST * 3 + otherUnitCost);
     await expect(page.getByText(expectedSubtotal)).toBeVisible();
   });
 

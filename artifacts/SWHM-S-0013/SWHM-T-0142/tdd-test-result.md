@@ -68,8 +68,25 @@ Genuine test bug, not a product bug: the assertion built its expected string wit
 `(UNIT_COST * 3).toFixed(2)` → `"1050.00"`, but `src/pages/cart.tsx`'s own `formatCurrency` uses
 `Intl.NumberFormat("en-US", {style: "currency", currency: "USD"})`, which renders `"$1,050.00"`
 with a thousands separator. Fixed by building the expected string with the same
-`Intl.NumberFormat` call instead of `toFixed`. No app code changed. This is the real red→green
-this ticket's spec produced — the five other tests passed on the first real execution.
+`Intl.NumberFormat` call instead of `toFixed`, and pushed.
+
+CI's second run on this fix failed the same test again, differently:
+
+```
+Error: expect.toBeVisible: Error: strict mode violation: getByText('$1,050.00') resolved to 2 elements:
+    1) <td ...>$1,050.00</td> aka getByRole('cell', { name: '$1,050.00' })
+    2) <span ...>$1,050.00</span> aka locator('span').filter({ hasText: '$' })
+1 failed, 33 passed (20.9s)
+```
+
+Second genuine test bug: with only one line in the cart, its line-total cell and the cart's
+subtotal render the identical string, so `getByText` matched both and Playwright's strict mode
+refused to pick one. Fixed by seeding a second line (`BIRDS-FINCHES-1`, unit cost `12.00`) so the
+subtotal (`$1,062.00`) is arithmetically distinct from either individual line total (`$1,050.00`,
+`$12.00`) — this also better matches "a subtotal consistent with it" by proving the sum, not just
+echoing a single line. No app code changed either time. This is the real red→green this ticket's
+spec produced across two CI runs — the other five tests passed on the first real execution and
+every run since.
 
 ## Green run
 
