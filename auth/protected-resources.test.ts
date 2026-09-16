@@ -13,4 +13,18 @@ describe("auth/protected-resources", () => {
     expect(resource).toBeDefined();
     expect(resource?.requiresRole).toBeUndefined();
   });
+
+  it("PR-03 (AC-1): /payment is a protected resource with no role requirement", () => {
+    const resource = findProtectedResource("/payment");
+
+    expect(resource).toBeDefined();
+    expect(resource?.requiresRole).toBeUndefined();
+  });
+
+  it("PR-04: /api/payment is a protected resource with no role requirement", () => {
+    const resource = findProtectedResource("/api/payment");
+
+    expect(resource).toBeDefined();
+    expect(resource?.requiresRole).toBeUndefined();
+  });
 });
