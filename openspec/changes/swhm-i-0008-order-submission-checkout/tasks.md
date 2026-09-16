@@ -62,12 +62,12 @@
 
 ## 7. Order Confirmation Display
 
-- [ ] 7.1 Create OrderResponse transfer object with orderId, email (SWHM-T-0159)
-- [ ] 7.2 Create order_completed.jsp confirmation page (SWHM-T-0159)
-- [ ] 7.3 Display order ID: <c:out value="${orderresponse.orderId}"/> (SWHM-T-0159)
-- [ ] 7.4 Display customer email: <c:out value="${orderresponse.email}"/> (SWHM-T-0159)
-- [ ] 7.5 Show message "You should receive a confirmation e-mail soon at [email]" (SWHM-T-0159)
-- [ ] 7.6 Provide link to continue shopping or view order status (SWHM-T-0159)
+- [x] 7.1 Create OrderResponse transfer object with orderId, email (SWHM-T-0159)
+- [x] 7.2 Create order_completed.jsp confirmation page (SWHM-T-0159)
+- [x] 7.3 Display order ID: <c:out value="${orderresponse.orderId}"/> (SWHM-T-0159)
+- [x] 7.4 Display customer email: <c:out value="${orderresponse.email}"/> (SWHM-T-0159)
+- [x] 7.5 Show message "You should receive a confirmation e-mail soon at [email]" (SWHM-T-0159)
+- [x] 7.6 Provide link to continue shopping or view order status (SWHM-T-0159)
 
 ## 8. Confirmation Notification
 
