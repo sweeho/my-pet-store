@@ -40,6 +40,17 @@ Create or modify only: `order/order.ts`, `order/order.test.ts`.
 
 Nothing else. `cart/checkout.ts` is complete as of SWHM-T-0157 — call it, do not edit it.
 
+**Deviation recorded during implementation:** `placeOrder`'s cart-clearing needs the shopper's
+`sessionId` (`cart_items` is keyed on session id, never username — `cart/cart.ts`), which
+`placeOrder(userName, submission)`'s existing two-parameter signature had no way to receive. The
+only caller is `routes/api/order/index.post.ts` (already resolving the full session via
+`useSignOnSession`, but previously discarding everything but `j_signon_username`), so widening
+`placeOrder` to a third `sessionId` parameter required a two-line change there — destructure the
+session once and pass `session.id` through, alongside `userName`. No other caller exists, the
+401/400 branches are untouched, and `SWHM-T-0161` (which depends on this ticket) already lists this
+same route file in its own ownership, confirming the file is meant to keep accreting wiring across
+this ticket sequence. See `summary.md` § Notes for the full reasoning.
+
 ## Design reference
 
 `artifacts/SWHM-S-0014/design/mockup-enter-order-information.html` carries the note that the shopper is told their cart is emptied on submit. That promise is what this ticket makes true.
