@@ -164,3 +164,43 @@ export const itemDetails = sqliteTable(
     index("item_details_locale_idx").on(t.locale),
   ],
 );
+
+// An order and what was in it. orders carries its own order_id because the
+// relationship to the customer is 1:N, not 1:1 — unlike the account entities
+// above, which share the customer's key (ARCHITECTURE.md § Key Decisions).
+// Indexed on status and order_date: the queue query filters on status, the
+// report queries filter on the date range, and both are the whole read.
+export const orders = sqliteTable(
+  "orders",
+  {
+    orderId: integer("order_id").primaryKey({ autoIncrement: true }),
+    userName: text("user_name")
+      .notNull()
+      .references(() => authUsers.userName),
+    orderDate: integer("order_date", { mode: "timestamp" }).notNull(),
+    orderAmount: real("order_amount").notNull(),
+    status: text("status").notNull(),
+  },
+  (t) => [index("orders_status_idx").on(t.status), index("orders_order_date_idx").on(t.orderDate)],
+);
+
+// Keyed on (order_id, line_number) rather than a surrogate id — a line item
+// never exists without its order. unitPrice is the price PAID, written at
+// order creation and never joined back to item.listPrice (design.md D4): a
+// join to the current price would silently restate history every time a
+// price changes.
+export const orderLineItem = sqliteTable(
+  "order_line_item",
+  {
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => orders.orderId, { onDelete: "cascade" }),
+    lineNumber: integer("line_number").notNull(),
+    itemid: text("itemid")
+      .notNull()
+      .references(() => item.itemid),
+    quantity: integer("quantity").notNull(),
+    unitPrice: real("unit_price").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
+);

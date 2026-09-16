@@ -2,13 +2,14 @@ import path from "node:path";
 import { randomBytes, scryptSync } from "node:crypto";
 
 import { Database } from "bun:sqlite";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
 import { seedCatalog } from "../catalog/seed";
 import { ADMIN_ROLE } from "../auth/protected-resources";
 
-import { authUsers, category, users } from "./schema";
+import { authUsers, category, orderLineItem, orders, users } from "./schema";
 
 // Same scrypt format auth/user.ts's hashPassword/matchPassword use
 // ("scrypt$salt$derived"). Not imported from there: auth/user.ts pulls in
@@ -68,4 +69,106 @@ if (db.select().from(authUsers).all().length === 0) {
 // Planning record, D9).
 if (db.select().from(category).all().length === 0 && !process.env.VITEST) {
   seedCatalog();
+}
+
+// Demo orders (design.md D1/D4), seeded only alongside the rest of the demo
+// data and only after the catalog exists — order_line_item.itemid is a real
+// foreign key, so an id the catalogue seed never created fails at insert.
+// Spans every OrderStatus, more than one category per some orders, and dates
+// wide enough apart that a later date-range filter can exclude some of them.
+type SeedOrder = {
+  userName: string;
+  daysAgo: number;
+  status: string;
+  lines: { itemid: string; quantity: number; unitPrice: number }[];
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const SEED_ORDERS: SeedOrder[] = [
+  {
+    userName: "alice_customer",
+    daysAgo: 60,
+    status: "PENDING",
+    lines: [
+      { itemid: "BIRDS-PARROTS-1", quantity: 1, unitPrice: 599.99 },
+      { itemid: "CATS-SHORTHAIR-1", quantity: 2, unitPrice: 89.99 },
+    ],
+  },
+  {
+    userName: "bob_customer",
+    daysAgo: 45,
+    status: "APPROVED",
+    lines: [{ itemid: "DOGS-BULLDOGS-1", quantity: 1, unitPrice: 449.99 }],
+  },
+  {
+    userName: "alice_customer",
+    daysAgo: 30,
+    status: "COMPLETED",
+    lines: [
+      { itemid: "FISH-GOLDFISH-1", quantity: 3, unitPrice: 4.99 },
+      { itemid: "REPTILES-LIZARDS-1", quantity: 1, unitPrice: 59.99 },
+    ],
+  },
+  {
+    userName: "carol_customer",
+    daysAgo: 20,
+    status: "DENIED",
+    lines: [{ itemid: "BIRDS-FINCHES-1", quantity: 1, unitPrice: 24.99 }],
+  },
+  {
+    userName: "bob_customer",
+    daysAgo: 10,
+    status: "APPROVED",
+    lines: [{ itemid: "CATS-LONGHAIR-1", quantity: 1, unitPrice: 199.99 }],
+  },
+  {
+    userName: "alice_customer",
+    daysAgo: 2,
+    status: "COMPLETED",
+    lines: [
+      { itemid: "DOGS-POODLES-2", quantity: 1, unitPrice: 349.99 },
+      { itemid: "FISH-ANGELFISH-1", quantity: 2, unitPrice: 14.99 },
+    ],
+  },
+];
+
+if (!process.env.VITEST && db.select().from(orders).all().length === 0) {
+  const demoCustomers = [...new Set(SEED_ORDERS.map((seedOrder) => seedOrder.userName))];
+  for (const userName of demoCustomers) {
+    if (!db.select().from(authUsers).where(eq(authUsers.userName, userName)).get()) {
+      db.insert(authUsers)
+        .values({ userName, password: hashAdminPassword("customer"), role: null })
+        .run();
+    }
+  }
+
+  for (const seedOrder of SEED_ORDERS) {
+    const orderAmount = seedOrder.lines.reduce(
+      (sum, line) => sum + line.quantity * line.unitPrice,
+      0,
+    );
+    const { orderId } = db
+      .insert(orders)
+      .values({
+        userName: seedOrder.userName,
+        orderDate: new Date(Date.now() - seedOrder.daysAgo * DAY_MS),
+        orderAmount: Math.round(orderAmount * 100) / 100,
+        status: seedOrder.status,
+      })
+      .returning({ orderId: orders.orderId })
+      .get();
+
+    db.insert(orderLineItem)
+      .values(
+        seedOrder.lines.map((line, index) => ({
+          orderId,
+          lineNumber: index + 1,
+          itemid: line.itemid,
+          quantity: line.quantity,
+          unitPrice: line.unitPrice,
+        })),
+      )
+      .run();
+  }
 }

@@ -22,6 +22,7 @@
     "auth",
     "account",
     "catalog",
+    "admin",
     "e2e"
   ]
 }
