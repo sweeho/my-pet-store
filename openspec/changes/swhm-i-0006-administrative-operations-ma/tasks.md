@@ -38,11 +38,11 @@
 
 ## 5. Order Management
 
-- [ ] 5.1 Implement AdminRequestBD.getOrdersByStatus(status) (SWHM-T-0118)
-- [ ] 5.2 Delegate to OPCAdminFacade.getOrdersByStatus(status) (SWHM-T-0118)
-- [ ] 5.3 Implement ApplRequestProcessor.getOrders() to marshal XML response (SWHM-T-0118)
-- [ ] 5.4 Create OrderDetails transfer object with orderId, userId, orderDate, orderValue, orderStatus (SWHM-T-0118)
-- [ ] 5.5 Implement XML marshaling to <Order> elements with OrderId, UserId, OrderDate, OrderAmount, OrderStatus (SWHM-T-0118)
+- [x] 5.1 Implement AdminRequestBD.getOrdersByStatus(status) (SWHM-T-0118)
+- [x] 5.2 Delegate to OPCAdminFacade.getOrdersByStatus(status) (SWHM-T-0118)
+- [x] 5.3 Implement ApplRequestProcessor.getOrders() to marshal XML response (SWHM-T-0118)
+- [x] 5.4 Create OrderDetails transfer object with orderId, userId, orderDate, orderValue, orderStatus (SWHM-T-0118)
+- [x] 5.5 Implement XML marshaling to <Order> elements with OrderId, UserId, OrderDate, OrderAmount, OrderStatus (SWHM-T-0118)
 
 ## 6. Order Status Updates
 
