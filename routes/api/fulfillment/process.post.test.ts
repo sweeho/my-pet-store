@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { H3Event } from "nitro/h3";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { authUsers, inventory, item, orderLineItem, orders } from "../../../db/schema";
 import { db } from "../../../db/client";
@@ -63,6 +63,69 @@ function postRequest(body: unknown): H3Event {
 }
 
 describe("POST /api/fulfillment/process", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  // AC-1: a failure inside a run leaves the order exactly as it was and is
+  // answered with a 500 carrying no stack trace. Same db.update() spy
+  // technique as fulfillment/fulfillment.test.ts's PT-07, applied here to
+  // prove the route's own error mapping, not the pass's rollback (already
+  // proven there).
+  it("PT-05: an unexpected failure partway through processing answers 500 with no stack trace or internal message, and changes nothing", async () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder(itemid, 30);
+    const inventoryBefore = db.select().from(inventory).where(eq(inventory.itemid, itemid)).get();
+
+    const originalUpdate = db.update.bind(db);
+    let updateCount = 0;
+    vi.spyOn(db, "update").mockImplementation((table) => {
+      updateCount += 1;
+      if (updateCount === 2) {
+        throw new Error("simulated shipped-quantity write failure");
+      }
+      return originalUpdate(table);
+    });
+
+    const event = postRequest({ orderId });
+    const result = await processFulfillment(event);
+
+    expect(event.res.status).toBe(500);
+    expect(result).toEqual({ error: expect.any(String) });
+    const body = result as { error: string };
+    expect(body.error).not.toContain("simulated");
+    expect(body.error).not.toMatch(/\bat\s+\S+:\d+:\d+/); // no stack frame
+    expect(body.error.toLowerCase()).not.toContain("error:");
+
+    expect(orderSnapshot(orderId)).toEqual({ status: "PENDING", quantityShipped: 0 });
+    expect(db.select().from(inventory).where(eq(inventory.itemid, itemid)).get()).toEqual(
+      inventoryBefore,
+    );
+  });
+
+  it("PT-06: an unexpected failure is logged to the server's error output naming the order it was processing", async () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder(itemid, 30);
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const originalUpdate = db.update.bind(db);
+    let updateCount = 0;
+    vi.spyOn(db, "update").mockImplementation((table) => {
+      updateCount += 1;
+      if (updateCount === 2) {
+        throw new Error("simulated shipped-quantity write failure");
+      }
+      return originalUpdate(table);
+    });
+
+    await processFulfillment(postRequest({ orderId }));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining(String(orderId)),
+      expect.anything(),
+    );
+  });
+
   it("PT-01: a body that is not an order identifier is refused with 400 and changes no inventory, no shipped quantity and no order status", async () => {
     const itemid = seedItem(10);
     const orderId = seedOrder(itemid, 5);
