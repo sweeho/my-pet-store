@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { db } from "../db/client";
-import { authUsers, orders, supplierPo } from "../db/schema";
+import { authUsers, notifications, orders, supplierPo } from "../db/schema";
 import { applyDecision } from "./decision";
 
 /**
@@ -39,6 +39,10 @@ function readStatus(orderId: number): string {
 
 function readSupplierPo(orderId: number) {
   return db.select().from(supplierPo).where(eq(supplierPo.orderId, orderId)).get();
+}
+
+function readNotifications(orderId: number) {
+  return db.select().from(notifications).where(eq(notifications.orderId, orderId)).all();
 }
 
 describe("applyDecision", () => {
@@ -119,5 +123,42 @@ describe("applyDecision", () => {
     applyDecision(orderId, "DENIED");
 
     expect(readSupplierPo(orderId)).toBeUndefined();
+  });
+
+  it("DA-11: an approval queues exactly one APPROVAL notification (SWHM-T-0213)", () => {
+    const orderId = seedOrder("PENDING");
+
+    applyDecision(orderId, "APPROVED");
+
+    const rows = readNotifications(orderId);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ orderId, kind: "APPROVAL" });
+  });
+
+  it("DA-12: a denial queues exactly one DENIAL notification (SWHM-T-0213)", () => {
+    const orderId = seedOrder("PENDING");
+
+    applyDecision(orderId, "DENIED");
+
+    const rows = readNotifications(orderId);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ orderId, kind: "DENIAL" });
+  });
+
+  it("DA-13: a skipped terminal order queues no notification (SWHM-T-0213)", () => {
+    const orderId = seedOrder("APPROVED");
+
+    applyDecision(orderId, "DENIED");
+
+    expect(readNotifications(orderId)).toHaveLength(0);
+  });
+
+  it("DA-14: deciding the same order twice queues exactly one notification (D7)", () => {
+    const orderId = seedOrder("PENDING");
+
+    applyDecision(orderId, "APPROVED");
+    applyDecision(orderId, "APPROVED");
+
+    expect(readNotifications(orderId)).toHaveLength(1);
   });
 });
