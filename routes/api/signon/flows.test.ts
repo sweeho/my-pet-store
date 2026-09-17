@@ -62,7 +62,12 @@ describe("account creation + authentication flows", () => {
     expect(signOnResult).toEqual({ signedOn: true, redirectTo: "/signon-welcome" });
 
     const session = await getSession(sessionRequest(sessionCookieFrom(signOnEvent)!));
-    expect(session).toEqual({ j_signon: true, j_signon_username: username, original_url: null });
+    expect(session).toEqual({
+      j_signon: true,
+      j_signon_username: username,
+      original_url: null,
+      role: null,
+    });
   });
 
   it("FT-02: a 25-character username is accepted for creation and authenticates", async () => {
@@ -139,7 +144,12 @@ describe("account creation + authentication flows", () => {
     expect(signOnResult).toEqual({ signedOn: false, redirectTo: "/signon-failed" });
 
     const session = await getSession(sessionRequest(sessionCookieFrom(signOnEvent)!));
-    expect(session).toEqual({ j_signon: false, j_signon_username: null, original_url: null });
+    expect(session).toEqual({
+      j_signon: false,
+      j_signon_username: null,
+      original_url: null,
+      role: null,
+    });
   });
 
   it("FT-06: a username that was never created fails sign-in and its session stays unsigned-on", async () => {
@@ -151,6 +161,11 @@ describe("account creation + authentication flows", () => {
     expect(signOnResult).toEqual({ signedOn: false, redirectTo: "/signon-failed" });
 
     const session = await getSession(sessionRequest(sessionCookieFrom(signOnEvent)!));
-    expect(session).toEqual({ j_signon: false, j_signon_username: null, original_url: null });
+    expect(session).toEqual({
+      j_signon: false,
+      j_signon_username: null,
+      original_url: null,
+      role: null,
+    });
   });
 });
