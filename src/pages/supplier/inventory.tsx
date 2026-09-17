@@ -14,8 +14,6 @@ import {
 
 import type { InventoryRow, InventoryUpdate } from "../../../fulfillment/types";
 
-type SessionInfo = { j_signon_username: string | null };
-
 // Same shared class string src/pages/customer.tsx uses — there is no input
 // primitive in src/components/ui/ and none is added here (F8).
 const inputClassName =
@@ -36,25 +34,10 @@ function initialRows(items: InventoryRow[]): Record<string, RowState> {
 }
 
 export function InventoryContent() {
-  const [username, setUsername] = useState<string | null>(null);
   const [items, setItems] = useState<InventoryRow[] | null>(null);
   const [rows, setRows] = useState<Record<string, RowState>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/signon/session")
-      .then((response) => response.json() as Promise<SessionInfo>)
-      .then((session) => {
-        if (!cancelled) setUsername(session.j_signon_username);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,7 +108,7 @@ export function InventoryContent() {
   }
 
   return (
-    <AdminShell username={username} backTo="/supplier" backLabel="Back to supplier home">
+    <AdminShell backTo="/supplier" backLabel="Back to supplier home">
       <h1 className="text-foreground text-2xl font-bold">Inventory</h1>
       <p className="text-muted-foreground mt-1.5 text-sm">
         Enter a new quantity and tick Update for every item you want to change, then submit the

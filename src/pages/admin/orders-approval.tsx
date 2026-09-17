@@ -14,8 +14,6 @@ import {
 import type { ApprovalDecision } from "../../../order/approval-types";
 import type { OrderStatus, OrderSummary, Page } from "../../../admin/types";
 
-type SessionInfo = { j_signon_username: string | null };
-
 // The fixed request/response shape SWHM-T-0211's route already carries
 // (PLAN.md's Fixed interface contracts) — restated locally rather than
 // imported across the src/ boundary from admin/order-status.ts, which no
@@ -81,26 +79,11 @@ function describeCommitOutcome(result: DecisionBatchResult): string {
 // table and per-row control (SWHM-T-0208), the colour tokens (SWHM-T-0209)
 // and now selection, bulk Approve/Deny, and Commit.
 export function OrdersApprovalContent() {
-  const [username, setUsername] = useState<string | null>(null);
   const [page, setPage] = useState<Page<OrderSummary> | null>(null);
   const [statusChoices, setStatusChoices] = useState<Record<number, OrderStatus>>({});
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [committing, setCommitting] = useState(false);
   const [commitMessage, setCommitMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/signon/session")
-      .then((response) => response.json() as Promise<SessionInfo>)
-      .then((session) => {
-        if (!cancelled) setUsername(session.j_signon_username);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -215,7 +198,7 @@ export function OrdersApprovalContent() {
   }
 
   return (
-    <AdminShell username={username} backTo="/admin" backLabel="Back to admin home">
+    <AdminShell backTo="/admin" backLabel="Back to admin home">
       <div className="mt-4">
         <h1 className="text-foreground text-2xl font-bold">Orders Approval</h1>
         <p className="text-muted-foreground mt-1.5 text-sm">

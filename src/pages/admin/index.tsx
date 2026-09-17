@@ -1,24 +1,7 @@
 import { AdminShell, Button, RequireAdmin } from "@/components";
 
-type SessionInfo = { j_signon_username: string | null };
-
 export function AdminHomeContent() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/signon/session")
-      .then((response) => response.json() as Promise<SessionInfo>)
-      .then((session) => {
-        if (!cancelled) setUsername(session.j_signon_username);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   async function handleLogout() {
     await fetch("/api/signon/logout", { method: "POST" });
@@ -26,7 +9,7 @@ export function AdminHomeContent() {
   }
 
   return (
-    <AdminShell username={username}>
+    <AdminShell>
       <h1 className="text-foreground text-2xl font-bold">Administration</h1>
       <p className="text-muted-foreground mt-3 max-w-[38rem] text-sm leading-6">
         The administration client manages orders and gives visibility of sales across the catalog.

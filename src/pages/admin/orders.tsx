@@ -12,8 +12,6 @@ import { cn } from "@/utils";
 
 import type { OrderStatus, OrderSummary, Page } from "../../../admin/types";
 
-type SessionInfo = { j_signon_username: string | null };
-
 // The three the requirement names, in one request (PLAN.md step 3). PENDING
 // is deliberately excluded here — the API still serves it, and the approval
 // workflow that acts on it belongs to swhm-i-0011 (design.md S14).
@@ -81,22 +79,7 @@ function isOrdersPage(result: unknown): result is Page<OrderSummary> {
 }
 
 export function OrdersContent() {
-  const [username, setUsername] = useState<string | null>(null);
   const [page, setPage] = useState<Page<OrderSummary> | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/signon/session")
-      .then((response) => response.json() as Promise<SessionInfo>)
-      .then((session) => {
-        if (!cancelled) setUsername(session.j_signon_username);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +97,7 @@ export function OrdersContent() {
   }, []);
 
   return (
-    <AdminShell username={username} backTo="/admin" backLabel="Back to admin home">
+    <AdminShell backTo="/admin" backLabel="Back to admin home">
       <div className="mt-4 flex items-end justify-between gap-4">
         <div>
           <h1 className="text-foreground text-2xl font-bold">Orders</h1>
