@@ -1,92 +1,91 @@
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Home from "./index";
 
 /**
  * UI / PAGE TEST
  *
- * Same tools as a component test (render + user-event), but exercises a
- * full page and a real interactive feature end to end inside jsdom: opening
- * the mobile nav (a @headlessui/react Dialog) and reading what appears.
- * Copy this pattern for other pages under src/pages.
+ * The bespoke header and its @headlessui/react mobile-nav Dialog are gone
+ * (design.md F10, SWHM-T-0237): the shared header (StoreHeader) now renders
+ * on every screen, home included, so this page's own tests cover the hero
+ * content and defer the header's own behaviour to
+ * src/components/StoreHeader.test.tsx. StoreHeader fetches
+ * /api/signon/session and /api/cart on mount, so fetch is stubbed here too.
  *
- * Wrapped in a MemoryRouter because the page now renders react-router
- * `Link`s for every in-app destination (src/pages/signon.test.tsx does the
- * same for the same reason).
+ * Wrapped in a MemoryRouter because the page renders react-router `Link`s
+ * for every in-app destination (src/pages/signon.test.tsx does the same for
+ * the same reason).
  */
+function jsonResponse(body: unknown) {
+  return { ok: true, status: 200, json: async () => body };
+}
+
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+const EMPTY_CART = { items: [], count: 0, subtotal: 0 };
+
+const fetchMock = vi.fn();
+
+function renderPage() {
+  return render(<Home />, { wrapper: MemoryRouter });
+}
+
 describe("Home page", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+    expect(screen.getByRole("link", { name: "Cart" })).toHaveAttribute("href", "/cart");
+  });
+
   it("renders the hero heading and primary CTA that opens the catalogue", () => {
-    render(<Home />, { wrapper: MemoryRouter });
+    renderPage();
 
     expect(screen.getByRole("heading", { level: 1, name: "My Pet Store" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/catalog");
   });
 
   it("lists the store highlights", () => {
-    render(<Home />, { wrapper: MemoryRouter });
+    renderPage();
 
     for (const highlight of ["Free shipping", "Vet-approved", "Curated brands", "Local pickup"]) {
       expect(screen.getByText(highlight)).toBeInTheDocument();
     }
   });
 
-  it("points the header Log in control at the sign-on screen", () => {
-    render(<Home />, { wrapper: MemoryRouter });
+  it("points the header's sign-in control at the sign-on screen", async () => {
+    renderPage();
 
-    expect(screen.getByRole("link", { name: /Log in/ })).toHaveAttribute("href", "/signon");
-  });
-
-  it("opens the mobile nav dialog and lists the nav links inside it", async () => {
-    const user = userEvent.setup();
-    render(<Home />, { wrapper: MemoryRouter });
-
-    // The mobile menu content isn't mounted until the dialog opens.
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Open main menu" }));
-
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByRole("link", { name: "Catalog" })).toHaveAttribute(
-      "href",
-      "/catalog",
-    );
-    expect(within(dialog).getByRole("link", { name: "My account" })).toHaveAttribute(
-      "href",
-      "/customer",
-    );
-    expect(within(dialog).getByRole("link", { name: "Log in" })).toHaveAttribute("href", "/signon");
-  });
-
-  it("closes the mobile nav dialog", async () => {
-    const user = userEvent.setup();
-    render(<Home />, { wrapper: MemoryRouter });
-
-    await user.click(screen.getByRole("button", { name: "Open main menu" }));
-    await screen.findByRole("dialog");
-
-    await user.click(screen.getByRole("button", { name: "Close menu" }));
-
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/signon");
   });
 
   it("requests no third-party asset and renders a store-branded mark instead of the template logo", async () => {
-    const user = userEvent.setup();
-    const { container } = render(<Home />, { wrapper: MemoryRouter });
+    const { container } = renderPage();
 
-    // The header logo link keeps its accessible name and now renders an
-    // in-repo SVG mark rather than a hotlinked <img>.
     const headerLogoLink = screen.getByRole("link", { name: "My Pet Store" });
     expect(within(headerLogoLink).queryByRole("img")).not.toBeInTheDocument();
     expect(headerLogoLink.querySelector("svg")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Open main menu" }));
-    const dialog = await screen.findByRole("dialog");
-    const dialogLogoLink = within(dialog).getByRole("link", { name: "My Pet Store" });
-    expect(within(dialogLogoLink).queryByRole("img")).not.toBeInTheDocument();
-    expect(dialogLogoLink.querySelector("svg")).toBeInTheDocument();
 
     for (const element of container.querySelectorAll<HTMLImageElement | HTMLAnchorElement>(
       "[src], [href]",
@@ -100,14 +99,11 @@ describe("Home page", () => {
   });
 
   it("leaves no navigation or hero link as a placeholder fragment", async () => {
-    const user = userEvent.setup();
-    render(<Home />, { wrapper: MemoryRouter });
+    renderPage();
+    await screen.findByRole("link", { name: "Sign in" });
 
-    await user.click(screen.getByRole("button", { name: "Open main menu" }));
-    await screen.findByRole("dialog");
-
-    // The brand logo links (accessible name "My Pet Store") are out of
-    // scope for this ticket — only nav and hero controls are checked.
+    // The brand logo link (accessible name "My Pet Store") is out of scope
+    // for this ticket — only nav and hero controls are checked.
     const logoLinks = screen.getAllByRole("link", { name: "My Pet Store" });
     for (const link of screen.getAllByRole("link")) {
       if (logoLinks.includes(link)) continue;

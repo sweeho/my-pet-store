@@ -1,8 +1,10 @@
-import { RequireSignOn } from "@/components";
+import { RequireSignOn, StoreHeader } from "@/components";
+import { CONTENT_WIDTH } from "@/components/layout";
+import { cn } from "@/utils";
 
 type SessionInfo = { j_signon_username: string | null };
 
-function SignOnWelcomeContent() {
+export function SignOnWelcomeContent() {
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,11 +22,14 @@ function SignOnWelcomeContent() {
   }, []);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-8">
-      <h1 className="text-foreground text-2xl font-bold">
-        Welcome{username ? `, ${username}` : ""}
-      </h1>
-    </div>
+    <>
+      <StoreHeader />
+      <div className={cn(CONTENT_WIDTH, "mx-auto flex flex-col gap-4 p-6")}>
+        <h1 className="text-foreground text-2xl font-bold">
+          Welcome{username ? `, ${username}` : ""}
+        </h1>
+      </div>
+    </>
   );
 }
 

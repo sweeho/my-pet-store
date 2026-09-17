@@ -10,6 +10,16 @@ function jsonResponse(body: unknown, init: { ok: boolean; status?: number } = { 
   return { ok: init.ok, status: init.status ?? (init.ok ? 200 : 400), json: async () => body };
 }
 
+// The shared header (StoreHeader) fetches these two on every mount, so
+// every fetch mock in this file has to answer them.
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+const EMPTY_HEADER_CART = { items: [], count: 0, subtotal: 0 };
+
 const PRODUCT: Product = {
   id: "BIRDS-PARROTS",
   categoryId: "BIRDS",
@@ -67,6 +77,20 @@ describe("ProductPage (/catalog/product/:productId)", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
+      return new Promise(() => {});
+    });
+
+    renderAt("/catalog/product/BIRDS-PARROTS");
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+    expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
+  });
+
   it("PT-01: shows the product's items, each linking to its detail", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.startsWith("/api/customer"))
@@ -75,6 +99,10 @@ describe("ProductPage (/catalog/product/:productId)", () => {
         return Promise.resolve(jsonResponse(PRODUCT));
       }
       if (url.startsWith("/api/catalog/items")) return Promise.resolve(jsonResponse(ITEMS_PAGE));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -97,6 +125,10 @@ describe("ProductPage (/catalog/product/:productId)", () => {
       if (url.startsWith("/api/catalog/items")) {
         return Promise.resolve(jsonResponse({ objects: [], start: 0, hasNext: false }));
       }
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -131,6 +163,10 @@ describe("ProductPage (/catalog/product/:productId)", () => {
         );
       }
       if (url.startsWith("/api/catalog/items")) return Promise.resolve(jsonResponse(EMPTY_PAGE));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -160,6 +196,10 @@ describe("ProductPage (/catalog/product/:productId)", () => {
         return Promise.resolve(jsonResponse(PRODUCT_ZH));
       }
       if (url.startsWith("/api/catalog/items")) return Promise.resolve(jsonResponse(EMPTY_PAGE));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -182,6 +222,10 @@ describe("ProductPage (/catalog/product/:productId)", () => {
         return Promise.resolve(jsonResponse(PRODUCT));
       }
       if (url.startsWith("/api/catalog/items")) return Promise.resolve(jsonResponse(EMPTY_PAGE));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -207,6 +251,10 @@ describe("ProductPage (/catalog/product/:productId)", () => {
         );
       }
       if (url.startsWith("/api/catalog/items")) return Promise.resolve(jsonResponse(ITEMS_PAGE));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 

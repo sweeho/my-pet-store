@@ -9,17 +9,49 @@ import { expect, test } from "@playwright/test";
  * elements interacting together across a full page. Prefer the
  * component-level UI test (src/pages/index.test.tsx) for anything that
  * doesn't specifically need a real browser — it's far faster.
+ *
+ * The bespoke header and its mobile-nav Dialog are gone (design.md F10,
+ * SWHM-T-0237) — every screen, home included, now renders the shared header
+ * (StoreHeader). Its own behaviour is covered by
+ * src/components/StoreHeader.test.tsx; the narrow-viewport case below is
+ * the one thing only a real browser observes (design.md § Open questions
+ * O1 — a real browser is the only tier that can see CSS-driven overlap).
  */
 test.describe("Home page", () => {
-  test("shows the hero content and desktop nav", async ({ page }) => {
+  test("shows the hero content and the shared header's desktop nav", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("My Pet Store");
     await expect(page.getByRole("link", { name: "Get started" })).toBeVisible();
 
-    for (const item of ["Catalog", "My account"]) {
+    for (const item of ["Catalog", "Cart"]) {
       await expect(page.getByRole("link", { name: item, exact: true })).toBeVisible();
     }
+  });
+
+  test("the header holds together at a 375px viewport, without overlapping the hero title (AC-7)", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+
+    const header = page.getByRole("banner");
+    await expect(header).toBeVisible();
+    for (const name of ["My Pet Store", "Catalog", "Cart", "Sign in"]) {
+      await expect(header.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+
+    const headerBox = await header.boundingBox();
+    const titleBox = await page.getByRole("heading", { level: 1 }).boundingBox();
+    expect(headerBox).not.toBeNull();
+    expect(titleBox).not.toBeNull();
+    expect(headerBox!.y + headerBox!.height).toBeLessThanOrEqual(titleBox!.y);
+
+    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
   test("has no vertical scrollbar on common viewport sizes", async ({ page }) => {
@@ -64,23 +96,5 @@ test.describe("Home page", () => {
       (href) => new URL(href, appOrigin).origin !== appOrigin,
     );
     expect(offOriginLinks).toEqual([]);
-  });
-
-  test("opens and closes the mobile nav from the hamburger button", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-
-    await expect(page.getByRole("dialog")).not.toBeVisible();
-
-    await page.getByRole("button", { name: "Open main menu" }).click();
-    // The Dialog root's own box is zero-height (its children are all
-    // `fixed`-positioned), so check its visible content instead of the
-    // wrapper element itself.
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByRole("link", { name: "My account" })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "Close menu" })).toBeVisible();
-
-    await page.getByRole("button", { name: "Close menu" }).click();
-    await expect(page.getByRole("dialog")).not.toBeVisible();
   });
 });

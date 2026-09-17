@@ -1,7 +1,9 @@
 import type { FormEvent } from "react";
 import { Link } from "react-router";
 
-import { Button, RequireSignOn } from "@/components";
+import { Button, RequireSignOn, StoreHeader } from "@/components";
+import { CONTENT_WIDTH } from "@/components/layout";
+import { cn } from "@/utils";
 
 import { COUNTRIES, STATES } from "../../account/vocabulary";
 import type { Cart } from "../../cart/types";
@@ -352,116 +354,116 @@ export function EnterOrderInformation() {
   }
 
   return (
-    <div className="mx-auto max-w-[1160px] p-6">
-      <Link to="/cart" className="text-muted-foreground text-sm hover:underline">
-        ← Shopping Cart
-      </Link>
-      <h1 className="text-foreground mt-2 text-xl font-bold">Enter Order Information</h1>
-      <p className="text-muted-foreground mt-1 text-sm">
-        Tell us where to bill this order and where to send it. Order date is recorded when you
-        submit.
-      </p>
-
-      {formError && (
-        <p
-          role="alert"
-          className="border-destructive bg-background text-destructive mt-3 rounded-md border px-3 py-2 text-sm"
-        >
-          {formError}
+    <>
+      <StoreHeader />
+      <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+        <Link to="/cart" className="text-muted-foreground text-sm hover:underline">
+          ← Shopping Cart
+        </Link>
+        <h1 className="text-foreground mt-2 text-xl font-bold">Enter Order Information</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Tell us where to bill this order and where to send it. Order date is recorded when you
+          submit.
         </p>
-      )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr_340px]"
-      >
-        <AddressSection
-          title="Billing Information"
-          badge="Address A"
-          idPrefix="billing"
-          values={billing}
-          onChange={updateBilling}
-          error={billingError}
-        />
-        <AddressSection
-          title="Shipping Information"
-          badge="Address B"
-          idPrefix="shipping"
-          values={shipping}
-          onChange={updateShipping}
-          error={shippingError}
-        />
+        {formError && (
+          <p
+            role="alert"
+            className="border-destructive bg-background text-destructive mt-3 rounded-md border px-3 py-2 text-sm"
+          >
+            {formError}
+          </p>
+        )}
 
-        <aside
-          aria-label="Your Order"
-          className="border-border bg-card flex flex-col rounded-[10px] border p-4"
-        >
-          <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
-            <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
-              Your Order
-            </h2>
-            {cart && (
-              <span className="border-border bg-secondary text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] tracking-wide uppercase">
-                {cart.count} {cart.count === 1 ? "item" : "items"}
-              </span>
-            )}
-          </div>
+        <form onSubmit={handleSubmit} className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <AddressSection
+            title="Billing Information"
+            badge="Address A"
+            idPrefix="billing"
+            values={billing}
+            onChange={updateBilling}
+            error={billingError}
+          />
+          <AddressSection
+            title="Shipping Information"
+            badge="Address B"
+            idPrefix="shipping"
+            values={shipping}
+            onChange={updateShipping}
+            error={shippingError}
+          />
 
-          {cart === null ? (
-            <p role="status" className="text-muted-foreground text-sm">
-              Loading order summary…
-            </p>
-          ) : (
-            <>
-              <ul>
-                {cart.items.map((item) => (
-                  <li
-                    key={item.itemId}
-                    className="border-border flex items-start gap-3 border-b py-2.5 last:border-0"
-                  >
-                    <span className="bg-secondary border-border flex h-[26px] w-[26px] flex-none items-center justify-center rounded-md border text-xs font-semibold">
-                      {item.quantity}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium">{item.productName}</span>
-                      <span className="text-muted-foreground mt-0.5 block text-[11px]">
-                        {item.itemId} · {formatCurrency(item.unitCost)} each
-                      </span>
-                    </span>
-                    <span className="text-right text-sm tabular-nums">
-                      {formatCurrency(item.lineTotal)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="border-border mt-1 flex flex-col gap-2 border-t pt-3">
-                <div className="text-muted-foreground flex justify-between text-sm">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(cart.subtotal)}</span>
-                </div>
-                <div className="text-foreground flex justify-between text-[15px] font-bold">
-                  <span>Order total</span>
-                  <span>{formatCurrency(cart.subtotal)}</span>
-                </div>
-              </div>
-              <p className="text-muted-foreground mt-2.5 text-[11px] leading-relaxed">
-                Tax and shipping are not calculated at this stage. Your cart is emptied once the
-                order is submitted.
+          <aside
+            aria-label="Your Order"
+            className="border-border bg-card col-span-full flex flex-col rounded-[10px] border p-4"
+          >
+            <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
+              <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
+                Your Order
+              </h2>
+              {cart && (
+                <span className="border-border bg-secondary text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] tracking-wide uppercase">
+                  {cart.count} {cart.count === 1 ? "item" : "items"}
+                </span>
+              )}
+            </div>
+
+            {cart === null ? (
+              <p role="status" className="text-muted-foreground text-sm">
+                Loading order summary…
               </p>
-            </>
-          )}
+            ) : (
+              <>
+                <ul>
+                  {cart.items.map((item) => (
+                    <li
+                      key={item.itemId}
+                      className="border-border flex items-start gap-3 border-b py-2.5 last:border-0"
+                    >
+                      <span className="bg-secondary border-border flex h-[26px] w-[26px] flex-none items-center justify-center rounded-md border text-xs font-semibold">
+                        {item.quantity}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium">{item.productName}</span>
+                        <span className="text-muted-foreground mt-0.5 block text-[11px]">
+                          {item.itemId} · {formatCurrency(item.unitCost)} each
+                        </span>
+                      </span>
+                      <span className="text-right text-sm tabular-nums">
+                        {formatCurrency(item.lineTotal)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="border-border mt-1 flex flex-col gap-2 border-t pt-3">
+                  <div className="text-muted-foreground flex justify-between text-sm">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(cart.subtotal)}</span>
+                  </div>
+                  <div className="text-foreground flex justify-between text-[15px] font-bold">
+                    <span>Order total</span>
+                    <span>{formatCurrency(cart.subtotal)}</span>
+                  </div>
+                </div>
+                <p className="text-muted-foreground mt-2.5 text-[11px] leading-relaxed">
+                  Tax and shipping are not calculated at this stage. Your cart is emptied once the
+                  order is submitted.
+                </p>
+              </>
+            )}
 
-          <div className="mt-4 flex flex-col gap-2">
-            <Button type="submit" className="w-full">
-              Submit Order
-            </Button>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/cart">Return to Cart</Link>
-            </Button>
-          </div>
-        </aside>
-      </form>
-    </div>
+            <div className="mt-4 flex flex-col gap-2">
+              <Button type="submit" className="w-full">
+                Submit Order
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/cart">Return to Cart</Link>
+              </Button>
+            </div>
+          </aside>
+        </form>
+      </div>
+    </>
   );
 }
 

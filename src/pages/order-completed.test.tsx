@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OrderCompleted } from "./order-completed";
 
@@ -13,11 +13,29 @@ import { OrderCompleted } from "./order-completed";
  *
  * The order id and email arrive as router navigation state — { orderId, email }
  * — the shape SWHM-T-0156's placement route returns (PLAN.md step 4); this
- * page issues no fetch to read an order back. design.md § Spec discrepancies
- * S13: the mockup renders "Your order Id is" as a label above the number as
- * a separate, larger element, so the two are composed into one accessible
- * name on the wrapping group rather than asserted as one text node.
+ * page issues no fetch to read an order back. design.md S13: the mockup
+ * renders "Your order Id is" as a label above the number as a separate,
+ * larger element, so the two are composed into one accessible name on the
+ * wrapping group rather than asserted as one text node.
+ *
+ * The shared header (StoreHeader, SWHM-T-0237) fetches /api/signon/session
+ * and /api/cart on every mount, so fetch is stubbed for those two even
+ * though this page itself still issues no fetch of its own.
  */
+function jsonResponse(body: unknown) {
+  return { ok: true, status: 200, json: async () => body };
+}
+
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+const EMPTY_CART = { items: [], count: 0, subtotal: 0 };
+
+const fetchMock = vi.fn();
+
 function renderWithState(state: unknown) {
   return render(
     <MemoryRouter initialEntries={[{ pathname: "/order-completed", state }]}>
@@ -27,6 +45,30 @@ function renderWithState(state: unknown) {
 }
 
 describe("OrderCompleted (/order-completed)", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    renderWithState({ orderId: 1005, email: "user@example.com" });
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+    // Exact name, not /cart/i — this page's own breadcrumb also links to
+    // /cart under the name "Shopping Cart".
+    expect(screen.getByRole("link", { name: "Cart" })).toHaveAttribute("href", "/cart");
+  });
+
   it("OC-01: composes the order id label and number into one accessible group naming the scenario's exact sentence", () => {
     renderWithState({ orderId: 1005, email: "user@example.com" });
 

@@ -1,6 +1,8 @@
 import { Link, useParams, useSearchParams } from "react-router";
 
-import { Button, LanguageSwitcher } from "@/components";
+import { Button, LanguageSwitcher, StoreHeader } from "@/components";
+import { CONTENT_WIDTH } from "@/components/layout";
+import { cn } from "@/utils";
 
 import { DEFAULT_LOCALE } from "../../../../catalog/locale";
 import type { Item, Page, Product } from "../../../../catalog/types";
@@ -49,86 +51,87 @@ export default function ProductPage() {
     : { prevStart: null, nextStart: null };
 
   return (
-    <div className="mx-auto max-w-[672px] p-6">
-      <Link
-        to={product ? `/catalog/category/${product.categoryId}` : "/catalog"}
-        className="text-muted-foreground text-sm hover:underline"
-      >
-        ← {product ? product.categoryId : "Catalog"}
-      </Link>
+    <>
+      <StoreHeader>
+        {locale && <LanguageSwitcher locale={locale} onChange={setLocale} />}
+      </StoreHeader>
+      <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+        <Link
+          to={product ? `/catalog/category/${product.categoryId}` : "/catalog"}
+          className="text-muted-foreground text-sm hover:underline"
+        >
+          ← {product ? product.categoryId : "Catalog"}
+        </Link>
 
-      <div className="mt-2 flex items-start justify-between gap-4">
         {product ? (
-          <div>
+          <div className="mt-2">
             <h1 className="text-foreground text-xl font-bold">{product.name}</h1>
             <p className="text-muted-foreground mt-1 text-sm">{product.description}</p>
           </div>
         ) : (
-          <h1 className="text-foreground text-xl font-bold">Product</h1>
+          <h1 className="text-foreground mt-2 text-xl font-bold">Product</h1>
         )}
-        {locale && (
-          <div>
-            <LanguageSwitcher locale={locale} onChange={setLocale} />
+
+        {reason === "missing-translation" ? (
+          <UnavailableInLanguage
+            locale={locale ?? DEFAULT_LOCALE}
+            entity="product"
+            onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+            onChangeLocale={setLocale}
+          />
+        ) : !product ? (
+          <p role="status" className="text-muted-foreground mt-6 text-sm">
+            Loading product…
+          </p>
+        ) : !items ? (
+          <p role="status" className="text-muted-foreground mt-6 text-sm">
+            Loading items…
+          </p>
+        ) : showUnavailable ? (
+          <UnavailableInLanguage
+            locale={locale ?? DEFAULT_LOCALE}
+            noun="items"
+            entity="product"
+            onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
+            onChangeLocale={setLocale}
+          />
+        ) : (
+          <ul className="mt-6 flex flex-col gap-2">
+            {items.objects.map((item) => (
+              <li key={item.itemId}>
+                <Link
+                  to={`/catalog/item/${item.itemId}`}
+                  className="text-foreground hover:underline"
+                >
+                  {item.description}
+                </Link>
+                <span className="text-muted-foreground ml-2 text-xs">
+                  ${item.listPrice.toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {reason !== "missing-translation" && items && !showUnavailable && (
+          <div className="mt-4 flex gap-2">
+            <Button
+              variant="outline"
+              disabled={prevStart === null}
+              onClick={() => goToStart(prevStart ?? 0)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              disabled={nextStart === null}
+              onClick={() => goToStart(nextStart ?? 0)}
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>
-
-      {reason === "missing-translation" ? (
-        <UnavailableInLanguage
-          locale={locale ?? DEFAULT_LOCALE}
-          entity="product"
-          onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
-          onChangeLocale={setLocale}
-        />
-      ) : !product ? (
-        <p role="status" className="text-muted-foreground mt-6 text-sm">
-          Loading product…
-        </p>
-      ) : !items ? (
-        <p role="status" className="text-muted-foreground mt-6 text-sm">
-          Loading items…
-        </p>
-      ) : showUnavailable ? (
-        <UnavailableInLanguage
-          locale={locale ?? DEFAULT_LOCALE}
-          noun="items"
-          entity="product"
-          onViewInEnglish={() => setLocale(DEFAULT_LOCALE)}
-          onChangeLocale={setLocale}
-        />
-      ) : (
-        <ul className="mt-6 flex flex-col gap-2">
-          {items.objects.map((item) => (
-            <li key={item.itemId}>
-              <Link to={`/catalog/item/${item.itemId}`} className="text-foreground hover:underline">
-                {item.description}
-              </Link>
-              <span className="text-muted-foreground ml-2 text-xs">
-                ${item.listPrice.toFixed(2)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {reason !== "missing-translation" && items && !showUnavailable && (
-        <div className="mt-4 flex gap-2">
-          <Button
-            variant="outline"
-            disabled={prevStart === null}
-            onClick={() => goToStart(prevStart ?? 0)}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            disabled={nextStart === null}
-            onClick={() => goToStart(nextStart ?? 0)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
