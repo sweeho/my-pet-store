@@ -81,8 +81,8 @@
 
 ## 10. Notifications & Transitions
 
-- [ ] 10.1 Queue approval notification on order APPROVED (SWHM-T-0213)
-- [ ] 10.2 Queue denial notification on order DENIED (SWHM-T-0213)
-- [ ] 10.3 Trigger doTransition() after status change (SWHM-T-0213)
-- [ ] 10.4 Send supplier PO to supplier queue on APPROVED (SWHM-T-0213)
-- [ ] 10.5 Handle notification errors gracefully (SWHM-T-0213)
+- [x] 10.1 Queue approval notification on order APPROVED (SWHM-T-0213)
+- [x] 10.2 Queue denial notification on order DENIED (SWHM-T-0213)
+- [x] 10.3 Trigger doTransition() after status change (SWHM-T-0213)
+- [x] 10.4 Send supplier PO to supplier queue on APPROVED (SWHM-T-0213)
+- [x] 10.5 Handle notification errors gracefully (SWHM-T-0213)
