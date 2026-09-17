@@ -20,6 +20,6 @@
 
 ## 4. Testing
 
-- [ ] 4.1 Test order approval notification (SWHM-T-0227)
-- [ ] 4.2 Test order completion notification (SWHM-T-0227)
-- [ ] 4.3 Test missing email handling (SWHM-T-0227)
+- [x] 4.1 Test order approval notification (SWHM-T-0227)
+- [x] 4.2 Test order completion notification (SWHM-T-0227)
+- [x] 4.3 Test missing email handling (SWHM-T-0227)
