@@ -12,22 +12,22 @@
 
 ## 2. Customer-facing screens
 
-- [ ] 2.1 Render the header on cart, account, payment, order form, order confirmation, sign-on welcome, account-creation error, the not-found screen and the four catalogue screens (SWHM-T-0237)
-- [ ] 2.2 Pass the catalogue language switcher into the header's trailing slot (design.md D9) (SWHM-T-0237)
-- [ ] 2.3 Move every customer-facing screen onto the shared store column width (design.md D6) (SWHM-T-0237)
-- [ ] 2.4 Re-flow the order form to two columns with a full-width summary (design.md D7, F9) (SWHM-T-0237)
-- [ ] 2.5 Decide and cover the header's narrow-viewport behaviour at 375px (design.md O1) (SWHM-T-0237)
+- [x] 2.1 Render the header on cart, account, payment, order form, order confirmation, sign-on welcome, account-creation error, the not-found screen and the four catalogue screens (SWHM-T-0237)
+- [x] 2.2 Pass the catalogue language switcher into the header's trailing slot (design.md D9) (SWHM-T-0237)
+- [x] 2.3 Move every customer-facing screen onto the shared store column width (design.md D6) (SWHM-T-0237)
+- [x] 2.4 Re-flow the order form to two columns with a full-width summary (design.md D7, F9) (SWHM-T-0237)
+- [x] 2.5 Decide and cover the header's narrow-viewport behaviour at 375px (design.md O1) (SWHM-T-0237)
 
 ## 3. Home and About on the design tokens
 
-- [ ] 3.1 Replace the home page's bespoke navigation bar and mobile dialog with the shared header (SWHM-T-0237)
-- [ ] 3.2 Move the home page and About page onto the design tokens, removing every raw palette class (SWHM-T-0237)
-- [ ] 3.3 Replace the mobile-nav browser and page specifications with header assertions (design.md F10, § Phases phase 4) (SWHM-T-0237)
+- [x] 3.1 Replace the home page's bespoke navigation bar and mobile dialog with the shared header (SWHM-T-0237)
+- [x] 3.2 Move the home page and About page onto the design tokens, removing every raw palette class (SWHM-T-0237)
+- [x] 3.3 Replace the mobile-nav browser and page specifications with header assertions (design.md F10, § Phases phase 4) (SWHM-T-0237)
 
 ## 4. Conformance tests
 
-- [ ] 4.1 Add the content-width conformance test over the screen sources (design.md D11) (SWHM-T-0237)
-- [ ] 4.2 Add the palette-class conformance test over the home and About sources (design.md D11) (SWHM-T-0237)
+- [x] 4.1 Add the content-width conformance test over the screen sources (design.md D11) (SWHM-T-0237)
+- [x] 4.2 Add the palette-class conformance test over the home and About sources (design.md D11) (SWHM-T-0237)
 
 ## 5. Administration and supplier screens
 
