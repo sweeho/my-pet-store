@@ -38,6 +38,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.87 0 0);
+
+  /* status tints — orders approval screen (design.md § Decisions D9).
+     Light values are the mockup's own (artifacts/SWHM-S-0018/design/
+     mockup-orders-approval.html), taken verbatim rather than re-derived. */
+  --status-pending-bg: oklch(0.965 0.055 95);
+  --status-pending-fg: oklch(0.45 0.09 80);
+  --status-pending-border: oklch(0.885 0.08 95);
+  --status-approved-bg: oklch(0.965 0.045 152);
+  --status-approved-fg: oklch(0.44 0.085 152);
+  --status-approved-border: oklch(0.885 0.07 152);
+  --status-denied-bg: oklch(0.965 0.035 27.325);
+  --status-denied-fg: oklch(0.505 0.2 27.325);
+  --status-denied-border: oklch(0.885 0.07 27.325);
 }
 
 .dark {
@@ -73,6 +86,21 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  /* status tints — dark counterparts are authored, not derived from light
+     (design.md § Decisions D9): a light tint run through a darkening
+     formula is not a dark tint. Same three hues as the light values above
+     (95 amber, 152 green, 27.325 red), restated at lightness/chroma that
+     reads as a dark-surface chip. */
+  --status-pending-bg: oklch(0.3 0.05 95);
+  --status-pending-fg: oklch(0.88 0.12 95);
+  --status-pending-border: oklch(0.45 0.08 95);
+  --status-approved-bg: oklch(0.28 0.045 152);
+  --status-approved-fg: oklch(0.85 0.11 152);
+  --status-approved-border: oklch(0.42 0.07 152);
+  --status-denied-bg: oklch(0.28 0.06 27.325);
+  --status-denied-fg: oklch(0.85 0.14 27.325);
+  --status-denied-border: oklch(0.42 0.09 27.325);
 }
 
 @theme inline {
@@ -112,6 +140,15 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-pending-fg: var(--status-pending-fg);
+  --color-status-pending-border: var(--status-pending-border);
+  --color-status-approved-bg: var(--status-approved-bg);
+  --color-status-approved-fg: var(--status-approved-fg);
+  --color-status-approved-border: var(--status-approved-border);
+  --color-status-denied-bg: var(--status-denied-bg);
+  --color-status-denied-fg: var(--status-denied-fg);
+  --color-status-denied-border: var(--status-denied-border);
 }
 
 @layer base {

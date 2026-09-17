@@ -114,3 +114,46 @@ describe("theme tokens — destructive pair", () => {
     ).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+// Orders approval status tints (design.md § Decisions D9; SWHM-T-0209
+// PLAN.md step 3) — covered the same way as the destructive pair above:
+// distinctness in both themes, the contrast ratio in light.
+describe("theme tokens — status pairs (pending, approved, denied)", () => {
+  const css = readFileSync(CSS_PATH, "utf-8");
+
+  const themes = [
+    { name: "light", selector: ":root" },
+    { name: "dark", selector: ".dark" },
+  ];
+
+  const statuses = ["pending", "approved", "denied"];
+
+  for (const status of statuses) {
+    it.each(themes)(
+      `$name theme: --status-${status}-bg and --status-${status}-fg are different colours`,
+      ({ name, selector }) => {
+        const block = extractBlock(css, selector);
+        const bg = extractVar(block, `--status-${status}-bg`);
+        const fg = extractVar(block, `--status-${status}-fg`);
+
+        expect(
+          bg,
+          `[${name}] --status-${status}-bg and --status-${status}-fg must not be identical`,
+        ).not.toBe(fg);
+      },
+    );
+
+    it(`light theme: --status-${status}-fg clears WCAG AA (4.5:1) against --status-${status}-bg`, () => {
+      const block = extractBlock(css, ":root");
+      const bg = extractVar(block, `--status-${status}-bg`);
+      const fg = extractVar(block, `--status-${status}-fg`);
+
+      const ratio = contrastRatio(bg, fg);
+
+      expect(
+        ratio,
+        `[light] --status-${status}-bg/--status-${status}-fg contrast is ${ratio.toFixed(2)}:1, below the 4.5:1 AA minimum`,
+      ).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+});

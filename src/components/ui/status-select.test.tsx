@@ -68,3 +68,46 @@ describe("StatusSelect", () => {
     expect(screen.getByRole("button", { name: "Status for order 1047" })).toBeDisabled();
   });
 });
+
+// AC-1 / AC-2 (SWHM-T-0209): each status renders its own status class, and
+// the status text is present in every case. Asserted by accessible text and
+// by the semantic class the component applies — never by a computed colour
+// value, which jsdom cannot resolve from a CSS custom property (PLAN.md
+// step 6).
+describe("StatusSelect — status colour coding (SWHM-T-0209)", () => {
+  it.each([
+    ["PENDING", "status-select-pending"],
+    ["APPROVED", "status-select-approved"],
+    ["DENIED", "status-select-denied"],
+  ] as const)("AC-1: %s renders the %s class on its trigger", (status, statusClass) => {
+    render(<StatusSelect value={status} orderId={1047} onChange={vi.fn()} />);
+
+    const trigger = screen.getByRole("button", { name: "Status for order 1047" });
+    expect(trigger).toHaveClass(statusClass);
+  });
+
+  it.each([
+    ["PENDING", "status-select-approved"],
+    ["APPROVED", "status-select-pending"],
+    ["DENIED", "status-select-pending"],
+  ] as const)(
+    "AC-2: %s's trigger does not also carry another status's class (%s)",
+    (status, otherStatusClass) => {
+      render(<StatusSelect value={status} orderId={1047} onChange={vi.fn()} />);
+
+      const trigger = screen.getByRole("button", { name: "Status for order 1047" });
+      expect(trigger).not.toHaveClass(otherStatusClass);
+    },
+  );
+
+  it.each(["PENDING", "APPROVED", "DENIED"] as const)(
+    "AC-2: %s's status text is still rendered in the trigger, colour is never the only cue",
+    (status) => {
+      render(<StatusSelect value={status} orderId={1047} onChange={vi.fn()} />);
+
+      expect(screen.getByRole("button", { name: "Status for order 1047" })).toHaveTextContent(
+        status,
+      );
+    },
+  );
+});
