@@ -187,6 +187,12 @@ export const orders = sqliteTable(
     orderDate: integer("order_date", { mode: "timestamp" }).notNull(),
     orderAmount: real("order_amount").notNull(),
     status: text("status").notNull(),
+    // Copied from profiles.preferred_language at placement, never resolved
+    // at decision time — an order records the locale it was agreed under,
+    // so a customer changing their language later cannot move an existing
+    // order across the auto-approval threshold (design.md § Decisions D2).
+    // Nullable because every order already in the database has none.
+    locale: text("locale"),
     billingGivenName: text("billing_given_name"),
     billingFamilyName: text("billing_family_name"),
     billingTelephone: text("billing_telephone"),

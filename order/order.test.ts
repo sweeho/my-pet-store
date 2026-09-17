@@ -14,6 +14,7 @@ import {
   orders,
   product,
   productDetails,
+  profiles,
   sessions,
 } from "../db/schema";
 import { EMPTY_CART_MESSAGE, ShoppingCartEmptyOrderError } from "./errors";
@@ -163,6 +164,21 @@ function seedAccountAddress(userName: string): void {
     .run();
 }
 
+// createCustomer already inserts a profiles row defaulted to en_US
+// (account/customer.ts DEFAULT_PROFILE) — this overwrites it so a test can
+// place an order under a specific locale.
+function setPreferredLanguage(userName: string, preferredLanguage: string): void {
+  db.update(profiles).set({ preferredLanguage }).where(eq(profiles.userName, userName)).run();
+}
+
+// A cart whose single line totals to the given amount, using seedFullItem's
+// unitCost directly (quantity 1) so the amount decideApproval sees is exact.
+function seedSessionWithAmount(amount: number): string {
+  const sessionId = seedSession();
+  addItem(sessionId, seedFullItem(amount), 1);
+  return sessionId;
+}
+
 describe("placeOrder", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -231,12 +247,15 @@ describe("placeOrder", () => {
     expect(readOrder(orderId).billingCity).toBe("San Francisco");
   });
 
-  it("OT-05: a new order's status is PENDING", () => {
+  it("OT-05: a new order under its locale's auto-approval threshold is APPROVED (SWHM-T-0204)", () => {
     const userName = seedUser();
 
+    // The default profile is en_US (account/customer.ts DEFAULT_PROFILE),
+    // and seedPopulatedSession's cart totals $9.99 — well under the $500
+    // en_US threshold.
     const { orderId } = placeOrder(userName, validSubmission(), seedPopulatedSession());
 
-    expect(readOrder(orderId).status).toBe("PENDING");
+    expect(readOrder(orderId).status).toBe("APPROVED");
   });
 
   it("OT-06: the order date is the placement time, read from a controlled clock", () => {
@@ -257,6 +276,64 @@ describe("placeOrder", () => {
 
     expect(result.orderId).toBe(readOrder(result.orderId).orderId);
     expect(result.email).toBe("maya.chen@example.com");
+  });
+});
+
+describe("placeOrder — auto-approval by locale threshold (SWHM-T-0204)", () => {
+  it("AP-01: a US order under $500 is APPROVED", () => {
+    const userName = seedUser();
+    setPreferredLanguage(userName, "en_US");
+
+    const { orderId } = placeOrder(userName, validSubmission(), seedSessionWithAmount(300));
+
+    expect(readOrder(orderId).status).toBe("APPROVED");
+  });
+
+  it("AP-02: a US order over $500 stays PENDING", () => {
+    const userName = seedUser();
+    setPreferredLanguage(userName, "en_US");
+
+    const { orderId } = placeOrder(userName, validSubmission(), seedSessionWithAmount(600));
+
+    expect(readOrder(orderId).status).toBe("PENDING");
+  });
+
+  it("AP-03: a Japan order under ¥50,000 is APPROVED", () => {
+    const userName = seedUser();
+    setPreferredLanguage(userName, "ja_JP");
+
+    const { orderId } = placeOrder(userName, validSubmission(), seedSessionWithAmount(40000));
+
+    expect(readOrder(orderId).status).toBe("APPROVED");
+  });
+
+  it("AP-04: a Japan order over ¥50,000 stays PENDING", () => {
+    const userName = seedUser();
+    setPreferredLanguage(userName, "ja_JP");
+
+    const { orderId } = placeOrder(userName, validSubmission(), seedSessionWithAmount(60000));
+
+    expect(readOrder(orderId).status).toBe("PENDING");
+  });
+
+  it("AP-05: the order's locale is copied from the customer's profile at placement", () => {
+    const userName = seedUser();
+    setPreferredLanguage(userName, "ja_JP");
+
+    const { orderId } = placeOrder(userName, validSubmission(), seedSessionWithAmount(40000));
+
+    expect(readOrder(orderId).locale).toBe("ja_JP");
+  });
+
+  it("AP-06: a customer with no profile row places an order with a null locale, which stays PENDING", () => {
+    const userName = seedUser();
+    db.delete(profiles).where(eq(profiles.userName, userName)).run();
+
+    const { orderId } = placeOrder(userName, validSubmission(), seedSessionWithAmount(1));
+
+    const row = readOrder(orderId);
+    expect(row.locale).toBeNull();
+    expect(row.status).toBe("PENDING");
   });
 });
 

@@ -9,7 +9,9 @@ import { eq } from "drizzle-orm";
 import { getCart } from "../cart/cart";
 import { clearCartAfterOrder, toOrderLineItems } from "../cart/checkout";
 import { db } from "../db/client";
-import { orderLineItem, orders } from "../db/schema";
+import { orderLineItem, orders, profiles } from "../db/schema";
+import { decideApproval } from "./approval";
+import type { ApprovalLocale } from "./approval-types";
 import { ShoppingCartEmptyOrderError } from "./errors";
 import type { OrderAddress } from "./types";
 import type { OrderSubmission } from "./validation";
@@ -54,6 +56,22 @@ function shippingColumns(address: Partial<OrderAddress>) {
   };
 }
 
+// preferredLanguage is validated at write time against account/vocabulary.ts's
+// LANGUAGES (account/validation.ts), the exact set ApprovalLocale
+// enumerates, so this narrows a validated column rather than trusting an
+// unchecked value. A customer with no profile row resolves to null, which
+// decideApproval treats as no threshold — stays PENDING (design.md §
+// Decisions D2).
+function resolvePlacementLocale(userName: string): ApprovalLocale | null {
+  const profile = db
+    .select({ preferredLanguage: profiles.preferredLanguage })
+    .from(profiles)
+    .where(eq(profiles.userName, userName))
+    .get();
+
+  return (profile?.preferredLanguage ?? null) as ApprovalLocale | null;
+}
+
 // userName comes from the caller (the route's resolved session), never from
 // the submission body — an order placed on someone else's account is the
 // failure this prevents (design.md § Steps 3). sessionId identifies the
@@ -76,9 +94,17 @@ export function placeOrder(
   // than relying on the transaction below to roll back a write that never
   // needed to happen. count is derived on read (cart/cart.ts's getCart), so
   // there is no separate emptiness flag to consult.
-  if (getCart(sessionId).count === 0) {
+  const cart = getCart(sessionId);
+  if (cart.count === 0) {
     throw new ShoppingCartEmptyOrderError();
   }
+
+  // The locale is copied from the profile at placement, never resolved at
+  // decision time (design.md § Decisions D2), and the amount decided on is
+  // the cart's subtotal — the same total createLineItems below writes onto
+  // the row as order_amount (SWHM-T-0204 PLAN.md step 4).
+  const locale = resolvePlacementLocale(userName);
+  const status = decideApproval(locale, cart.subtotal);
 
   return db.transaction(() => {
     const { orderId } = db
@@ -87,7 +113,8 @@ export function placeOrder(
         userName,
         orderDate: new Date(),
         orderAmount: ORDER_AMOUNT_PLACEHOLDER,
-        status: "PENDING",
+        status,
+        locale,
         ...billingColumns(submission.billingAddress),
         ...shippingColumns(submission.shippingAddress),
       })
