@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../db/client";
 import { orders } from "../db/schema";
+import { notify } from "../notifications/notify";
 import type { OrderStatus } from "../admin/types";
 
 export function readOrderStatus(orderId: number): OrderStatus | null {
@@ -39,5 +40,10 @@ export function markOrderCompleted(orderId: number): boolean {
   }
 
   db.update(orders).set({ status: "COMPLETED" }).where(eq(orders.orderId, orderId)).run();
+  // Only on the path that actually transitions the order (design.md §
+  // Decisions D3; PLAN.md step 6) — a refused or already-COMPLETED call
+  // returns above and never reaches here, so a repeat run over a finished
+  // order queues nothing.
+  notify(orderId, "COMPLETION");
   return true;
 }

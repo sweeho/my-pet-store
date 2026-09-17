@@ -45,5 +45,7 @@ export type SupplierPoLine = {
 };
 
 // A notification is a row recording what is owed; nothing sends it —
-// swhm-i-0012 owns delivery (design.md § Decisions D5).
-export type NotificationKind = "APPROVAL" | "DENIAL";
+// swhm-i-0012 owns delivery (design.md § Decisions D5). The vocabulary
+// itself lives in notifications/types.ts (SWHM-T-0224) and is re-exported
+// here rather than redeclared, so the two cannot drift.
+export type { NotificationKind } from "../notifications/types";
