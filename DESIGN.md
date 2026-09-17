@@ -13,12 +13,24 @@ OKLCH custom properties in `src/index.css` (`:root` light, `.dark` dark), mapped
 | `--destructive` / `--destructive-foreground`         | `bg-destructive` / `text-destructive-foreground`     |
 | `--border` / `--input` / `--ring`                    | `border-border` / `border-input` / `outline-ring/50` |
 | `--radius` (+ `sm`/`md`/`lg`/`xl`)                   | `rounded-*`                                          |
+| `--status-{pending,approved,denied}-{bg,fg,border}`  | `bg-*` / `text-*` / `border-*` — see § Status        |
 
 ### Contrast
 
 A `--x` / `--x-foreground` pair must never resolve to the same colour in either theme, and must meet WCAG 2.1 AA for normal text (4.5:1). `src/theme-tokens.test.ts` enforces both for the destructive pair — distinctness in both themes, the ratio in light. The other pairs are not yet covered by an automated check; measure before changing one.
 
 Two gotchas when picking a foreground: the light neutrals `oklch(0.97 0 0)` (`--secondary`, `--muted`, `--accent`) are too dark to clear 4.5:1 against a saturated background, and the `.dark` destructive pair sits at 2.63:1 — below AA — so it is not a model to copy.
+
+### Status
+
+Three states a record can be in — waiting, accepted, rejected — each a triple of background, foreground and border rather than a single colour, so a status surface can be tinted and outlined without a caller mixing its own. The hues are the only saturated colour in the system besides `--destructive`: amber for pending, green for approved, and the destructive hue itself for denied, so a refusal reads as the same kind of thing wherever it appears.
+
+Two rules bind every use of them:
+
+- **The triples are authored per theme, never derived.** A light tint darkened by a formula is not a dark tint; both sets are written into `:root` and `.dark` explicitly, and both meet the § Contrast bar for their own `bg`/`fg` pair. The neutrals gotcha above applies with more force here, because these backgrounds are saturated.
+- **Colour is never the only thing that says what the status is.** The status text stays rendered inside the tinted surface, and any dot or icon beside it is `aria-hidden`. WCAG 2.1 1.4.1 forbids colour as the sole carrier of information, and the point of the tint is that a reader scanning a column finds a state faster — not that the word becomes removable. A test asserts the status by its accessible text, never by a class name or a computed colour.
+
+Do not add a fourth triple for a state that is merely another kind of waiting. These are the states a record rests in; a transient state belongs in § Pending actions.
 
 ## Theming
 
