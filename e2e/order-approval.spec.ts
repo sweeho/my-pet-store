@@ -17,30 +17,18 @@ import { expect, test, type Page } from "@playwright/test";
  * Three PENDING orders are created here, not read from the seed data —
  * db/client.ts seeds only one PENDING order, not three, and this journey
  * needs three of its own to bulk-approve. Each is placed directly through
- * POST /api/order (order/order.ts's placeOrder), the same route
- * e2e/order.spec.ts's UI journey ends at, skipping the multi-page
- * checkout/payment UI — that journey is already covered there, and this
- * file's subject is the approval screen, not order placement. A fresh
- * account's profile defaults to en_US (account/customer.ts), whose
- * auto-approval threshold is $500 (order/approval.ts); BIRDS-PARROTS-1
- * lists at $599.99 (catalog/seed.ts), so one unit already prices the order
- * above the threshold and it is placed PENDING.
- *
- * Same uniqueness rule as e2e/order.spec.ts's uniqueUsername: derived from
- * Date.now(), not a fixed string, so a second run against the same
- * file-backed sqlite.db never collides on auth_users' primary key.
+ * POST /api/order (order/order.ts's placeOrder) as jps_admin itself:
+ * placeOrder does not check role (e2e/fulfillment.spec.ts's own comment and
+ * proven pattern — "one session carries both the shopper steps ... and the
+ * admin-only calls that follow"), so this needs no separate shopper session
+ * and no session handoff. jps_admin carries no profile row, so
+ * order/order.ts's resolvePlacementLocale resolves a null locale, and
+ * order/approval.ts's decideApproval defaults a null locale to PENDING
+ * regardless of amount — the order lands PENDING either way BIRDS-PARROTS-1
+ * ($599.99, catalog/seed.ts) also clears the en_US $500 threshold on its
+ * own, so this holds even if that ever changes.
  */
 const ITEM_ID = "BIRDS-PARROTS-1";
-
-function uniqueUsername(label: string): string {
-  const username = `${label}-${Date.now()}`;
-  if (username.length > 25) {
-    throw new Error(
-      `test bug: username "${username}" exceeds MAX_USERID_LENGTH (25) — shorten label`,
-    );
-  }
-  return username;
-}
 
 const ADDRESS = {
   givenName: "Priya",
@@ -54,15 +42,14 @@ const ADDRESS = {
   email: "priya.nair@example.com",
 };
 
-// page.request shares the page's own cookie jar (e2e/order.spec.ts's
-// pattern) — create-user signs the session on directly, so no separate
-// sign-in step is needed for the shopper half of this journey.
-async function signOnShopper(page: Page, username: string): Promise<void> {
-  const response = await page.request.post("/api/signon/create-user", {
-    data: { j_username: username, j_password: "secret123", j_password_2: "secret123" },
+// e2e/fulfillment.spec.ts's own signOnAsAdmin, restated here rather than
+// imported — e2e specs in this project do not share helper modules.
+async function signOnAsAdmin(page: Page): Promise<void> {
+  const response = await page.request.post("/api/signon", {
+    data: { j_username: "jps_admin", j_password: "admin" },
   });
   expect(response.ok()).toBe(true);
-  expect((await response.json()).created).toBe(true);
+  expect((await response.json()).signedOn).toBe(true);
 }
 
 async function placePendingOrder(page: Page): Promise<number> {
@@ -79,25 +66,19 @@ async function placePendingOrder(page: Page): Promise<number> {
   return result.orderId;
 }
 
-async function signOnAdmin(page: Page): Promise<void> {
-  await page.goto("/admin/signon");
-  const signInForm = page.getByRole("form", { name: "Administrator sign in" });
-  await signInForm.getByRole("button", { name: "Sign In" }).click();
-  await expect(page).toHaveURL(/\/admin$/);
-}
-
 test.describe("Administrator — order approval journey", () => {
   test("selects three pending orders, approves and commits them, and sees them move to APPROVED", async ({
     page,
   }) => {
-    await signOnShopper(page, uniqueUsername("appr"));
+    await signOnAsAdmin(page);
     const orderIds = [
       await placePendingOrder(page),
       await placePendingOrder(page),
       await placePendingOrder(page),
     ];
 
-    await signOnAdmin(page);
+    await page.goto("/admin");
+    await expect(page.getByRole("heading", { name: "Administration" })).toBeVisible();
     await page.getByRole("button", { name: "Review Pending Orders" }).click();
 
     await expect(page).toHaveURL(/\/admin\/orders-approval$/);
