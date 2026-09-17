@@ -8,11 +8,11 @@ Measured on the sprint branch (`vortex/sprint/swhm-s-0021-5e503761`, at `0a77532
 the idea text.
 
 - **F1 — There is no `StoreHeader` today, and no in-flight change that creates one.**
-  `openspec/changes/` holds only `archive/`. `src/components/` holds `StoreMark.tsx` (the inline SVG
-  - wordmark), `AdminShell.tsx`, `LanguageSwitcher.tsx`, `ReportBars.tsx`, `RequireAdmin.tsx`,
-    `RequireSignOn.tsx`. The idea's phrase "the `StoreHeader` being introduced for the catalog
-    screens" describes work that has not landed, so **this change creates the component**, not
-    merely spreads it.
+  `openspec/changes/` holds only `archive/`. `src/components/` holds `StoreMark.tsx` (the inline
+  SVG and wordmark), `AdminShell.tsx`, `LanguageSwitcher.tsx`, `ReportBars.tsx`,
+  `RequireAdmin.tsx`, `RequireSignOn.tsx`. The idea's phrase "the `StoreHeader` being introduced
+  for the catalog screens" describes work that has not landed, so **this change creates the
+  component**, not merely spreads it.
 
 - **F2 — There is no layout route.** `src/main.tsx` renders `useRoutes(routes)` over
   `~react-pages` directly; `vite-plugin-pages` is configured without a layout. A header therefore
