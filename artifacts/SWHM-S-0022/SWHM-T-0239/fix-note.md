@@ -21,8 +21,9 @@ plugin's `exclude` array only named test files and one shared component
 `src/pages/[...all].tsx` — and `RootErrorBoundary.tsx` — an `errorElement` nothing in
 `src/main.tsx` wires up — were scanned like any other screen and published as top-level routes.
 Confirmed by building the project and reading the generated route table out of
-`.output/public/assets/index-*.js`: it listed `path:\`NotFound\``and`path:\`RootErrorBoundary\``as literal top-level paths alongside the catch-all's`path:\`\*\``. Neither file was ever written to
-be navigated to directly.
+`.output/public/assets/index-*.js`: it listed literal top-level `path:` entries reading
+`NotFound` and `RootErrorBoundary`, alongside the catch-all's own `path:` entry reading `*`.
+Neither file was ever written to be navigated to directly.
 
 ## Fix
 

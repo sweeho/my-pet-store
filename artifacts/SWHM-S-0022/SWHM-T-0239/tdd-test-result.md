@@ -40,9 +40,11 @@ container's Chromium is genuinely not installed (`scripts/ensure-playwright-brow
 fast — see `## Green run`), and `vitest.config.ts` deliberately has no file-based-routing support
 (design.md § F6), so no unit-test tier can see this half of the bug either. The bug itself was
 reproduced directly instead: `bun run build`, then reading the generated route table out of
-`.output/public/assets/index-*.js`, showed literal `path:\`NotFound\``and`path:\`RootErrorBoundary\``entries before the`vite.config.ts`fix, and neither after it (see`fix-note.md`). The new Playwright spec is committed as real test code and is
-`Pending Verification` by this run; it executes in CI on this branch and again in the
-INTEGRATION_QA phase, which is where the assertion is actually observed running.
+`.output/public/assets/index-*.js`, showed literal top-level `path:` entries reading `NotFound`
+and `RootErrorBoundary` before the `vite.config.ts` fix, and neither after it (see `fix-note.md`).
+The new Playwright spec is committed as real test code and is `Pending Verification` by this run;
+it executes in CI on this branch and again in the INTEGRATION_QA phase, which is where the
+assertion is actually observed running.
 
 ## Green run
 
