@@ -74,10 +74,10 @@
 
 ## 9. Process Manager Integration
 
-- [ ] 9.1 Implement getStatus(orderId) method (SWHM-T-0212)
-- [ ] 9.2 Implement updateStatus(orderId, newStatus) method (SWHM-T-0212)
-- [ ] 9.3 Ensure status queries are transactionally consistent (SWHM-T-0212)
-- [ ] 9.4 Support status transitions: PENDING → APPROVED/DENIED (SWHM-T-0212)
+- [x] 9.1 Implement getStatus(orderId) method (SWHM-T-0212)
+- [x] 9.2 Implement updateStatus(orderId, newStatus) method (SWHM-T-0212)
+- [x] 9.3 Ensure status queries are transactionally consistent (SWHM-T-0212)
+- [x] 9.4 Support status transitions: PENDING → APPROVED/DENIED (SWHM-T-0212)
 
 ## 10. Notifications & Transitions
 
