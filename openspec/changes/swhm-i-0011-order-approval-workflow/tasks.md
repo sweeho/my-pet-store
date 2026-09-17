@@ -10,11 +10,11 @@
 
 ## 2. Status Validation & Guard
 
-- [ ] 2.1 Implement status guard in OrderApprovalMDB.doWork() (SWHM-T-0205)
-- [ ] 2.2 Query ProcessManager for current order status (SWHM-T-0205)
-- [ ] 2.3 Skip processing if status is APPROVED, DENIED, or COMPLETED (SWHM-T-0205)
-- [ ] 2.4 Prevent duplicate processing of terminal-state orders (SWHM-T-0205)
-- [ ] 2.5 Log skipped orders for audit trail (SWHM-T-0205)
+- [x] 2.1 Implement status guard in OrderApprovalMDB.doWork() (SWHM-T-0205)
+- [x] 2.2 Query ProcessManager for current order status (SWHM-T-0205)
+- [x] 2.3 Skip processing if status is APPROVED, DENIED, or COMPLETED (SWHM-T-0205)
+- [x] 2.4 Prevent duplicate processing of terminal-state orders (SWHM-T-0205)
+- [x] 2.5 Log skipped orders for audit trail (SWHM-T-0205)
 
 ## 3. Order Approval & Denial Workflow
 
