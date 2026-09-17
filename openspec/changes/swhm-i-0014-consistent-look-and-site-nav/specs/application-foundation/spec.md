@@ -1,0 +1,272 @@
+## ADDED Requirements
+
+### Requirement: Persistent store header on every screen
+
+The application SHALL render one shared header, in the same position, on every routable screen
+except the four sign-on screens (`/signon`, `/signon-failed`, `/admin/signon`,
+`/admin/signon-failed`). The header SHALL carry the store mark linking to the home page, a link to
+the catalogue at `/catalog`, and a link to the cart at `/cart` showing the number of lines the cart
+holds, with no number shown when the cart is empty. On the administration and supplier screens the
+header SHALL additionally present the administration context those screens show today, and the
+back-link those screens carry SHALL continue to lead one level up. Every control in the header
+SHALL be reachable from the keyboard, in the order it appears, ahead of the screen's own content.
+At a narrow viewport the header's controls SHALL remain readable and reachable and SHALL NOT
+overlap the screen's title. The header SHALL accept a trailing slot a screen may fill with a
+control of its own.
+
+#### Scenario: The header renders on a screen that had none
+
+- **GIVEN** a visitor on the cart screen at `/cart`
+- **WHEN** the screen has rendered
+- **THEN** the shared header is present, carrying the store mark, a catalogue link and a cart link
+
+#### Scenario: The store mark leads home
+
+- **GIVEN** a visitor on any screen that carries the header
+- **WHEN** the visitor activates the store mark in the header
+- **THEN** the browser is on the home page at `/`
+
+#### Scenario: The catalogue link leads to the catalogue
+
+- **GIVEN** a visitor on the cart screen at `/cart`
+- **WHEN** the visitor activates the header's catalogue link
+- **THEN** the browser is on the catalogue screen at `/catalog`
+
+#### Scenario: The cart link reports how many lines the cart holds
+
+- **GIVEN** a visitor whose cart holds two distinct lines
+- **WHEN** any screen carrying the header has rendered
+- **THEN** the header's cart link is accompanied by the number 2 and leads to `/cart`
+
+#### Scenario: An empty cart shows no number
+
+- **GIVEN** a visitor whose cart is empty
+- **WHEN** any screen carrying the header has rendered
+- **THEN** the header's cart link leads to `/cart` and no line count is shown beside it
+
+#### Scenario: The sign-on screens carry no header
+
+- **GIVEN** a visitor on the sign-on screen at `/signon`
+- **WHEN** the screen has rendered
+- **THEN** the shared header is absent and the screen presents its bare centred card
+
+#### Scenario: The administration screens keep their context and their back-link
+
+- **GIVEN** an administrator on the order queue screen at `/admin/orders`
+- **WHEN** the screen has rendered
+- **THEN** the header presents the administration context together with the signed-in username, and
+  the screen's back-link still leads to `/admin`
+
+#### Scenario: The header is reached before the screen's content
+
+- **GIVEN** a visitor on any screen that carries the header
+- **WHEN** the visitor moves through the screen from the keyboard alone
+- **THEN** every header control is reached, in the order it appears, before the first control
+  belonging to the screen's own content
+
+#### Scenario: The header holds together at a narrow viewport
+
+- **GIVEN** a visitor on a screen carrying the header at a 375-pixel-wide viewport
+- **WHEN** the screen has rendered
+- **THEN** every header control is visible and reachable, and none of them overlaps the screen's
+  title
+
+#### Scenario: A catalogue screen fills the header's trailing slot
+
+- **GIVEN** a visitor on the catalogue screen at `/catalog`
+- **WHEN** the screen has rendered
+- **THEN** the language switcher is present in the header, and choosing a different language there
+  leaves that language in effect after navigating to another catalogue screen
+
+### Requirement: Header reports who the visitor is
+
+The header SHALL present the signed-on state of the visitor, and SHALL present nothing about it
+until that state is known. While the session state is unresolved the header SHALL present neither a
+sign-in control, nor a username, nor an administrative link. Once resolved, a signed-out visitor
+SHALL be offered a sign-in control and SHALL be offered no account, sign-out or administrative
+link; a signed-on visitor SHALL be shown their username together with a link to their account and a
+sign-out control. Activating the sign-out control SHALL end the session and take the visitor to the
+home page. Rendering the header SHALL NOT change where a visitor is taken after signing on.
+
+#### Scenario: Nothing is claimed before the session state is known
+
+- **GIVEN** a visitor loading a screen that carries the header
+- **WHEN** the session read has not yet answered
+- **THEN** the header presents no sign-in control, no username and no administrative link
+
+#### Scenario: A signed-out visitor is offered sign-in only
+
+- **GIVEN** a visitor who is not signed on
+- **WHEN** a screen carrying the header has rendered and the session read has answered
+- **THEN** the header presents a sign-in control leading to `/signon`, and presents no account
+  link, no sign-out control and no administrative link
+
+#### Scenario: A signed-on visitor is named
+
+- **GIVEN** a visitor signed on as "alice"
+- **WHEN** a screen carrying the header has rendered and the session read has answered
+- **THEN** the header presents "alice", a link to the account screen at `/customer`, and a sign-out
+  control
+
+#### Scenario: Signing out ends the session and returns home
+
+- **GIVEN** a signed-on visitor on a screen carrying the header
+- **WHEN** the visitor activates the header's sign-out control
+- **THEN** the session is ended, the browser is on the home page at `/`, and the header presents a
+  sign-in control again
+
+#### Scenario: The header does not displace the post-sign-on destination
+
+- **GIVEN** a signed-out shopper on the cart screen at `/cart` who is sent to `/signon` from there
+- **WHEN** the shopper signs on successfully
+- **THEN** the browser is on `/cart`, and not on `/admin` or the home page
+
+### Requirement: Administrative entry from the header
+
+A signed-on visitor holding the administrator role SHALL be offered a link to the administration
+home page at `/admin` in the header of every screen that carries one, including the home page. A
+visitor who does not hold that role SHALL be offered no such link on any screen. The presence of
+that link is a convenience and SHALL NOT be the mechanism that protects the administration area:
+`/admin` SHALL remain refused to a visitor who does not hold the role whether or not the link was
+ever shown.
+
+#### Scenario: An administrator is offered the administration area
+
+- **GIVEN** a visitor signed on as an identity holding the administrator role
+- **WHEN** the home page at `/` has rendered and the session read has answered
+- **THEN** the header presents a link to `/admin`
+
+#### Scenario: A shopper is offered nothing of the kind
+
+- **GIVEN** a visitor signed on as an identity that does not hold the administrator role
+- **WHEN** any screen carrying the header has rendered and the session read has answered
+- **THEN** the header presents no link to `/admin`
+
+#### Scenario: The administration area is refused without the link
+
+- **GIVEN** a visitor signed on as an identity that does not hold the administrator role
+- **WHEN** the visitor requests `/admin` directly
+- **THEN** the request is refused and the administration content is never presented
+
+### Requirement: One content column width
+
+Every screen's main content SHALL sit in one shared column width, declared in one place in the
+codebase, and no screen SHALL declare a column width of its own. The four sign-on screens, which
+present a bare centred card rather than a column of content, are excepted.
+
+#### Scenario: Two screens in a purchase sit in the same column
+
+- **GIVEN** a shopper moving from the cart screen at `/cart` to the order form at
+  `/enter-order-information`
+- **WHEN** both screens have rendered
+- **THEN** the main content of each occupies the same column width, and the page does not shift
+  sideways between them
+
+#### Scenario: No screen declares a width of its own
+
+- **GIVEN** the application's screen sources
+- **WHEN** they are examined for the column width each screen's main content container declares
+- **THEN** every screen but the four sign-on screens takes the one shared declaration, and the
+  project's test suite reports a failure naming any screen that declares its own
+
+#### Scenario: The order form stays usable in the shared column
+
+- **GIVEN** a shopper on the order form at `/enter-order-information` at a desktop viewport
+- **WHEN** the screen has rendered
+- **THEN** the billing and shipping sections and the order summary are each fully readable within
+  the shared column, and no field is cut off or overlapped
+
+### Requirement: Store-wide conformance to the design tokens
+
+Every screen the application serves SHALL take its colours from the project's design tokens, and no
+screen SHALL use a raw utility-framework palette colour.
+
+#### Scenario: The home page and About page use the tokens
+
+- **GIVEN** the sources of the home page and the About page
+- **WHEN** they are examined for colour classes
+- **THEN** neither contains a raw palette colour — no grey, indigo, or bare white background or
+  text class — and the project's test suite reports a failure naming the file if one is
+  reintroduced
+
+#### Scenario: The home page reads as the same store as the catalogue
+
+- **GIVEN** a visitor moving from the home page at `/` to the catalogue screen at `/catalog`
+- **WHEN** both screens have rendered
+- **THEN** both present the same header and the same background and text colours
+
+#### Scenario: The not-found screen is a screen of the store
+
+- **GIVEN** a visitor requesting a path the application does not route
+- **WHEN** the not-found screen has rendered
+- **THEN** it carries the shared header and the store's own typography, rather than an unstyled
+  message
+
+## MODIFIED Requirements
+
+### Requirement: Product-branded application shell
+
+The application SHALL identify itself as My Pet Store everywhere a person or a user agent can read
+its name, and SHALL NOT present the name, placeholder copy, example screens or hosted assets of the
+boilerplate it was generated from.
+
+#### Scenario: Home page names the product
+
+- **GIVEN** the application is running
+- **WHEN** a visitor loads the home page at `/`
+- **THEN** the page's level-1 heading reads "My Pet Store", and no boilerplate product name or
+  placeholder hero copy remains anywhere in the rendered page
+
+#### Scenario: Browser tab and web app manifest name the product
+
+- **GIVEN** the application is running
+- **WHEN** a user agent loads the home page and fetches the web app manifest the page links
+- **THEN** the document title is "My Pet Store", the manifest resolves successfully with its `name`
+  set to "My Pet Store", and the package manifest's `name` field is `my-pet-store`
+
+#### Scenario: Home page requests no third-party asset
+
+- **GIVEN** the application is running
+- **WHEN** a visitor loads the home page at `/`
+- **THEN** a store-branded mark is rendered in the page's header, and every asset the page requests
+  is served from the application's own origin
+
+#### Scenario: No page fetches a web font from a third-party host
+
+- **GIVEN** the application is running
+- **WHEN** a visitor loads a page and every request the page issues is recorded, together with the
+  link elements in the document's head
+- **THEN** no request and no link element — stylesheet, font file, preconnect or prefetch hint —
+  names a host other than the application's own origin, and the page's text is legible in the
+  store's type without any font having been downloaded
+
+#### Scenario: Boilerplate example screens are not reachable
+
+- **GIVEN** the application is running
+- **WHEN** a visitor navigates directly to `/users`, to `/users/1`, or to `/users/profile`
+- **THEN** each path renders the application's not-found screen, and no page presents the
+  boilerplate's placeholder people or example-route copy
+
+### Requirement: Application shell navigation
+
+Every navigation and call-to-action control the application presents SHALL lead to a screen the
+application serves. A control that names no such screen SHALL NOT be presented.
+
+#### Scenario: Primary call to action opens the catalogue
+
+- **GIVEN** a visitor on the home page at `/`
+- **WHEN** the visitor activates the primary hero call to action
+- **THEN** the browser is on the catalogue screen at `/catalog`
+
+#### Scenario: Sign-in control opens the sign-on screen
+
+- **GIVEN** a signed-out visitor on the home page at `/`
+- **WHEN** the visitor activates the header's sign-in control
+- **THEN** the browser is on the sign-on screen at `/signon`
+
+#### Scenario: No control leads nowhere
+
+- **GIVEN** a visitor on a screen that carries the header
+- **WHEN** every navigation and hero link on the page is inspected, in the header and in the
+  screen's own content
+- **THEN** each one targets a path the application routes, and none targets a placeholder fragment
