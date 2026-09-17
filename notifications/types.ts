@@ -18,3 +18,20 @@ export type NotificationRecipient = {
   givenName: string | null;
   familyName: string | null;
 };
+
+// buildMessage's output (SWHM-T-0225): what a transport is handed. `to` is
+// carried on the message rather than re-derived from `recipient`, because
+// the fallback to the order's copied billing address (design.md § Decisions
+// D5) is the dispatcher's call, not the builder's (PLAN.md § Fixed
+// interface contracts).
+export type MailMessage = { to: string; subject: string; body: string };
+
+// buildMessage's input. `status` is a plain string, not OrderStatus —
+// the builder only ever names it in prose, it never branches on it.
+export type MessageInput = {
+  orderId: number;
+  kind: NotificationKind;
+  status: string;
+  recipient: NotificationRecipient;
+  to: string;
+};
