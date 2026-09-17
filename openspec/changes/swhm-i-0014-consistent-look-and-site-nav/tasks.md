@@ -31,10 +31,10 @@
 
 ## 5. Administration and supplier screens
 
-- [ ] 5.1 Reduce `AdminShell` to the header's administration variant plus the label, back-link and content frame, dropping its `username` prop (design.md D8) (SWHM-T-0238)
-- [ ] 5.2 Remove the now-dead session fetch from the seven `AdminShell` callers, leaving the spec-mandated page-level sign-out controls in place (design.md D8, F4, F12) (SWHM-T-0238)
-- [ ] 5.3 Move the two route guards' pending and refusal states onto the shared administration column, keeping their `role="status"` indicators (design.md D5, D6) (SWHM-T-0238)
-- [ ] 5.4 Update the affected component and page tests, including the `AdminShell` username-prop assertions (SWHM-T-0238)
+- [x] 5.1 Reduce `AdminShell` to the header's administration variant plus the label, back-link and content frame, dropping its `username` prop (design.md D8) (SWHM-T-0238)
+- [x] 5.2 Remove the now-dead session fetch from the seven `AdminShell` callers, leaving the spec-mandated page-level sign-out controls in place (design.md D8, F4, F12) (SWHM-T-0238)
+- [x] 5.3 Move the two route guards' pending and refusal states onto the shared administration column, keeping their `role="status"` indicators (design.md D5, D6) (SWHM-T-0238)
+- [x] 5.4 Update the affected component and page tests, including the `AdminShell` username-prop assertions (SWHM-T-0238)
 
 ## 6. Continuous integration
 
