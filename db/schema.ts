@@ -294,6 +294,12 @@ export const supplierPoLineItem = sqliteTable(
 // owed more than one notification over its life. swhm-i-0012 will read
 // this table, so the column names are its contract and are not abbreviated
 // (PLAN.md § Fixed interface contracts).
+//
+// status/sentAt/failureReason are the delivery state SWHM-T-0224 adds
+// (design.md § Decisions D2): the same rows the queueing path already
+// writes, not a second table, so the dispatcher the rest of this change
+// builds reads exactly what got queued. status defaults to QUEUED so the
+// existing approval/denial writers need no change to keep inserting.
 export const notifications = sqliteTable("notifications", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   orderId: integer("order_id")
@@ -302,6 +308,9 @@ export const notifications = sqliteTable("notifications", {
   kind: text("kind").notNull(),
   recipientEmail: text("recipient_email"),
   queuedAt: integer("queued_at", { mode: "timestamp" }).notNull(),
+  status: text("status").notNull().default("QUEUED"),
+  sentAt: integer("sent_at", { mode: "timestamp" }),
+  failureReason: text("failure_reason"),
 });
 
 // Quantity only — price is resolved on read through catalog/item.ts, so a

@@ -11,7 +11,7 @@ Requirement implemented: **Customer email retrieval** (`specs/notifications/spec
 
 ## Steps
 
-1. **Create `notifications/` and register it.** Add the directory to the `server` project's `include` and the `client` project's `exclude` in `vitest.config.ts` — both, per design.md F10. Registering it in one list only is the failure mode, and a test that reaches `db/client.ts` from the jsdom project cannot load `bun:sqlite` at all.
+1. **Create `notifications/` and register it.** Add the directory to the `server` project's `include` and the `client` project's `exclude` in `vitest.config.ts` — both, per design.md F10. Registering it in one list only is the failure mode, and a test that reaches `db/client.ts` from the jsdom project cannot load `bun:sqlite` at all. **Deviation, recorded in summary.md:** `notifications` also needs adding to `tsconfig.node.json`'s `include` — `tsc --build` refused to resolve the new directory (`TS6307`) without it. Not called out in this step originally; the same directory-registration obligation extends to the TypeScript project, not only Vitest.
 
 2. **Extend the `notifications` table** in `db/schema.ts` with delivery state: a `status` column that is not null and defaults to `QUEUED`, a nullable `sent_at` timestamp, and a nullable `failure_reason`. Do not create a second table — design.md D2 explains why the shipped rows and the rows the dispatcher reads have to be the same rows. Generate the migration into `drizzle/` and commit it; the schema change is incomplete without it.
 
