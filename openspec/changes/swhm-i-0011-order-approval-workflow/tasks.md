@@ -27,13 +27,13 @@
 
 ## 4. Supplier PO Generation
 
-- [ ] 4.1 Implement getXmlPO(PurchaseOrder po, TPASupplierOrderXDE xde) (SWHM-T-0207)
-- [ ] 4.2 Create TPASupplierOrderXDE document instance (SWHM-T-0207)
-- [ ] 4.3 Set order metadata (poId, poDate) (SWHM-T-0207)
-- [ ] 4.4 Extract and set shipping address details (SWHM-T-0207)
-- [ ] 4.5 Iterate line items and add to XML (SWHM-T-0207)
-- [ ] 4.6 Return serialized XML string (SWHM-T-0207)
-- [ ] 4.7 Call getXmlPO() only for APPROVED orders (SWHM-T-0207)
+- [x] 4.1 Implement getXmlPO(PurchaseOrder po, TPASupplierOrderXDE xde) (SWHM-T-0207)
+- [x] 4.2 Create TPASupplierOrderXDE document instance (SWHM-T-0207)
+- [x] 4.3 Set order metadata (poId, poDate) (SWHM-T-0207)
+- [x] 4.4 Extract and set shipping address details (SWHM-T-0207)
+- [x] 4.5 Iterate line items and add to XML (SWHM-T-0207)
+- [x] 4.6 Return serialized XML string (SWHM-T-0207)
+- [x] 4.7 Call getXmlPO() only for APPROVED orders (SWHM-T-0207)
 
 ## 5. Approval Screen UI (Rich Client)
 
