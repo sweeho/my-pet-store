@@ -44,6 +44,15 @@ const POPULATED_CART: Cart = {
   subtotal: 229.97,
 };
 
+// The shared header (StoreHeader) also fetches /api/signon/session on every
+// mount, so every fetch mock in this file has to answer it.
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+
 const fetchMock = vi.fn();
 const navigateMock = vi.fn();
 
@@ -96,6 +105,7 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
     navigateMock.mockReset();
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -117,6 +127,13 @@ describe("EnterOrderInformation (/enter-order-information)", () => {
     "Telephone",
     "Email",
   ];
+
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", () => {
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+  });
 
   it("EOI-01: renders a Billing Information section and a Shipping Information section", () => {
     renderPage();

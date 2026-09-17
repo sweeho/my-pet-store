@@ -91,11 +91,25 @@ A magnitude is drawn from the tokens above, not from a charting dependency — a
 
 The bar is `aria-hidden`; the value it depicts is rendered beside it as text, and the rows are a `<ul>`. A bar conveys a comparison a sighted reader makes at a glance and carries nothing a screen reader can use, so labelling it would announce the same number twice. Where the figure is a magnitude of the same kind rendered in several places, the component takes a formatter rather than assuming money or a count — the same bar serves revenue and order counts.
 
+## Page frame
+
+Every screen is the same frame: one header across the top, then the screen's own content in one column beneath it. The frame is two pieces and both are shared — `src/components/StoreHeader.tsx` and a content-width class exported from `src/components/layout.ts`. A screen renders the header itself rather than receiving it from a route; ARCHITECTURE.md § Cross-cutting constraints records why, and what that costs.
+
+**The header is the store's one standing set of controls**, in one order: the mark leading home, the catalogue, the cart with the number of lines it holds, then who the visitor is. Nothing is added to it per screen. A screen that needs a control of its own in that row passes it into the header's trailing slot — the catalogue's language switcher is the only one today — which keeps the control beside the others without making it a second thing the header knows about.
+
+**Identity is shown only once it is known.** Until the session read answers, the header shows neither a sign-in control, nor a username, nor an administrative link. This is the one place in the system where § Loading states deliberately does not apply: the header is chrome on every screen, so a `role="status"` region there would announce on every navigation, and unlike a gated screen the content beneath it is already present and correct. Reserve the space, say nothing, and let the screen's own pending indicators do the announcing.
+
+**A control the visitor is not entitled to is absent, not disabled.** A signed-out visitor is offered sign-in and nothing else; only an administrator sees the administration link. This reads the same way § Tabular data's read-only rule does — a disabled control announces a denial, an absent one announces nothing — and it is presentation only: what actually protects the route is in ARCHITECTURE.md § Key Decisions.
+
+**Two shared column widths, each declared once.** `CONTENT_WIDTH` (672px) is the store's own screens; `ADMIN_CONTENT_WIDTH` (832px) is the administration and supplier screens — both exported from `src/components/layout.ts`, and a screen's main content container declares one of the two, never a width of its own. The header's own inner container matches whichever width the content beneath it uses, so the two edges line up. A screen that needs more room re-flows its content — the order form drops from three columns to two — rather than widening the column: a per-screen width is what made the page jump sideways between two steps of one purchase. `RequireSignOn` and `RequireAdmin`'s pending and refusal states take the width of the surface they guard — `CONTENT_WIDTH` and `ADMIN_CONTENT_WIDTH` respectively — so a route guard never flashes the other surface's width before its content resolves. The four sign-on screens are the documented exception; they are centred cards, not columns of content.
+
+**Both rules are enforced by a repository-level test**, beside `src/theme-tokens.test.ts` — one scanning the screen sources for a width that is not the shared one, one scanning for a raw utility-framework palette class. Neither property is visible to a component test, and both are reintroduced by a new screen copying an old one, which is exactly the failure a source-level assertion catches and a rendered assertion does not.
+
 ## Brand mark
 
 `src/components/StoreMark.tsx` is the store's mark — an inline SVG plus the `STORE_NAME` wordmark, both drawn in `currentColor` so the mark takes its colour from whatever surface it sits on. It is deliberately not a `ui/` primitive and does not follow the variants pattern above: it has no variants, only an optional `className` for sizing, and it sits in `src/components/` with the other behavioural components.
 
-The whole mark is `aria-hidden`. Whatever renders it supplies the accessible name on the surrounding element — the landing header and its mobile panel each carry an `sr-only` span inside the logo link, which is what `getByRole("link", { name: … })` matches. Naming the mark as well would make every logo link announce the store twice.
+The whole mark is `aria-hidden`. Whatever renders it supplies the accessible name on the surrounding element — the header's logo link carries an `sr-only` span, which is what `getByRole("link", { name: … })` matches. Naming the mark as well would make the logo link announce the store twice.
 
 A mark, icon or font is never referenced from a third-party host. The template this page was generated from hotlinked its logo from `tailwindcss.com`, which shipped a demo asset to every visitor and made the store's own branding depend on someone else's CDN.
 
@@ -149,7 +163,7 @@ Tests locate the heading and both actions by role and accessible name, as everyt
 
 ## Icons
 
-`lucide-react` for general use, `@heroicons/react` for `@headlessui/react` overlays (nav dialog).
+`lucide-react` for general use. `@headlessui/react` supplies the overlay primitives the language menu is built from; its icons come from `lucide-react` too. `@heroicons/react` is still installed but nothing draws from it — see ARCHITECTURE.md § Stack.
 
 ## Animation
 

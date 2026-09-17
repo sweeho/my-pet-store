@@ -16,6 +16,15 @@ function jsonResponse(body: unknown, init: { ok: boolean; status?: number } = { 
   return { ok: init.ok, status: init.status ?? (init.ok ? 200 : 400), json: async () => body };
 }
 
+// The shared header (StoreHeader) also fetches /api/signon/session on every
+// mount, so every fetch mock in this file has to answer it.
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+
 const EMPTY_CART: Cart = { items: [], count: 0, subtotal: 0 };
 
 const POPULATED_CART: Cart = {
@@ -69,6 +78,19 @@ describe("CartPage (/cart)", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+  });
+
   it("CPT-01: renders a role=status pending indicator while the cart read is outstanding", () => {
     fetchMock.mockImplementation(() => new Promise(() => {}));
 
@@ -81,6 +103,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-02: an empty cart shows the exact empty message, no table, and a link back to the catalogue", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -97,6 +120,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-03: a populated cart shows a table with name, unit cost, quantity input and line total per item", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -120,6 +144,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-04: each item's quantity input carries the accessible name Quantity for <itemId>", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -134,6 +159,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-05: renders the item-count subtitle, subtotal and the Update Cart control", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -148,6 +174,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-06: the back-to-catalogue link is present in both states", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -174,6 +201,7 @@ describe("CartPage (/cart)", () => {
         return Promise.resolve(jsonResponse(updatedCart));
       }
       if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url} ${init?.method}`);
     });
 
@@ -214,6 +242,7 @@ describe("CartPage (/cart)", () => {
         return Promise.resolve(jsonResponse(afterRemoval));
       }
       if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url} ${init?.method}`);
     });
 
@@ -239,6 +268,7 @@ describe("CartPage (/cart)", () => {
         return Promise.resolve(jsonResponse(afterRemoval));
       }
       if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url} ${init?.method}`);
     });
 
@@ -260,6 +290,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-10: an empty quantity field is refused on screen with a message naming the row, and no PUT is sent", async () => {
     fetchMock.mockImplementation((url: string, init?: RequestInit) => {
       if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url} ${init?.method}`);
     });
 
@@ -281,6 +312,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-12: a populated cart shows a control that navigates to /enter-order-information", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -301,6 +333,7 @@ describe("CartPage (/cart)", () => {
         return Promise.resolve(jsonResponse(EMPTY_CART));
       }
       if (url === "/api/cart" && !init) return Promise.resolve(jsonResponse(singleItemCart));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url} ${init?.method}`);
     });
 
@@ -315,6 +348,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-13: arriving from a refused empty-cart placement shows its own alert with the fixed message", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -330,6 +364,7 @@ describe("CartPage (/cart)", () => {
   it("CPT-14: arriving normally (no navigation state) shows no empty-cart alert", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 

@@ -48,6 +48,7 @@ const fetchMock = vi.fn();
 function mockRoutes(ordersPage: Page<OrderSummary>) {
   fetchMock.mockImplementation((url: string) => {
     if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+    if (url.startsWith("/api/cart")) return Promise.resolve(jsonResponse({ items: [], count: 0 }));
     if (url.startsWith("/api/admin/orders")) return Promise.resolve(jsonResponse(ordersPage));
     throw new Error(`unexpected fetch: ${url}`);
   });

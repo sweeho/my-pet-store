@@ -1,0 +1,117 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:oklch(1 0 0);
+  --foreground:oklch(0.145 0 0);
+  --card:oklch(1 0 0);
+  --primary:oklch(0.205 0 0);
+  --primary-foreground:oklch(0.985 0 0);
+  --secondary:oklch(0.97 0 0);
+  --muted:oklch(0.97 0 0);
+  --muted-foreground:oklch(0.556 0 0);
+  --accent:oklch(0.97 0 0);
+  --border:oklch(0.922 0 0);
+  --input:oklch(0.922 0 0);
+  --ring:oklch(0.87 0 0);
+  --radius:0.625rem;
+  --radius-md:calc(var(--radius) - 2px);
+  --radius-sm:calc(var(--radius) - 4px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--background);color:var(--foreground);
+  font-family:"Space Grotesk",-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.mark{display:inline-flex;align-items:center;gap:8px}
+.mark svg{height:26px;width:auto;fill:currentColor;flex:none}
+.mark .word{font-size:16px;font-weight:600;letter-spacing:-0.01em;white-space:nowrap}
+.hdr{border-bottom:1px solid var(--border)}
+.hdr-inner{margin:0 auto;max-width:672px;padding:14px 24px;display:flex;align-items:center;gap:18px}
+.navlink{font-size:14px;font-weight:500;white-space:nowrap}
+.navlink:hover{text-decoration:underline;text-underline-offset:4px}
+.cartcount{display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;
+  background:var(--secondary);color:var(--foreground);font-size:11px;font-weight:600;
+  font-variant-numeric:tabular-nums;vertical-align:1px}
+.spacer{flex:1}
+.acct{display:flex;align-items:center;gap:14px}
+.who{font-size:13px;color:var(--muted-foreground);white-space:nowrap}
+.who b{color:var(--foreground);font-weight:500}
+.small{font-size:13px;font-weight:500;white-space:nowrap}
+.small:hover{text-decoration:underline;text-underline-offset:4px}
+.adminlink{font-size:13px;font-weight:600;white-space:nowrap;
+  border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 9px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;
+  padding:0 16px;border-radius:var(--radius-md);font-size:14px;font-weight:500;
+  background:var(--primary);color:var(--primary-foreground);border:1px solid var(--primary)}
+.btn.outline{background:var(--background);color:var(--foreground);border:1px solid var(--input)}
+.btn.lg{height:44px;padding:0 32px}
+.col{margin:0 auto;max-width:672px;padding:24px}
+.back{font-size:14px;color:var(--muted-foreground)}
+h1{margin-top:8px;font-size:20px;font-weight:700}
+.meta{margin-top:4px;font-size:14px;color:var(--muted-foreground)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:24px}
+th{color:var(--muted-foreground);padding:10px 16px;text-align:left;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:top}
+tr{border-bottom:1px solid var(--border)}
+tbody tr:nth-child(even){background:var(--secondary)}
+.pname{font-weight:500}
+.pdesc{margin-top:2px;font-size:13px;color:var(--muted-foreground)}
+.pid{margin-top:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--muted-foreground)}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.qty{width:72px;border:1px solid var(--input);background:var(--background);color:var(--foreground);
+  border-radius:var(--radius-md);padding:8px 10px;font:inherit;font-size:14px;font-variant-numeric:tabular-nums}
+.remove{font-size:14px;font-weight:500}
+.foot{margin-top:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+.acts{display:flex;gap:8px}
+.tot{text-align:right}
+.totrow{display:flex;align-items:baseline;justify-content:flex-end;gap:24px}
+.totlbl{font-size:14px;color:var(--muted-foreground)}
+.totval{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{margin-top:4px;font-size:12px;color:var(--muted-foreground)}
+.hint{margin-top:16px;font-size:12px;color:var(--muted-foreground)}
+</style></head><body>
+<header class="hdr"><div class="hdr-inner">
+  <a href="/" class="mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 4 9v14l12 6 12-6V9Zm0 3.4 8.4 4.2L16 14.8 7.6 10.6ZM6 11.2l9 4.5v10.6l-9-4.5Zm11 15.1V15.7l9-4.5v10.6Z"/></svg><span class="word">My Pet Store</span></a>
+  <a href="/catalog" class="navlink">Catalog</a>
+  <a href="/cart" class="navlink">Cart<span class="cartcount">2</span></a>
+  <span class="spacer"></span>
+  <div class="acct">
+    <span class="who">Signed in as <b>jdoe</b></span>
+    <a href="/customer" class="small">My account</a>
+    <a href="/signon" class="small">Sign out</a>
+  </div>
+</div></header>
+<main class="col">
+  <a href="/catalog" class="back">&larr; Continue shopping</a>
+  <h1>Shopping Cart</h1>
+  <p class="meta">2 items in your cart</p>
+  <table>
+    <thead><tr><th>Item</th><th class="num">Unit Cost</th><th>Quantity</th><th class="num">Line Total</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><div class="pname">Parrots</div><div class="pdesc">A large, intelligent parrot native to Africa, known for exceptional talking ability</div><div class="pid">BIRDS-PARROTS-1</div></td>
+        <td class="num">$350.00</td>
+        <td><input class="qty" value="1"></td>
+        <td class="num" style="font-weight:500">$350.00</td>
+        <td class="num"><span class="remove">Remove</span></td>
+      </tr>
+      <tr>
+        <td><div class="pname">Shorthair Cats</div><div class="pdesc">A friendly, easygoing cat with a short coat</div><div class="pid">CATS-SHORTHAIR-1</div></td>
+        <td class="num">$45.00</td>
+        <td><input class="qty" value="2"></td>
+        <td class="num" style="font-weight:500">$90.00</td>
+        <td class="num"><span class="remove">Remove</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="foot">
+    <div class="acts"><span class="btn">Update Cart</span><span class="btn outline">Proceed to Checkout</span></div>
+    <div class="tot"><div class="totrow"><span class="totlbl">Subtotal</span><span class="totval">$440.00</span></div>
+      <p class="note">Sum of unit cost &times; quantity for all items.</p></div>
+  </div>
+  <p class="hint">Set a quantity to 0 and choose Update Cart to remove an item.</p>
+</main>
+</body></html>

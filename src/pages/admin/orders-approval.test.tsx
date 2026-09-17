@@ -73,6 +73,7 @@ function mockRoutes(
   let ordersCallCount = 0;
   fetchMock.mockImplementation((url: string) => {
     if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+    if (url.startsWith("/api/cart")) return Promise.resolve(jsonResponse({ items: [], count: 0 }));
     if (url.startsWith("/api/admin/orders/decisions")) {
       return Promise.resolve(
         jsonResponse(options.decisionsResult ?? { applied: [], skipped: [], notFound: [] }),
@@ -277,6 +278,8 @@ describe("OrdersApprovalContent (/admin/orders-approval)", () => {
     let resolveDecisions!: (value: unknown) => void;
     fetchMock.mockImplementation((url: string) => {
       if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+      if (url.startsWith("/api/cart"))
+        return Promise.resolve(jsonResponse({ items: [], count: 0 }));
       if (url.startsWith("/api/admin/orders/decisions")) {
         return new Promise((resolve) => {
           resolveDecisions = () =>

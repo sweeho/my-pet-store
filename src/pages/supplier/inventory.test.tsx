@@ -29,6 +29,7 @@ const fetchMock = vi.fn();
 function mockRoutes(items: InventoryRow[]) {
   fetchMock.mockImplementation((url: string, init?: RequestInit) => {
     if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+    if (url.startsWith("/api/cart")) return Promise.resolve(jsonResponse({ items: [], count: 0 }));
     if (url.startsWith("/api/supplier/inventory") && (!init || init.method === undefined)) {
       return Promise.resolve(jsonResponse({ items }));
     }
@@ -97,6 +98,8 @@ describe("InventoryContent (/supplier/inventory)", () => {
     mockRoutes(ITEMS);
     fetchMock.mockImplementation((url: string, init?: RequestInit) => {
       if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+      if (url.startsWith("/api/cart"))
+        return Promise.resolve(jsonResponse({ items: [], count: 0 }));
       if (url.startsWith("/api/supplier/inventory") && init?.method === "POST") {
         return Promise.resolve(jsonResponse({ updated: ["BIRDS-PARROTS-1"], notFound: [] }));
       }
@@ -134,6 +137,8 @@ describe("InventoryContent (/supplier/inventory)", () => {
     let getCount = 0;
     fetchMock.mockImplementation((url: string, init?: RequestInit) => {
       if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+      if (url.startsWith("/api/cart"))
+        return Promise.resolve(jsonResponse({ items: [], count: 0 }));
       if (url.startsWith("/api/supplier/inventory") && init?.method === "POST") {
         return Promise.resolve(jsonResponse({ updated: ["BIRDS-PARROTS-1"], notFound: [] }));
       }
@@ -164,6 +169,8 @@ describe("InventoryContent (/supplier/inventory)", () => {
     mockRoutes(ITEMS);
     fetchMock.mockImplementation((url: string, init?: RequestInit) => {
       if (url.startsWith("/api/signon/session")) return Promise.resolve(jsonResponse(SESSION));
+      if (url.startsWith("/api/cart"))
+        return Promise.resolve(jsonResponse({ items: [], count: 0 }));
       if (url.startsWith("/api/supplier/inventory") && init?.method === "POST") {
         return Promise.resolve(
           jsonResponse(

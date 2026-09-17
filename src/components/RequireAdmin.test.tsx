@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ADMIN_CONTENT_WIDTH } from "./layout";
 import { RequireAdmin } from "./RequireAdmin";
 
 /**
@@ -50,6 +51,20 @@ describe("RequireAdmin", () => {
 
     expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.queryByText("admin content")).not.toBeInTheDocument();
+  });
+
+  it("AC-8: the pending state takes the shared administration content width, not a width of its own", () => {
+    fetchMock.mockReturnValueOnce(new Promise(() => {}));
+
+    render(
+      <MemoryRouter initialEntries={["/admin"]}>
+        <RequireAdmin>
+          <div>admin content</div>
+        </RequireAdmin>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("status").className).toContain(ADMIN_CONTENT_WIDTH);
   });
 
   it("renders its children once the access check answers allowed", async () => {
@@ -106,5 +121,21 @@ describe("RequireAdmin", () => {
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.queryByText("admin content")).not.toBeInTheDocument();
     expect(navigateMock).not.toHaveBeenCalled();
+  });
+
+  it("AC-8: the refusal state takes the shared administration content width, not a width of its own", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ allowed: false, reason: "role-required", requiredRole: "administrator" }),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/admin"]}>
+        <RequireAdmin>
+          <div>admin content</div>
+        </RequireAdmin>
+      </MemoryRouter>,
+    );
+
+    expect((await screen.findByRole("alert")).className).toContain(ADMIN_CONTENT_WIDTH);
   });
 });

@@ -1,7 +1,9 @@
 import type { FormEvent } from "react";
 import { Link } from "react-router";
 
-import { Button, RequireSignOn } from "@/components";
+import { Button, RequireSignOn, StoreHeader } from "@/components";
+import { CONTENT_WIDTH } from "@/components/layout";
+import { cn } from "@/utils";
 
 import { CARD_TYPES } from "../../account/vocabulary";
 import type { Cart } from "../../cart/types";
@@ -200,235 +202,241 @@ export function Payment() {
   if (!state) return null;
 
   return (
-    <div className="mx-auto max-w-[672px] p-6">
-      <Link to="/enter-order-information" className="text-muted-foreground text-sm hover:underline">
-        ← Order information
-      </Link>
-      <h1 className="text-foreground mt-2 text-xl font-bold">Payment Details</h1>
-      <p className="text-muted-foreground mt-1 text-xs">
-        Step 2 of 3 · Your card is authorized when you submit the order.
-      </p>
-
-      {formError && (
-        <p
-          role="alert"
-          className="border-destructive bg-background text-destructive mt-3 rounded-md border px-3 py-2 text-sm"
+    <>
+      <StoreHeader />
+      <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+        <Link
+          to="/enter-order-information"
+          className="text-muted-foreground text-sm hover:underline"
         >
-          {formError}
+          ← Order information
+        </Link>
+        <h1 className="text-foreground mt-2 text-xl font-bold">Payment Details</h1>
+        <p className="text-muted-foreground mt-1 text-xs">
+          Step 2 of 3 · Your card is authorized when you submit the order.
         </p>
-      )}
 
-      <form onSubmit={handleSubmit}>
-        <section
-          aria-label="Order summary"
-          className="border-border bg-card mt-3 rounded-[10px] border p-4"
-        >
-          <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
-            <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
-              Order summary
-            </h2>
-            <Link to="/cart" className="text-muted-foreground text-xs hover:underline">
-              Edit cart
-            </Link>
-          </div>
-
-          {cart === null ? (
-            <p role="status" className="text-muted-foreground text-sm">
-              Loading order summary…
-            </p>
-          ) : (
-            <>
-              <ul>
-                {cart.items.map((item) => (
-                  <li
-                    key={item.itemId}
-                    className="border-border flex items-start justify-between gap-3 border-b py-2.5 last:border-0"
-                  >
-                    <span>
-                      <span className="block text-sm font-medium">{item.productName}</span>
-                      <span className="text-muted-foreground mt-0.5 block text-[11px]">
-                        {item.quantity} × {formatCurrency(item.unitCost)}
-                      </span>
-                    </span>
-                    <span className="text-right text-sm tabular-nums">
-                      {formatCurrency(item.lineTotal)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="border-border mt-1 flex flex-col gap-2 border-t pt-3">
-                <div className="text-foreground flex justify-between text-[15px] font-bold">
-                  <span>
-                    Subtotal ({cart.count} {cart.count === 1 ? "item" : "items"})
-                  </span>
-                  <span>{formatCurrency(cart.subtotal)}</span>
-                </div>
-                <p className="text-muted-foreground text-[11px] leading-relaxed">
-                  Tax and shipping are not calculated. This is the amount sent for authorization.
-                </p>
-              </div>
-            </>
-          )}
-        </section>
-
-        <section
-          aria-label="Billing address"
-          className="border-border bg-card mt-3 rounded-[10px] border p-4"
-        >
-          <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
-            <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
-              Billing address
-            </h2>
-            <Link
-              to="/enter-order-information"
-              className="text-muted-foreground text-xs hover:underline"
-            >
-              Change
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-foreground text-sm">
-                {state.billingAddress.givenName} {state.billingAddress.familyName}
-              </div>
-              <div className="text-muted-foreground mt-0.5 text-sm">
-                {formatAddress(state.billingAddress)}
-              </div>
-            </div>
-            <div>
-              <div className="text-muted-foreground text-xs">Email</div>
-              <div className="text-foreground mt-0.5 text-sm">{state.billingAddress.email}</div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          aria-label="Payment method"
-          className="border-border bg-card mt-3 rounded-[10px] border p-4"
-        >
-          <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
-            <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
-              Payment method
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="cardholderName" className="text-foreground text-sm font-medium">
-                Cardholder name
-              </label>
-              <input
-                id="cardholderName"
-                maxLength={30}
-                className={inputClassName}
-                value={card.cardholderName}
-                disabled={submitting}
-                onChange={(event) => update("cardholderName", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="cardType" className="text-foreground text-sm font-medium">
-                Card type
-              </label>
-              <select
-                id="cardType"
-                className={fieldClassName("cardType")}
-                value={card.cardType}
-                disabled={submitting}
-                aria-invalid={invalid("cardType") ? "true" : undefined}
-                onChange={(event) => update("cardType", event.target.value)}
-              >
-                <option value="">— Select —</option>
-                {CARD_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              {renderFieldError("cardType")}
-            </div>
-
-            <div className="col-span-2 flex flex-col gap-1">
-              <label htmlFor="cardNumber" className="text-foreground text-sm font-medium">
-                Card number
-              </label>
-              <input
-                id="cardNumber"
-                className={fieldClassName("cardNumber")}
-                value={card.cardNumber}
-                disabled={submitting}
-                aria-invalid={invalid("cardNumber") ? "true" : undefined}
-                onChange={(event) => update("cardNumber", event.target.value)}
-              />
-              {renderFieldError("cardNumber")}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label htmlFor="expiryMonth" className="text-foreground text-sm font-medium">
-                Expiry month
-              </label>
-              <select
-                id="expiryMonth"
-                className={fieldClassName("expiryMonth")}
-                value={card.expiryMonth}
-                disabled={submitting}
-                aria-invalid={invalid("expiryMonth") ? "true" : undefined}
-                onChange={(event) => update("expiryMonth", event.target.value)}
-              >
-                <option value="">— Select —</option>
-                {EXPIRY_MONTHS.map((month) => (
-                  <option key={month} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>
-              {renderFieldError("expiryMonth")}
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="expiryYear" className="text-foreground text-sm font-medium">
-                Expiry year
-              </label>
-              <select
-                id="expiryYear"
-                className={fieldClassName("expiryYear")}
-                value={card.expiryYear}
-                disabled={submitting}
-                aria-invalid={invalid("expiryYear") ? "true" : undefined}
-                onChange={(event) => update("expiryYear", event.target.value)}
-              >
-                <option value="">— Select —</option>
-                {EXPIRY_YEARS.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <p className="text-muted-foreground mt-2.5 text-[11px] leading-relaxed">
-            {formatAcceptedTypes(CARD_TYPES)} are accepted.
-          </p>
-        </section>
-
-        <div className="mt-4 flex items-center gap-2">
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Authorizing…" : "Submit payment"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={submitting}
-            onClick={() => navigate("/enter-order-information")}
+        {formError && (
+          <p
+            role="alert"
+            className="border-destructive bg-background text-destructive mt-3 rounded-md border px-3 py-2 text-sm"
           >
-            Back to order information
-          </Button>
-          {submitting && (
-            <span role="status" className="text-muted-foreground text-sm">
-              Authorizing payment…
-            </span>
-          )}
-        </div>
-      </form>
-    </div>
+            {formError}
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <section
+            aria-label="Order summary"
+            className="border-border bg-card mt-3 rounded-[10px] border p-4"
+          >
+            <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
+              <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
+                Order summary
+              </h2>
+              <Link to="/cart" className="text-muted-foreground text-xs hover:underline">
+                Edit cart
+              </Link>
+            </div>
+
+            {cart === null ? (
+              <p role="status" className="text-muted-foreground text-sm">
+                Loading order summary…
+              </p>
+            ) : (
+              <>
+                <ul>
+                  {cart.items.map((item) => (
+                    <li
+                      key={item.itemId}
+                      className="border-border flex items-start justify-between gap-3 border-b py-2.5 last:border-0"
+                    >
+                      <span>
+                        <span className="block text-sm font-medium">{item.productName}</span>
+                        <span className="text-muted-foreground mt-0.5 block text-[11px]">
+                          {item.quantity} × {formatCurrency(item.unitCost)}
+                        </span>
+                      </span>
+                      <span className="text-right text-sm tabular-nums">
+                        {formatCurrency(item.lineTotal)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="border-border mt-1 flex flex-col gap-2 border-t pt-3">
+                  <div className="text-foreground flex justify-between text-[15px] font-bold">
+                    <span>
+                      Subtotal ({cart.count} {cart.count === 1 ? "item" : "items"})
+                    </span>
+                    <span>{formatCurrency(cart.subtotal)}</span>
+                  </div>
+                  <p className="text-muted-foreground text-[11px] leading-relaxed">
+                    Tax and shipping are not calculated. This is the amount sent for authorization.
+                  </p>
+                </div>
+              </>
+            )}
+          </section>
+
+          <section
+            aria-label="Billing address"
+            className="border-border bg-card mt-3 rounded-[10px] border p-4"
+          >
+            <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
+              <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
+                Billing address
+              </h2>
+              <Link
+                to="/enter-order-information"
+                className="text-muted-foreground text-xs hover:underline"
+              >
+                Change
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-foreground text-sm">
+                  {state.billingAddress.givenName} {state.billingAddress.familyName}
+                </div>
+                <div className="text-muted-foreground mt-0.5 text-sm">
+                  {formatAddress(state.billingAddress)}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground text-xs">Email</div>
+                <div className="text-foreground mt-0.5 text-sm">{state.billingAddress.email}</div>
+              </div>
+            </div>
+          </section>
+
+          <section
+            aria-label="Payment method"
+            className="border-border bg-card mt-3 rounded-[10px] border p-4"
+          >
+            <div className="border-border mb-3 flex items-center justify-between border-b pb-2">
+              <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
+                Payment method
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="cardholderName" className="text-foreground text-sm font-medium">
+                  Cardholder name
+                </label>
+                <input
+                  id="cardholderName"
+                  maxLength={30}
+                  className={inputClassName}
+                  value={card.cardholderName}
+                  disabled={submitting}
+                  onChange={(event) => update("cardholderName", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="cardType" className="text-foreground text-sm font-medium">
+                  Card type
+                </label>
+                <select
+                  id="cardType"
+                  className={fieldClassName("cardType")}
+                  value={card.cardType}
+                  disabled={submitting}
+                  aria-invalid={invalid("cardType") ? "true" : undefined}
+                  onChange={(event) => update("cardType", event.target.value)}
+                >
+                  <option value="">— Select —</option>
+                  {CARD_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                {renderFieldError("cardType")}
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1">
+                <label htmlFor="cardNumber" className="text-foreground text-sm font-medium">
+                  Card number
+                </label>
+                <input
+                  id="cardNumber"
+                  className={fieldClassName("cardNumber")}
+                  value={card.cardNumber}
+                  disabled={submitting}
+                  aria-invalid={invalid("cardNumber") ? "true" : undefined}
+                  onChange={(event) => update("cardNumber", event.target.value)}
+                />
+                {renderFieldError("cardNumber")}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label htmlFor="expiryMonth" className="text-foreground text-sm font-medium">
+                  Expiry month
+                </label>
+                <select
+                  id="expiryMonth"
+                  className={fieldClassName("expiryMonth")}
+                  value={card.expiryMonth}
+                  disabled={submitting}
+                  aria-invalid={invalid("expiryMonth") ? "true" : undefined}
+                  onChange={(event) => update("expiryMonth", event.target.value)}
+                >
+                  <option value="">— Select —</option>
+                  {EXPIRY_MONTHS.map((month) => (
+                    <option key={month} value={month}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+                {renderFieldError("expiryMonth")}
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="expiryYear" className="text-foreground text-sm font-medium">
+                  Expiry year
+                </label>
+                <select
+                  id="expiryYear"
+                  className={fieldClassName("expiryYear")}
+                  value={card.expiryYear}
+                  disabled={submitting}
+                  aria-invalid={invalid("expiryYear") ? "true" : undefined}
+                  onChange={(event) => update("expiryYear", event.target.value)}
+                >
+                  <option value="">— Select —</option>
+                  {EXPIRY_YEARS.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-muted-foreground mt-2.5 text-[11px] leading-relaxed">
+              {formatAcceptedTypes(CARD_TYPES)} are accepted.
+            </p>
+          </section>
+
+          <div className="mt-4 flex items-center gap-2">
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Authorizing…" : "Submit payment"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={submitting}
+              onClick={() => navigate("/enter-order-information")}
+            >
+              Back to order information
+            </Button>
+            {submitting && (
+              <span role="status" className="text-muted-foreground text-sm">
+                Authorizing payment…
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
 
