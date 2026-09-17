@@ -16,6 +16,17 @@ function jsonResponse(body: unknown, init: { ok: boolean; status?: number } = { 
   return { ok: init.ok, status: init.status ?? (init.ok ? 200 : 400), json: async () => body };
 }
 
+// The shared header (StoreHeader) fetches these two on every mount —
+// AC-5's language-switcher-in-the-header requirement puts StoreHeader on
+// this page now, so every fetch mock in this file has to answer them.
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+const EMPTY_HEADER_CART = { items: [], count: 0, subtotal: 0 };
+
 const CATEGORIES_PAGE: Page<Category> = {
   objects: [
     { id: "BIRDS", name: "Birds", description: "Feathered pets" },
@@ -58,6 +69,10 @@ function mockFetch(url: string) {
     };
     return Promise.resolve(jsonResponse(searchPage));
   }
+  if (url === "/api/signon/session") {
+    return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+  }
+  if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
   throw new Error(`unexpected fetch: ${url}`);
 }
 
@@ -70,6 +85,21 @@ describe("CatalogHome (/catalog)", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    render(<CatalogHome />, { wrapper: MemoryRouter });
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+    expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
+  });
+
+  it("fills the header's trailing slot with the language switcher (AC-5)", async () => {
+    render(<CatalogHome />, { wrapper: MemoryRouter });
+
+    const header = screen.getByRole("banner");
+    expect(await within(header).findByRole("button", { name: /English/ })).toBeInTheDocument();
   });
 
   it("PT-01: lists the categories, each linking to its products", async () => {

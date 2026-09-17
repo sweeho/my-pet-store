@@ -1,7 +1,9 @@
 import type { FormEvent } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { Button, LanguageSwitcher } from "@/components";
+import { Button, LanguageSwitcher, StoreHeader } from "@/components";
+import { CONTENT_WIDTH } from "@/components/layout";
+import { cn } from "@/utils";
 
 import type { Category, Item, Page } from "../../../catalog/types";
 import { paginationLinks, useCatalogFetch, useCatalogLocale } from "./shared";
@@ -51,97 +53,99 @@ export default function CatalogHome() {
     : { prevStart: null, nextStart: null };
 
   return (
-    <div className="mx-auto max-w-[672px] p-6">
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="text-foreground text-xl font-bold">Catalog</h1>
+    <>
+      <StoreHeader>
         {locale && <LanguageSwitcher locale={locale} onChange={setLocale} />}
-      </div>
+      </StoreHeader>
+      <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+        <h1 className="text-foreground text-xl font-bold">Catalog</h1>
 
-      <form
-        role="search"
-        aria-label="Search the catalog"
-        onSubmit={submitSearch}
-        className="mt-4 flex gap-2"
-      >
-        <input
-          name="q"
-          type="search"
-          defaultValue={q}
-          placeholder="Search items"
-          aria-label="Search query"
-          className="border-input bg-background text-foreground flex-1 rounded-md border px-3 py-2 text-sm"
-        />
-        <Button type="submit">Search</Button>
-      </form>
+        <form
+          role="search"
+          aria-label="Search the catalog"
+          onSubmit={submitSearch}
+          className="mt-4 flex gap-2"
+        >
+          <input
+            name="q"
+            type="search"
+            defaultValue={q}
+            placeholder="Search items"
+            aria-label="Search query"
+            className="border-input bg-background text-foreground flex-1 rounded-md border px-3 py-2 text-sm"
+          />
+          <Button type="submit">Search</Button>
+        </form>
 
-      {q ? (
-        searchResults ? (
-          <section aria-label={`Search results for "${q}"`} className="mt-6">
-            <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
-              Search results for &quot;{q}&quot;
-            </h2>
-            {searchResults.objects.length === 0 ? (
-              <p className="text-muted-foreground mt-2 text-sm">No items matched your search.</p>
-            ) : (
-              <ul className="mt-2 flex flex-col gap-2">
-                {searchResults.objects.map((item) => (
-                  <li key={item.itemId}>
-                    <Link
-                      to={`/catalog/item/${item.itemId}`}
-                      className="text-foreground hover:underline"
-                    >
-                      {item.description}
-                    </Link>
-                    <span className="text-muted-foreground ml-2 text-xs">{item.productName}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {q ? (
+          searchResults ? (
+            <section aria-label={`Search results for "${q}"`} className="mt-6">
+              <h2 className="text-muted-foreground text-xs font-bold tracking-wide uppercase">
+                Search results for &quot;{q}&quot;
+              </h2>
+              {searchResults.objects.length === 0 ? (
+                <p className="text-muted-foreground mt-2 text-sm">No items matched your search.</p>
+              ) : (
+                <ul className="mt-2 flex flex-col gap-2">
+                  {searchResults.objects.map((item) => (
+                    <li key={item.itemId}>
+                      <Link
+                        to={`/catalog/item/${item.itemId}`}
+                        className="text-foreground hover:underline"
+                      >
+                        {item.description}
+                      </Link>
+                      <span className="text-muted-foreground ml-2 text-xs">{item.productName}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          ) : (
+            <p role="status" className="text-muted-foreground mt-6 text-sm">
+              Loading search results…
+            </p>
+          )
+        ) : categories ? (
+          <section aria-label="Categories" className="mt-6">
+            <ul className="flex flex-col gap-2">
+              {categories.objects.map((category) => (
+                <li key={category.id}>
+                  <Link
+                    to={`/catalog/category/${category.id}`}
+                    className="text-foreground hover:underline"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         ) : (
           <p role="status" className="text-muted-foreground mt-6 text-sm">
-            Loading search results…
+            Loading categories…
           </p>
-        )
-      ) : categories ? (
-        <section aria-label="Categories" className="mt-6">
-          <ul className="flex flex-col gap-2">
-            {categories.objects.map((category) => (
-              <li key={category.id}>
-                <Link
-                  to={`/catalog/category/${category.id}`}
-                  className="text-foreground hover:underline"
-                >
-                  {category.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : (
-        <p role="status" className="text-muted-foreground mt-6 text-sm">
-          Loading categories…
-        </p>
-      )}
+        )}
 
-      {activePage && (
-        <div className="mt-4 flex gap-2">
-          <Button
-            variant="outline"
-            disabled={prevStart === null}
-            onClick={() => goToStart(prevStart ?? 0)}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            disabled={nextStart === null}
-            onClick={() => goToStart(nextStart ?? 0)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
-    </div>
+        {activePage && (
+          <div className="mt-4 flex gap-2">
+            <Button
+              variant="outline"
+              disabled={prevStart === null}
+              onClick={() => goToStart(prevStart ?? 0)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              disabled={nextStart === null}
+              onClick={() => goToStart(nextStart ?? 0)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

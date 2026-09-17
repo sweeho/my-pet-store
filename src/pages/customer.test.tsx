@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CustomerAccount } from "../../account/types";
@@ -9,9 +10,10 @@ import { CustomerProfile } from "./customer";
  * UI / PAGE TEST
  *
  * Mirrors src/pages/signon.test.tsx: render the unwrapped content component
- * directly (no RequireSignOn gate, no router — this page never navigates),
- * mock the two account endpoints it calls, and assert against accessible
- * roles/labels rather than the DOM shape.
+ * directly (no RequireSignOn gate), mock the two account endpoints it calls,
+ * and assert against accessible roles/labels rather than the DOM shape.
+ * Wrapped in a MemoryRouter because the page now renders the shared
+ * StoreHeader, which renders react-router Links (SWHM-T-0237).
  */
 const sampleAccount: CustomerAccount = {
   userName: "alice",
@@ -43,7 +45,42 @@ function jsonResponse(body: unknown, init: { ok: boolean; status?: number } = { 
   return { ok: init.ok, status: init.status ?? (init.ok ? 200 : 400), json: async () => body };
 }
 
+// The shared header (StoreHeader) fetches these two on every mount — a
+// second, independent pair of endpoints from the /api/customer this page
+// itself calls (SWHM-T-0237).
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+const EMPTY_HEADER_CART = { items: [], count: 0, subtotal: 0 };
+
 const fetchMock = vi.fn();
+
+// URL/method-keyed rather than call-order-keyed, so the header's own two
+// fetches (which now interleave with /api/customer) can't shift which call
+// index a test's assertion looks at.
+function mockFetch(handlers: {
+  customerGet?: ReturnType<typeof jsonResponse>;
+  customerPut?: ReturnType<typeof jsonResponse>;
+}) {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+    if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
+    if (url === "/api/customer" && init?.method === "PUT") {
+      return Promise.resolve(handlers.customerPut ?? jsonResponse(sampleAccount));
+    }
+    if (url === "/api/customer") {
+      return Promise.resolve(handlers.customerGet ?? jsonResponse(sampleAccount));
+    }
+    throw new Error(`unexpected fetch: ${url}`);
+  });
+}
+
+function renderPage() {
+  return render(<CustomerProfile />, { wrapper: MemoryRouter });
+}
 
 describe("CustomerProfile", () => {
   beforeEach(() => {
@@ -55,10 +92,20 @@ describe("CustomerProfile", () => {
     vi.unstubAllGlobals();
   });
 
-  it("PT-01: renders the wireframe's contact-information fields with their values", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    mockFetch({});
 
-    render(<CustomerProfile />);
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+    expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
+  });
+
+  it("PT-01: renders the wireframe's contact-information fields with their values", async () => {
+    mockFetch({});
+
+    renderPage();
 
     const card = await screen.findByRole("region", { name: "Contact information" });
     expect(
@@ -79,9 +126,9 @@ describe("CustomerProfile", () => {
   });
 
   it("PT-02: renders the account-details card as read-only rows", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
+    mockFetch({});
 
-    render(<CustomerProfile />);
+    renderPage();
 
     const card = await screen.findByRole("region", { name: "Account details" });
     expect(within(card).getByRole("group", { name: "Account status" }).textContent).toContain(
@@ -100,10 +147,10 @@ describe("CustomerProfile", () => {
   });
 
   it("PT-03: the edit affordance reveals a form pre-filled with the current values", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
+    mockFetch({});
     const user = userEvent.setup();
 
-    render(<CustomerProfile />);
+    renderPage();
     await screen.findByRole("region", { name: "Contact information" });
     await user.click(screen.getByRole("button", { name: "Edit profile" }));
 
@@ -128,10 +175,10 @@ describe("CustomerProfile", () => {
   });
 
   it("PT-04: the language control offers exactly en_US, ja_JP and zh_CN", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
+    mockFetch({});
     const user = userEvent.setup();
 
-    render(<CustomerProfile />);
+    renderPage();
     await screen.findByRole("region", { name: "Contact information" });
     await user.click(screen.getByRole("button", { name: "Edit profile" }));
 
@@ -141,10 +188,10 @@ describe("CustomerProfile", () => {
   });
 
   it("PT-05: the category control offers exactly the five vocabulary categories", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
+    mockFetch({});
     const user = userEvent.setup();
 
-    render(<CustomerProfile />);
+    renderPage();
     await screen.findByRole("region", { name: "Contact information" });
     await user.click(screen.getByRole("button", { name: "Edit profile" }));
 
@@ -160,11 +207,10 @@ describe("CustomerProfile", () => {
       ...sampleAccount,
       contactInfo: { ...sampleAccount.contactInfo, givenName: "Alicia" },
     };
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
-    fetchMock.mockResolvedValueOnce(jsonResponse(updated));
+    mockFetch({ customerPut: jsonResponse(updated) });
     const user = userEvent.setup();
 
-    render(<CustomerProfile />);
+    renderPage();
     await screen.findByRole("region", { name: "Contact information" });
     await user.click(screen.getByRole("button", { name: "Edit profile" }));
 
@@ -180,10 +226,12 @@ describe("CustomerProfile", () => {
     const card = screen.getByRole("region", { name: "Contact information" });
     expect(within(card).getByRole("group", { name: "First name" }).textContent).toContain("Alicia");
 
-    const putCall = fetchMock.mock.calls[1];
-    expect(putCall[0]).toBe("/api/customer");
+    const putCall = fetchMock.mock.calls.find(
+      (call: unknown[]) =>
+        call[0] === "/api/customer" && (call[1] as RequestInit | undefined)?.method === "PUT",
+    )!;
     expect(putCall[1]).toMatchObject({ method: "PUT" });
-    const body = JSON.parse(putCall[1].body as string);
+    const body = JSON.parse((putCall[1] as RequestInit).body as string);
     expect(body.contactInfo.givenName).toBe("Alicia");
   });
 
@@ -196,11 +244,10 @@ describe("CustomerProfile", () => {
       ...sampleAccount,
       card: { cardType: null, expiryDate: null, lastFour: "1234" },
     };
-    fetchMock.mockResolvedValueOnce(jsonResponse(noCardYet));
-    fetchMock.mockResolvedValueOnce(jsonResponse(afterSave));
+    mockFetch({ customerGet: jsonResponse(noCardYet), customerPut: jsonResponse(afterSave) });
     const user = userEvent.setup();
 
-    render(<CustomerProfile />);
+    renderPage();
     await screen.findByRole("region", { name: "Contact information" });
     await user.click(screen.getByRole("button", { name: "Edit profile" }));
 
@@ -216,13 +263,15 @@ describe("CustomerProfile", () => {
   });
 
   it("PT-08: a validation error from the server is shown and the form stays open", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
-    fetchMock.mockResolvedValueOnce(
-      jsonResponse({ error: "Unsupported language: fr_FR" }, { ok: false, status: 400 }),
-    );
+    mockFetch({
+      customerPut: jsonResponse(
+        { error: "Unsupported language: fr_FR" },
+        { ok: false, status: 400 },
+      ),
+    });
     const user = userEvent.setup();
 
-    render(<CustomerProfile />);
+    renderPage();
     await screen.findByRole("region", { name: "Contact information" });
     await user.click(screen.getByRole("button", { name: "Edit profile" }));
     await user.click(screen.getByRole("button", { name: "Save changes" }));
@@ -232,9 +281,9 @@ describe("CustomerProfile", () => {
   });
 
   it("PT-09: sets the document's lang attribute from the fetched profile", async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(sampleAccount));
+    mockFetch({});
 
-    render(<CustomerProfile />);
+    renderPage();
 
     await waitFor(() => {
       expect(document.documentElement.lang).toBe("ja_JP");
@@ -243,13 +292,18 @@ describe("CustomerProfile", () => {
 
   it("PT-10: shows the heading and a status indicator while the account read is in flight, then replaces it with content", async () => {
     let resolveFetch: (value: unknown) => void = () => {};
-    fetchMock.mockReturnValueOnce(
-      new Promise((resolve) => {
-        resolveFetch = resolve;
-      }),
-    );
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
+      if (url === "/api/customer") {
+        return new Promise((resolve) => {
+          resolveFetch = resolve;
+        });
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
 
-    render(<CustomerProfile />);
+    renderPage();
 
     expect(screen.getByRole("heading", { name: "Customer Profile" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toBeInTheDocument();

@@ -15,6 +15,16 @@ function jsonResponse(body: unknown, init: { ok: boolean; status?: number } = { 
 // customer-facing; see summary.md § Notes). productName is the PRODUCT's
 // name ("Parrots") — the Item type has no item-specific name field, so the
 // item's own description is what distinguishes it from siblings.
+// The shared header (StoreHeader) fetches these two on every mount, so
+// every fetch mock in this file has to answer them.
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+const EMPTY_HEADER_CART = { items: [], count: 0, subtotal: 0 };
+
 const ITEM: Item = {
   itemId: "BIRDS-PARROTS-1",
   category: "BIRDS",
@@ -53,12 +63,30 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
+      return new Promise(() => {});
+    });
+
+    renderAt("/catalog/item/BIRDS-PARROTS-1");
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+    expect(screen.getByRole("link", { name: /cart/i })).toHaveAttribute("href", "/cart");
+  });
+
   it("PT-01: shows the item's image, description, all five attributes and the list price", async () => {
     fetchMock.mockImplementation((url: string) => {
       if (url.startsWith("/api/customer"))
         return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
       if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
         return Promise.resolve(jsonResponse(ITEM));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -106,6 +134,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
           jsonResponse({ ...ITEM, attribute3: null, attribute4: null, attribute5: null }),
         );
       }
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -126,6 +158,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
           jsonResponse({ error: "not found", reason: "not-found" }, { ok: false, status: 404 }),
         );
       }
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -143,6 +179,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
           jsonResponse({ error: "not found", reason: "not-found" }, { ok: false, status: 404 }),
         );
       }
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -163,6 +203,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
           ),
         );
       }
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -193,6 +237,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
         return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
       if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
         return Promise.resolve(jsonResponse(ITEM));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -208,6 +256,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
         return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
       if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
         return Promise.resolve(jsonResponse(ITEM));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -232,6 +284,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
         return Promise.resolve(jsonResponse({}, { ok: false, status: 401 }));
       if (url.startsWith("/api/catalog/items/BIRDS-PARROTS-1"))
         return Promise.resolve(jsonResponse(ITEM));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -250,6 +306,10 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
         return Promise.resolve(jsonResponse(ITEM));
       if (url === "/api/cart")
         return Promise.resolve(jsonResponse({ items: [], count: 1, subtotal: 1050 }));
+      if (url === "/api/signon/session") {
+        return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
+      }
+      if (url === "/api/cart") return Promise.resolve(jsonResponse(EMPTY_HEADER_CART));
       throw new Error(`unexpected fetch: ${url}`);
     });
     const user = userEvent.setup();
@@ -262,7 +322,13 @@ describe("ItemPage (/catalog/item/:itemId)", () => {
     await user.type(quantity, "3");
     await user.click(screen.getByRole("button", { name: "Add to Cart" }));
 
-    const cartCall = fetchMock.mock.calls.find((call: unknown[]) => call[0] === "/api/cart");
+    // The shared header (StoreHeader) also issues a plain GET /api/cart on
+    // mount, so this must find the POST specifically, not just any call to
+    // the same URL.
+    const cartCall = fetchMock.mock.calls.find(
+      (call: unknown[]) =>
+        call[0] === "/api/cart" && (call[1] as RequestInit | undefined)?.method === "POST",
+    );
     expect(cartCall).toBeDefined();
     expect(cartCall![1]).toMatchObject({ method: "POST" });
     const body = JSON.parse((cartCall![1] as { body: string }).body);

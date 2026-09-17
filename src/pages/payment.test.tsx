@@ -69,6 +69,15 @@ const VALID_CARD = {
   "Expiry month": "09",
 };
 
+// The shared header (StoreHeader) also fetches /api/signon/session on every
+// mount, so every fetch mock in this file has to answer it.
+const SIGNED_OUT_SESSION = {
+  j_signon: false,
+  j_signon_username: null,
+  original_url: null,
+  role: null,
+};
+
 const fetchMock = vi.fn();
 const navigateMock = vi.fn();
 let locationState: unknown = PAYMENT_STATE;
@@ -102,6 +111,7 @@ function mockFetch(handlers: {
 }) {
   fetchMock.mockImplementation((url: string, init?: RequestInit) => {
     if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+    if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
     if (url === "/api/payment/authorize" && init?.method === "POST") {
       return Promise.resolve(handlers.authorize ?? jsonResponse({ status: "approved" }));
     }
@@ -140,6 +150,13 @@ describe("Payment (/payment)", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders the shared header carrying the store mark, a catalogue link and a cart link (AC-1)", () => {
+    renderPage();
+
+    expect(screen.getByRole("link", { name: "My Pet Store" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/catalog");
+  });
+
   it("PAY-01: with no order data carried in navigation state, redirects back to /enter-order-information", () => {
     locationState = null;
     renderPage();
@@ -176,6 +193,7 @@ describe("Payment (/payment)", () => {
   it("PAY-05: renders a role=status indicator while the order summary is loading", () => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/cart") return new Promise(() => {});
+      if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
       throw new Error(`unexpected fetch: ${url}`);
     });
 
@@ -261,6 +279,7 @@ describe("Payment (/payment)", () => {
       const { default: userEvent } = await import("@testing-library/user-event");
       fetchMock.mockImplementation((url: string, init?: RequestInit) => {
         if (url === "/api/cart") return Promise.resolve(jsonResponse(POPULATED_CART));
+        if (url === "/api/signon/session") return Promise.resolve(jsonResponse(SIGNED_OUT_SESSION));
         if (url === "/api/payment/authorize") return new Promise(() => {});
         throw new Error(`unexpected fetch: ${url} ${init?.method ?? "GET"}`);
       });

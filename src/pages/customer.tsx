@@ -1,6 +1,8 @@
 import type { FormEvent, ReactNode } from "react";
 
-import { Button, RequireSignOn } from "@/components";
+import { Button, RequireSignOn, StoreHeader } from "@/components";
+import { CONTENT_WIDTH } from "@/components/layout";
+import { cn } from "@/utils";
 
 import { CARD_TYPES, CATEGORIES, COUNTRIES, LANGUAGES, STATES } from "../../account/vocabulary";
 import type { AccountUpdate, CustomerAccount } from "../../account/types";
@@ -193,295 +195,304 @@ export function CustomerProfile() {
 
   if (!account) {
     return (
-      <div className="mx-auto max-w-[672px] p-6">
-        <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
-        <p role="status" className="text-muted-foreground mt-4 text-sm">
-          Loading account…
-        </p>
-      </div>
+      <>
+        <StoreHeader />
+        <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+          <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
+          <p role="status" className="text-muted-foreground mt-4 text-sm">
+            Loading account…
+          </p>
+        </div>
+      </>
     );
   }
 
   if (editing && form) {
     return (
-      <div className="mx-auto max-w-[672px] p-6">
-        <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
+      <>
+        <StoreHeader />
+        <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+          <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
 
-        {error && (
-          <p role="alert" className="text-destructive mt-2 text-sm">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p role="alert" className="text-destructive mt-2 text-sm">
+              {error}
+            </p>
+          )}
 
-        <form
-          aria-label="Edit profile"
-          onSubmit={handleSubmit}
-          className="mt-4 flex flex-col gap-4"
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label htmlFor="givenName" className="text-foreground text-sm font-medium">
-                First name
-              </label>
-              <input
-                id="givenName"
-                className={inputClassName}
-                value={form.givenName}
-                onChange={(event) => updateForm("givenName", event.target.value)}
-              />
+          <form
+            aria-label="Edit profile"
+            onSubmit={handleSubmit}
+            className="mt-4 flex flex-col gap-4"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="givenName" className="text-foreground text-sm font-medium">
+                  First name
+                </label>
+                <input
+                  id="givenName"
+                  className={inputClassName}
+                  value={form.givenName}
+                  onChange={(event) => updateForm("givenName", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="familyName" className="text-foreground text-sm font-medium">
+                  Last name
+                </label>
+                <input
+                  id="familyName"
+                  className={inputClassName}
+                  value={form.familyName}
+                  onChange={(event) => updateForm("familyName", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="telephone" className="text-foreground text-sm font-medium">
+                  Telephone
+                </label>
+                <input
+                  id="telephone"
+                  className={inputClassName}
+                  value={form.telephone}
+                  onChange={(event) => updateForm("telephone", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="email" className="text-foreground text-sm font-medium">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  className={inputClassName}
+                  value={form.email}
+                  onChange={(event) => updateForm("email", event.target.value)}
+                />
+              </div>
+              <div className="col-span-2 flex flex-col gap-1">
+                <label htmlFor="streetName1" className="text-foreground text-sm font-medium">
+                  Street address line 1
+                </label>
+                <input
+                  id="streetName1"
+                  className={inputClassName}
+                  value={form.streetName1}
+                  onChange={(event) => updateForm("streetName1", event.target.value)}
+                />
+              </div>
+              <div className="col-span-2 flex flex-col gap-1">
+                <label htmlFor="streetName2" className="text-foreground text-sm font-medium">
+                  Street address line 2
+                </label>
+                <input
+                  id="streetName2"
+                  className={inputClassName}
+                  value={form.streetName2}
+                  onChange={(event) => updateForm("streetName2", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="city" className="text-foreground text-sm font-medium">
+                  City
+                </label>
+                <input
+                  id="city"
+                  className={inputClassName}
+                  value={form.city}
+                  onChange={(event) => updateForm("city", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="state" className="text-foreground text-sm font-medium">
+                  State / Province
+                </label>
+                <select
+                  id="state"
+                  className={inputClassName}
+                  value={form.state}
+                  onChange={(event) => updateForm("state", event.target.value)}
+                >
+                  <option value="">— None —</option>
+                  {STATES.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="zipCode" className="text-foreground text-sm font-medium">
+                  Postal code
+                </label>
+                <input
+                  id="zipCode"
+                  className={inputClassName}
+                  value={form.zipCode}
+                  onChange={(event) => updateForm("zipCode", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="country" className="text-foreground text-sm font-medium">
+                  Country
+                </label>
+                <select
+                  id="country"
+                  className={inputClassName}
+                  value={form.country}
+                  onChange={(event) => updateForm("country", event.target.value)}
+                >
+                  <option value="">— None —</option>
+                  {COUNTRIES.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="cardType" className="text-foreground text-sm font-medium">
+                  Card type
+                </label>
+                <select
+                  id="cardType"
+                  className={inputClassName}
+                  value={form.cardType}
+                  onChange={(event) => updateForm("cardType", event.target.value)}
+                >
+                  <option value="">— None —</option>
+                  {CARD_TYPES.map((cardType) => (
+                    <option key={cardType} value={cardType}>
+                      {cardType}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="expiryDate" className="text-foreground text-sm font-medium">
+                  Expiry (MM/YYYY)
+                </label>
+                <input
+                  id="expiryDate"
+                  placeholder="MM/YYYY"
+                  className={inputClassName}
+                  value={form.expiryDate}
+                  onChange={(event) => updateForm("expiryDate", event.target.value)}
+                />
+              </div>
+              <div className="col-span-2 flex flex-col gap-1">
+                <label htmlFor="cardNumber" className="text-foreground text-sm font-medium">
+                  Card number
+                </label>
+                <input
+                  id="cardNumber"
+                  className={inputClassName}
+                  value={form.cardNumber}
+                  onChange={(event) => updateForm("cardNumber", event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="preferredLanguage" className="text-foreground text-sm font-medium">
+                  Preferred language
+                </label>
+                <select
+                  id="preferredLanguage"
+                  className={inputClassName}
+                  value={form.preferredLanguage}
+                  onChange={(event) => updateForm("preferredLanguage", event.target.value)}
+                >
+                  {LANGUAGES.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="favoriteCategory" className="text-foreground text-sm font-medium">
+                  Favorite category
+                </label>
+                <select
+                  id="favoriteCategory"
+                  className={inputClassName}
+                  value={form.favoriteCategory}
+                  onChange={(event) => updateForm("favoriteCategory", event.target.value)}
+                >
+                  <option value="">— No preference —</option>
+                  {CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="myListPreference"
+                  type="checkbox"
+                  checked={form.myListPreference}
+                  onChange={(event) => updateForm("myListPreference", event.target.checked)}
+                />
+                <label htmlFor="myListPreference" className="text-foreground text-sm">
+                  Add to My List by default
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="bannerPreference"
+                  type="checkbox"
+                  checked={form.bannerPreference}
+                  onChange={(event) => updateForm("bannerPreference", event.target.checked)}
+                />
+                <label htmlFor="bannerPreference" className="text-foreground text-sm">
+                  Show banner promotions
+                </label>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="familyName" className="text-foreground text-sm font-medium">
-                Last name
-              </label>
-              <input
-                id="familyName"
-                className={inputClassName}
-                value={form.familyName}
-                onChange={(event) => updateForm("familyName", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="telephone" className="text-foreground text-sm font-medium">
-                Telephone
-              </label>
-              <input
-                id="telephone"
-                className={inputClassName}
-                value={form.telephone}
-                onChange={(event) => updateForm("telephone", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="email" className="text-foreground text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                className={inputClassName}
-                value={form.email}
-                onChange={(event) => updateForm("email", event.target.value)}
-              />
-            </div>
-            <div className="col-span-2 flex flex-col gap-1">
-              <label htmlFor="streetName1" className="text-foreground text-sm font-medium">
-                Street address line 1
-              </label>
-              <input
-                id="streetName1"
-                className={inputClassName}
-                value={form.streetName1}
-                onChange={(event) => updateForm("streetName1", event.target.value)}
-              />
-            </div>
-            <div className="col-span-2 flex flex-col gap-1">
-              <label htmlFor="streetName2" className="text-foreground text-sm font-medium">
-                Street address line 2
-              </label>
-              <input
-                id="streetName2"
-                className={inputClassName}
-                value={form.streetName2}
-                onChange={(event) => updateForm("streetName2", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="city" className="text-foreground text-sm font-medium">
-                City
-              </label>
-              <input
-                id="city"
-                className={inputClassName}
-                value={form.city}
-                onChange={(event) => updateForm("city", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="state" className="text-foreground text-sm font-medium">
-                State / Province
-              </label>
-              <select
-                id="state"
-                className={inputClassName}
-                value={form.state}
-                onChange={(event) => updateForm("state", event.target.value)}
-              >
-                <option value="">— None —</option>
-                {STATES.map((state) => (
-                  <option key={state} value={state}>
-                    {state}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="zipCode" className="text-foreground text-sm font-medium">
-                Postal code
-              </label>
-              <input
-                id="zipCode"
-                className={inputClassName}
-                value={form.zipCode}
-                onChange={(event) => updateForm("zipCode", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="country" className="text-foreground text-sm font-medium">
-                Country
-              </label>
-              <select
-                id="country"
-                className={inputClassName}
-                value={form.country}
-                onChange={(event) => updateForm("country", event.target.value)}
-              >
-                <option value="">— None —</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="cardType" className="text-foreground text-sm font-medium">
-                Card type
-              </label>
-              <select
-                id="cardType"
-                className={inputClassName}
-                value={form.cardType}
-                onChange={(event) => updateForm("cardType", event.target.value)}
-              >
-                <option value="">— None —</option>
-                {CARD_TYPES.map((cardType) => (
-                  <option key={cardType} value={cardType}>
-                    {cardType}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="expiryDate" className="text-foreground text-sm font-medium">
-                Expiry (MM/YYYY)
-              </label>
-              <input
-                id="expiryDate"
-                placeholder="MM/YYYY"
-                className={inputClassName}
-                value={form.expiryDate}
-                onChange={(event) => updateForm("expiryDate", event.target.value)}
-              />
-            </div>
-            <div className="col-span-2 flex flex-col gap-1">
-              <label htmlFor="cardNumber" className="text-foreground text-sm font-medium">
-                Card number
-              </label>
-              <input
-                id="cardNumber"
-                className={inputClassName}
-                value={form.cardNumber}
-                onChange={(event) => updateForm("cardNumber", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="preferredLanguage" className="text-foreground text-sm font-medium">
-                Preferred language
-              </label>
-              <select
-                id="preferredLanguage"
-                className={inputClassName}
-                value={form.preferredLanguage}
-                onChange={(event) => updateForm("preferredLanguage", event.target.value)}
-              >
-                {LANGUAGES.map((language) => (
-                  <option key={language} value={language}>
-                    {language}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label htmlFor="favoriteCategory" className="text-foreground text-sm font-medium">
-                Favorite category
-              </label>
-              <select
-                id="favoriteCategory"
-                className={inputClassName}
-                value={form.favoriteCategory}
-                onChange={(event) => updateForm("favoriteCategory", event.target.value)}
-              >
-                <option value="">— No preference —</option>
-                {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="myListPreference"
-                type="checkbox"
-                checked={form.myListPreference}
-                onChange={(event) => updateForm("myListPreference", event.target.checked)}
-              />
-              <label htmlFor="myListPreference" className="text-foreground text-sm">
-                Add to My List by default
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="bannerPreference"
-                type="checkbox"
-                checked={form.bannerPreference}
-                onChange={(event) => updateForm("bannerPreference", event.target.checked)}
-              />
-              <label htmlFor="bannerPreference" className="text-foreground text-sm">
-                Show banner promotions
-              </label>
-            </div>
-          </div>
 
-          <div className="flex gap-2">
-            <Button type="submit">Save changes</Button>
-            <Button type="button" variant="outline" onClick={cancelEdit}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
+            <div className="flex gap-2">
+              <Button type="submit">Save changes</Button>
+              <Button type="button" variant="outline" onClick={cancelEdit}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[672px] p-6">
-      <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
+    <>
+      <StoreHeader />
+      <div className={cn(CONTENT_WIDTH, "mx-auto p-6")}>
+        <h1 className="text-foreground text-xl font-bold">Customer Profile</h1>
 
-      <ProfileCard title="Contact information">
-        <ReadOnlyField label="First name" value={display(account.contactInfo.givenName)} />
-        <ReadOnlyField label="Last name" value={display(account.contactInfo.familyName)} />
-        <ReadOnlyField
-          label="Street address"
-          value={display(streetAddress(account) || null)}
-          full
-        />
-        <ReadOnlyField label="City" value={display(account.address.city)} />
-        <ReadOnlyField label="State / Province" value={display(account.address.state)} />
-        <ReadOnlyField label="Postal code" value={display(account.address.zipCode)} />
-        <ReadOnlyField label="Country" value={display(account.address.country)} />
-      </ProfileCard>
+        <ProfileCard title="Contact information">
+          <ReadOnlyField label="First name" value={display(account.contactInfo.givenName)} />
+          <ReadOnlyField label="Last name" value={display(account.contactInfo.familyName)} />
+          <ReadOnlyField
+            label="Street address"
+            value={display(streetAddress(account) || null)}
+            full
+          />
+          <ReadOnlyField label="City" value={display(account.address.city)} />
+          <ReadOnlyField label="State / Province" value={display(account.address.state)} />
+          <ReadOnlyField label="Postal code" value={display(account.address.zipCode)} />
+          <ReadOnlyField label="Country" value={display(account.address.country)} />
+        </ProfileCard>
 
-      <ProfileCard title="Account details">
-        <ReadOnlyField label="Account status" value={display(account.status)} />
-        <ReadOnlyField label="Telephone" value={display(account.contactInfo.telephone)} />
-        <ReadOnlyField label="Email" value={display(account.contactInfo.email)} />
-        <ReadOnlyField label="Card type" value={display(account.card.cardType)} />
-      </ProfileCard>
+        <ProfileCard title="Account details">
+          <ReadOnlyField label="Account status" value={display(account.status)} />
+          <ReadOnlyField label="Telephone" value={display(account.contactInfo.telephone)} />
+          <ReadOnlyField label="Email" value={display(account.contactInfo.email)} />
+          <ReadOnlyField label="Card type" value={display(account.card.cardType)} />
+        </ProfileCard>
 
-      <Button onClick={startEdit}>Edit profile</Button>
-    </div>
+        <Button onClick={startEdit}>Edit profile</Button>
+      </div>
+    </>
   );
 }
 
