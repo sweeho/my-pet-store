@@ -8,9 +8,9 @@
 
 ## 2. Email Generation
 
-- [ ] 2.1 Create email templates for each notification type (SWHM-T-0225)
-- [ ] 2.2 Implement email body generation with order details (SWHM-T-0225)
-- [ ] 2.3 Include customer name and order ID in message (SWHM-T-0225)
+- [x] 2.1 Create email templates for each notification type (SWHM-T-0225)
+- [x] 2.2 Implement email body generation with order details (SWHM-T-0225)
+- [x] 2.3 Include customer name and order ID in message (SWHM-T-0225)
 
 ## 3. Message Queue
 
