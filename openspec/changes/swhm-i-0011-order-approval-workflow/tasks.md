@@ -57,12 +57,12 @@
 
 ## 7. Admin Operations
 
-- [ ] 7.1 Implement Approve button to set selected rows to APPROVED (SWHM-T-0210)
-- [ ] 7.2 Implement Deny button to set selected rows to DENIED (SWHM-T-0210)
-- [ ] 7.3 Implement Commit button to send changes to server (SWHM-T-0210)
-- [ ] 7.4 Support bulk approval of multiple orders (SWHM-T-0210)
-- [ ] 7.5 Support bulk denial of multiple orders (SWHM-T-0210)
-- [ ] 7.6 Validate changes before sending to server (SWHM-T-0210)
+- [x] 7.1 Implement Approve button to set selected rows to APPROVED (SWHM-T-0210)
+- [x] 7.2 Implement Deny button to set selected rows to DENIED (SWHM-T-0210)
+- [x] 7.3 Implement Commit button to send changes to server (SWHM-T-0210)
+- [x] 7.4 Support bulk approval of multiple orders (SWHM-T-0210)
+- [x] 7.5 Support bulk denial of multiple orders (SWHM-T-0210)
+- [x] 7.6 Validate changes before sending to server (SWHM-T-0210)
 
 ## 8. Message Queue Integration
 
