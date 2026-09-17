@@ -6,9 +6,9 @@
 
 ## 2. Non-screen components are not routable (SWHM-T-0239)
 
-- [ ] 2.1 Stop `NotFound.tsx` and `RootErrorBoundary.tsx` producing routes of their own, per design.md D1 (SWHM-T-0239)
-- [ ] 2.2 Pin `/NotFound` and `/RootErrorBoundary` to the not-found screen in the browser tier, per design.md D5 (SWHM-T-0239)
-- [ ] 2.3 Add the checked-in route inventory guard over the pages directory, per design.md D3 and D4 (SWHM-T-0239)
+- [x] 2.1 Stop `NotFound.tsx` and `RootErrorBoundary.tsx` producing routes of their own, per design.md D1 (SWHM-T-0239)
+- [x] 2.2 Pin `/NotFound` and `/RootErrorBoundary` to the not-found screen in the browser tier, per design.md D5 (SWHM-T-0239)
+- [x] 2.3 Add the checked-in route inventory guard over the pages directory, per design.md D3 and D4 (SWHM-T-0239)
 
 ## 3. Dispatch codebase-context defect (SWHM-T-0235)
 
