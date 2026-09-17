@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Orders Approval — My Pet Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.145 0 0);
+        --card: oklch(1 0 0);
+        --primary: oklch(0.205 0 0);
+        --primary-foreground: oklch(0.985 0 0);
+        --secondary: oklch(0.97 0 0);
+        --muted: oklch(0.97 0 0);
+        --muted-foreground: oklch(0.556 0 0);
+        --accent: oklch(0.97 0 0);
+        --destructive: oklch(0.577 0.245 27.325);
+        --destructive-foreground: oklch(1 0 0);
+        --border: oklch(0.922 0 0);
+        --input: oklch(0.922 0 0);
+        --ring: oklch(0.87 0 0);
+        --radius: 0.625rem;
+        --radius-md: calc(var(--radius) - 2px);
+        --radius-sm: calc(var(--radius) - 4px);
+
+        /* status tints — proposed, not yet in the token file */
+        --status-pending-bg: oklch(0.965 0.055 95);
+        --status-pending-fg: oklch(0.45 0.09 80);
+        --status-pending-border: oklch(0.885 0.08 95);
+        --status-approved-bg: oklch(0.965 0.045 152);
+        --status-approved-fg: oklch(0.44 0.085 152);
+        --status-approved-border: oklch(0.885 0.07 152);
+        --status-denied-bg: oklch(0.965 0.035 27.325);
+        --status-denied-fg: oklch(0.505 0.2 27.325);
+        --status-denied-border: oklch(0.885 0.07 27.325);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 1440px;
+        height: 900px;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 672px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .page-meta {
+        margin: 6px 0 0;
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--muted-foreground);
+      }
+
+      .section-label {
+        margin: 24px 0 0;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted-foreground);
+      }
+
+      .card {
+        margin-top: 8px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: var(--radius);
+        overflow: visible;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      thead th {
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 11px;
+        line-height: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted-foreground);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      tbody td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        line-height: 20px;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr.is-selected td {
+        background: var(--muted);
+      }
+
+      .col-check {
+        width: 40px;
+      }
+      .col-id {
+        width: 74px;
+      }
+      .col-user {
+        width: 112px;
+      }
+      .col-date {
+        width: 104px;
+      }
+      .col-amount {
+        width: 122px;
+        text-align: right;
+      }
+      td.amount {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      td.order-id,
+      td.user-id,
+      td.order-date {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      td.user-id {
+        color: var(--foreground);
+      }
+      td.order-date {
+        color: var(--muted-foreground);
+      }
+
+      .checkbox {
+        display: block;
+        width: 16px;
+        height: 16px;
+        border: 1px solid var(--input);
+        border-radius: var(--radius-sm);
+        background: var(--background);
+      }
+
+      .checkbox.checked {
+        background: var(--primary);
+        border-color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .checkbox.checked svg {
+        width: 11px;
+        height: 11px;
+        color: var(--primary-foreground);
+      }
+
+      .status-select {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        width: 148px;
+        height: 32px;
+        padding: 0 8px 0 10px;
+        border: 1px solid var(--input);
+        border-radius: var(--radius-md);
+        background: var(--background);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+
+      .status-select svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.65;
+        flex: none;
+      }
+
+      .status-select.pending {
+        background: var(--status-pending-bg);
+        border-color: var(--status-pending-border);
+        color: var(--status-pending-fg);
+      }
+
+      .status-select.approved {
+        background: var(--status-approved-bg);
+        border-color: var(--status-approved-border);
+        color: var(--status-approved-fg);
+      }
+
+      .status-select.denied {
+        background: var(--status-denied-bg);
+        border-color: var(--status-denied-border);
+        color: var(--status-denied-fg);
+      }
+
+      .status-cell {
+        position: relative;
+      }
+
+      .status-select.open {
+        border-color: var(--ring);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 45%, transparent);
+      }
+
+      .status-menu {
+        position: absolute;
+        top: 44px;
+        left: 12px;
+        z-index: 5;
+        width: 148px;
+        padding: 4px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+      }
+
+      .status-menu .option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 6px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--foreground);
+      }
+
+      .status-menu .option .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+      }
+
+      .dot.pending {
+        background: var(--status-pending-bg);
+        border-color: var(--status-pending-border);
+      }
+      .dot.approved {
+        background: var(--status-approved-bg);
+        border-color: var(--status-approved-border);
+      }
+      .dot.denied {
+        background: var(--status-denied-bg);
+        border-color: var(--status-denied-border);
+      }
+
+      .status-menu .option.active {
+        background: var(--accent);
+      }
+
+      .status-menu .option svg {
+        width: 13px;
+        height: 13px;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .actions-meta {
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--muted-foreground);
+      }
+
+      .actions-buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 40px;
+        padding: 8px 16px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+
+      .btn svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .btn-outline {
+        border-color: var(--input);
+        background: var(--background);
+        color: var(--foreground);
+      }
+
+      .btn-destructive {
+        background: var(--destructive);
+        color: var(--destructive-foreground);
+      }
+
+      .btn-default {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+
+      .footnote {
+        margin: 16px 0 0;
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--muted-foreground);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Orders Approval</h1>
+      <p class="page-meta">
+        Orders above the auto-approval threshold for their locale. 8 awaiting review.
+      </p>
+
+      <p class="section-label">Pending orders</p>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-check" scope="col">
+                <span class="checkbox checked" aria-label="Select all orders">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14" /></svg>
+                </span>
+              </th>
+              <th class="col-id" scope="col">Order ID</th>
+              <th class="col-user" scope="col">User ID</th>
+              <th class="col-date" scope="col">Order Date</th>
+              <th class="col-amount" scope="col">Order Amount</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="is-selected">
+              <td>
+                <span class="checkbox checked" aria-label="Order 1042 selected">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+              </td>
+              <td class="order-id">1042</td>
+              <td class="user-id">j_doe</td>
+              <td class="order-date">2026-09-12</td>
+              <td class="amount">$642.00</td>
+              <td class="status-cell">
+                <span class="status-select approved">
+                  APPROVED
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+            <tr class="is-selected">
+              <td>
+                <span class="checkbox checked" aria-label="Order 1043 selected">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+              </td>
+              <td class="order-id">1043</td>
+              <td class="user-id">kuma_tanaka</td>
+              <td class="order-date">2026-09-12</td>
+              <td class="amount">&yen;68,400</td>
+              <td class="status-cell">
+                <span class="status-select approved">
+                  APPROVED
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="checkbox" aria-label="Order 1044 not selected"></span>
+              </td>
+              <td class="order-id">1044</td>
+              <td class="user-id">m_okafor</td>
+              <td class="order-date">2026-09-11</td>
+              <td class="amount">$1,289.50</td>
+              <td class="status-cell">
+                <span class="status-select pending">
+                  PENDING
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="checkbox" aria-label="Order 1045 not selected"></span>
+              </td>
+              <td class="order-id">1045</td>
+              <td class="user-id">s_bergstrom</td>
+              <td class="order-date">2026-09-11</td>
+              <td class="amount">$515.75</td>
+              <td class="status-cell">
+                <span class="status-select pending">
+                  PENDING
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+            <tr class="is-selected">
+              <td>
+                <span class="checkbox checked" aria-label="Order 1046 selected">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+              </td>
+              <td class="order-id">1046</td>
+              <td class="user-id">y_watanabe</td>
+              <td class="order-date">2026-09-10</td>
+              <td class="amount">&yen;124,900</td>
+              <td class="status-cell">
+                <span class="status-select denied">
+                  DENIED
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="checkbox" aria-label="Order 1047 not selected"></span>
+              </td>
+              <td class="order-id">1047</td>
+              <td class="user-id">a_delacroix</td>
+              <td class="order-date">2026-09-10</td>
+              <td class="amount">$903.20</td>
+              <td class="status-cell">
+                <span class="status-select pending open">
+                  PENDING
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+                <div class="status-menu" role="listbox" aria-label="Status for order 1047">
+                  <div class="option active" role="option" aria-selected="true">
+                    <span><span class="dot pending"></span> PENDING</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                  </div>
+                  <div class="option" role="option" aria-selected="false">
+                    <span><span class="dot approved"></span> APPROVED</span>
+                  </div>
+                  <div class="option" role="option" aria-selected="false">
+                    <span><span class="dot denied"></span> DENIED</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="checkbox" aria-label="Order 1048 not selected"></span>
+              </td>
+              <td class="order-id">1048</td>
+              <td class="user-id">h_yamamoto</td>
+              <td class="order-date">2026-09-09</td>
+              <td class="amount">&yen;57,200</td>
+              <td class="status-cell">
+                <span class="status-select pending">
+                  PENDING
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span class="checkbox" aria-label="Order 1049 not selected"></span>
+              </td>
+              <td class="order-id">1049</td>
+              <td class="user-id">r_castellanos</td>
+              <td class="order-date">2026-09-09</td>
+              <td class="amount">$2,140.00</td>
+              <td class="status-cell">
+                <span class="status-select pending">
+                  PENDING
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="actions">
+        <p class="actions-meta">3 selected &middot; 3 uncommitted changes</p>
+        <div class="actions-buttons">
+          <span class="btn btn-outline">Approve</span>
+          <span class="btn btn-destructive">Deny</span>
+          <span class="btn btn-default">Commit</span>
+        </div>
+      </div>
+
+      <p class="footnote">
+        Commit sends every changed status to the server. Approved orders generate a supplier purchase
+        order; both approvals and denials notify the customer.
+      </p>
+    </div>
+  </body>
+</html>

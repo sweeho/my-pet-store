@@ -67,6 +67,9 @@ export function AdminHomeContent() {
         <Button type="button" onClick={() => navigate("/admin/orders")}>
           Launch Rich Client
         </Button>
+        <Button type="button" variant="outline" onClick={() => navigate("/admin/orders-approval")}>
+          Review Pending Orders
+        </Button>
         <Button type="button" variant="outline" onClick={handleLogout}>
           Logout
         </Button>

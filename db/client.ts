@@ -98,6 +98,11 @@ type SeedOrder = {
   userName: string;
   daysAgo: number;
   status: string;
+  // Copied onto orders.locale the same way placeOrder copies it from the
+  // profile (order/order.ts, design.md § Decisions D2) — SWHM-T-0204 gives
+  // the demo database a realistic locale mix, including a ja_JP order at a
+  // yen-scale amount matching the mockup's pending rows.
+  locale: "en_US" | "ja_JP" | null;
   lines: { itemid: string; quantity: number; unitPrice: number }[];
 };
 
@@ -108,21 +113,21 @@ const SEED_ORDERS: SeedOrder[] = [
     userName: "alice_customer",
     daysAgo: 60,
     status: "PENDING",
-    lines: [
-      { itemid: "BIRDS-PARROTS-1", quantity: 1, unitPrice: 599.99 },
-      { itemid: "CATS-SHORTHAIR-1", quantity: 2, unitPrice: 89.99 },
-    ],
+    locale: "ja_JP",
+    lines: [{ itemid: "BIRDS-PARROTS-1", quantity: 1, unitPrice: 68400 }],
   },
   {
     userName: "bob_customer",
     daysAgo: 45,
     status: "APPROVED",
+    locale: "en_US",
     lines: [{ itemid: "DOGS-BULLDOGS-1", quantity: 1, unitPrice: 449.99 }],
   },
   {
     userName: "alice_customer",
     daysAgo: 30,
     status: "COMPLETED",
+    locale: "en_US",
     lines: [
       { itemid: "FISH-GOLDFISH-1", quantity: 3, unitPrice: 4.99 },
       { itemid: "REPTILES-LIZARDS-1", quantity: 1, unitPrice: 59.99 },
@@ -132,18 +137,21 @@ const SEED_ORDERS: SeedOrder[] = [
     userName: "carol_customer",
     daysAgo: 20,
     status: "DENIED",
+    locale: "en_US",
     lines: [{ itemid: "BIRDS-FINCHES-1", quantity: 1, unitPrice: 24.99 }],
   },
   {
     userName: "bob_customer",
     daysAgo: 10,
     status: "APPROVED",
+    locale: "en_US",
     lines: [{ itemid: "CATS-LONGHAIR-1", quantity: 1, unitPrice: 199.99 }],
   },
   {
     userName: "alice_customer",
     daysAgo: 2,
     status: "COMPLETED",
+    locale: "en_US",
     lines: [
       { itemid: "DOGS-POODLES-2", quantity: 1, unitPrice: 349.99 },
       { itemid: "FISH-ANGELFISH-1", quantity: 2, unitPrice: 14.99 },
@@ -173,6 +181,7 @@ if (!process.env.VITEST && db.select().from(orders).all().length === 0) {
         orderDate: new Date(Date.now() - seedOrder.daysAgo * DAY_MS),
         orderAmount: Math.round(orderAmount * 100) / 100,
         status: seedOrder.status,
+        locale: seedOrder.locale,
       })
       .returning({ orderId: orders.orderId })
       .get();

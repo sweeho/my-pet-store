@@ -187,6 +187,12 @@ export const orders = sqliteTable(
     orderDate: integer("order_date", { mode: "timestamp" }).notNull(),
     orderAmount: real("order_amount").notNull(),
     status: text("status").notNull(),
+    // Copied from profiles.preferred_language at placement, never resolved
+    // at decision time — an order records the locale it was agreed under,
+    // so a customer changing their language later cannot move an existing
+    // order across the auto-approval threshold (design.md § Decisions D2).
+    // Nullable because every order already in the database has none.
+    locale: text("locale"),
     billingGivenName: text("billing_given_name"),
     billingFamilyName: text("billing_family_name"),
     billingTelephone: text("billing_telephone"),
@@ -237,6 +243,66 @@ export const orderLineItem = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
 );
+
+// Two rows, not a document (design.md § Decisions D4, S2): no XML, no
+// queue — the fulfilment capability reads these rows directly. Keyed on
+// order_id, not a surrogate id, so an order can carry at most one PO — the
+// schema itself makes a repeat approval unable to produce a second (D7).
+// Every field is copied from the order at approval time, never joined back
+// (D4), so a PO still says where that order shipped even if the order's
+// own columns changed later.
+export const supplierPo = sqliteTable("supplier_po", {
+  orderId: integer("order_id")
+    .primaryKey()
+    .references(() => orders.orderId),
+  poDate: integer("po_date", { mode: "timestamp" }).notNull(),
+  shippingGivenName: text("shipping_given_name"),
+  shippingFamilyName: text("shipping_family_name"),
+  shippingTelephone: text("shipping_telephone"),
+  shippingEmail: text("shipping_email"),
+  shippingStreetName1: text("shipping_street_name1"),
+  shippingStreetName2: text("shipping_street_name2"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingZipCode: text("shipping_zip_code"),
+  shippingCountry: text("shipping_country"),
+});
+
+// One row per line, copied from order_line_item at approval time (D4).
+// catid/productid stay nullable — the order's own line can carry either as
+// null (the demo seed sets neither) and the PO records what the order
+// recorded rather than inventing a value.
+export const supplierPoLineItem = sqliteTable(
+  "supplier_po_line_item",
+  {
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => supplierPo.orderId, { onDelete: "cascade" }),
+    lineNumber: integer("line_number").notNull(),
+    catid: text("catid"),
+    productid: text("productid"),
+    itemid: text("itemid").notNull(),
+    quantity: integer("quantity").notNull(),
+    unitPrice: real("unit_price").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
+);
+
+// A row recording that the customer is owed word of a decision — nothing
+// sends it here; swhm-i-0012 owns delivery (design.md § Decisions D5).
+// order_id is NOT the primary key: unlike supplier_po, an order can be
+// owed more than one notification over its life. swhm-i-0012 will read
+// this table, so the column names are its contract and are not abbreviated
+// (PLAN.md § Fixed interface contracts).
+export const notifications = sqliteTable("notifications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => orders.orderId),
+  kind: text("kind").notNull(),
+  recipientEmail: text("recipient_email"),
+  queuedAt: integer("queued_at", { mode: "timestamp" }).notNull(),
+});
 
 // Quantity only — price is resolved on read through catalog/item.ts, so a
 // cart line never disagrees with the catalogue about what an item costs

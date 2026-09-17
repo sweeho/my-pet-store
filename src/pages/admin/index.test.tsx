@@ -49,7 +49,7 @@ describe("AdminHomeContent", () => {
     expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument();
   });
 
-  it("renders the title, description and both actions once the session read resolves", async () => {
+  it("renders the title, description and all three actions once the session read resolves", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ j_signon_username: "jps_admin" }));
 
     render(<AdminHomeContent />, { wrapper: MemoryRouter });
@@ -58,6 +58,7 @@ describe("AdminHomeContent", () => {
     expect(screen.getByRole("heading", { name: "Administration" })).toBeInTheDocument();
     expect(screen.getByText(/manages orders and gives visibility of sales/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Launch Rich Client" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review Pending Orders" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Logout" })).toBeInTheDocument();
   });
 
@@ -70,6 +71,17 @@ describe("AdminHomeContent", () => {
     await user.click(screen.getByRole("button", { name: "Launch Rich Client" }));
 
     expect(navigateMock).toHaveBeenCalledWith("/admin/orders");
+  });
+
+  it("SWHM-T-0208: navigates to /admin/orders-approval when Review Pending Orders is activated", async () => {
+    const user = userEvent.setup();
+    fetchMock.mockResolvedValueOnce(jsonResponse({ j_signon_username: "jps_admin" }));
+
+    render(<AdminHomeContent />, { wrapper: MemoryRouter });
+    await screen.findByText("jps_admin");
+    await user.click(screen.getByRole("button", { name: "Review Pending Orders" }));
+
+    expect(navigateMock).toHaveBeenCalledWith("/admin/orders-approval");
   });
 
   it("POSTs to /api/signon/logout and navigates to / when Logout is activated", async () => {

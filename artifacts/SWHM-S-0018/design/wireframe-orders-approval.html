@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Orders Approval — wireframe</title>
+    <style>
+      :root {
+        --bg: #f4f4f5;
+        --card: #ffffff;
+        --border: #e4e4e7;
+        --ink: #18181b;
+        --muted: #71717a;
+        --bar: #d4d4d8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        padding: 16px;
+      }
+      .page {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 24px;
+        max-width: 688px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-top: 16px;
+        overflow: hidden;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .sect-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin: 0;
+      }
+      .actions { display: flex; gap: 8px; }
+      .btn {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+      }
+      .btn--primary { background: var(--ink); color: #fafafa; border-color: var(--ink); }
+      .btn--danger { border-color: #fca5a5; color: #991b1b; }
+
+      table { width: 100%; border-collapse: collapse; }
+      th {
+        text-align: left;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        padding: 8px 12px;
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        color: #52525b;
+        font-variant-numeric: tabular-nums;
+      }
+      tr:last-child td { border-bottom: 0; }
+      .num { text-align: right; }
+      .sel { background: #f4f4f5; }
+      .sel td:first-child { box-shadow: inset 2px 0 0 0 var(--ink); }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        width: 132px;
+        height: 30px;
+        padding: 0 8px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .status .caret { font-size: 9px; opacity: 0.6; }
+      .s-approved { background: #dcfce7; border-color: #86efac; color: #166534; }
+      .s-denied   { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+      .s-pending  { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+
+      .detail {
+        max-width: 688px;
+        margin: 16px auto 0;
+        border: 1px dashed #a1a1aa;
+        border-radius: 10px;
+        padding: 14px;
+        background: #fafafa;
+      }
+      .detail-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      .menu {
+        width: 132px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card);
+        margin-top: 4px;
+        overflow: hidden;
+      }
+      .menu div {
+        padding: 7px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #f4f4f5;
+      }
+      .menu div:last-child { border-bottom: 0; }
+      .menu .on { background: #f4f4f5; }
+      .notes {
+        max-width: 688px;
+        margin: 16px auto 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.7;
+      }
+      .notes b { color: #52525b; font-weight: 600; }
+      .bar { height: 8px; background: var(--bar); border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Orders Approval</h1>
+
+      <div class="card">
+        <div class="card-head">
+          <p class="sect-title">Pending orders</p>
+          <div class="actions">
+            <span class="btn">Approve</span>
+            <span class="btn btn--danger">Deny</span>
+            <span class="btn btn--primary">Commit</span>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 96px">Order ID</th>
+              <th style="width: 96px">User ID</th>
+              <th style="width: 112px">Order Date</th>
+              <th class="num" style="width: 116px">Order Amount</th>
+              <th style="width: 152px">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="sel">
+              <td>1001</td>
+              <td>j.doe</td>
+              <td>2026-03-02</td>
+              <td class="num">$612.00</td>
+              <td><div class="status s-pending"><span>PENDING</span><span class="caret">▼</span></div></td>
+            </tr>
+            <tr class="sel">
+              <td>1002</td>
+              <td>a.tanaka</td>
+              <td>2026-03-02</td>
+              <td class="num">¥68,400</td>
+              <td><div class="status s-pending"><span>PENDING</span><span class="caret">▼</span></div></td>
+            </tr>
+            <tr>
+              <td>1003</td>
+              <td>m.singh</td>
+              <td>2026-03-03</td>
+              <td class="num">$1,480.25</td>
+              <td><div class="status s-approved"><span>APPROVED</span><span class="caret">▼</span></div></td>
+            </tr>
+            <tr>
+              <td>1004</td>
+              <td>r.oconnell</td>
+              <td>2026-03-03</td>
+              <td class="num">$845.00</td>
+              <td><div class="status s-denied"><span>DENIED</span><span class="caret">▼</span></div></td>
+            </tr>
+            <tr>
+              <td>1005</td>
+              <td>k.yamada</td>
+              <td>2026-03-04</td>
+              <td class="num">¥120,000</td>
+              <td><div class="status s-pending"><span>PENDING</span><span class="caret">▼</span></div></td>
+            </tr>
+            <tr>
+              <td>1006</td>
+              <td>l.moreau</td>
+              <td>2026-03-04</td>
+              <td class="num">$505.90</td>
+              <td><div class="status s-pending"><span>PENDING</span><span class="caret">▼</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="detail">
+      <p class="detail-title">Detail — status cell, dropdown open (same screen)</p>
+      <div style="display: flex; gap: 24px; align-items: flex-start">
+        <div>
+          <div class="status s-pending"><span>PENDING</span><span class="caret">▼</span></div>
+          <div class="menu">
+            <div class="on" style="color: #854d0e; background: #fef9c3">PENDING</div>
+            <div style="color: #166534">APPROVED</div>
+            <div style="color: #991b1b">DENIED</div>
+          </div>
+        </div>
+        <div style="flex: 1; padding-top: 4px">
+          <div class="bar" style="width: 100%"></div>
+          <div class="bar" style="width: 86%; margin-top: 6px"></div>
+          <div class="bar" style="width: 54%; margin-top: 6px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <b>Selection</b> — rows 1001 and 1002 are shown selected (tinted row, left rule). Approve sets
+      every selected row's status to APPROVED; Deny sets them to DENIED. Both change the status cell
+      in place; nothing reaches the server until Commit.<br />
+      <b>Status cell</b> — editable in place on any row via the dropdown, values PENDING / APPROVED /
+      DENIED. Cell background: green APPROVED, red DENIED, yellow PENDING.<br />
+      <b>Commit</b> — sends all status changes in the table to the server.
+    </div>
+  </body>
+</html>
