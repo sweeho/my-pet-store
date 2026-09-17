@@ -14,9 +14,9 @@
 
 ## 3. Message Queue
 
-- [ ] 3.1 Send notifications via AsyncSender EJB (SWHM-T-0226)
-- [ ] 3.2 Queue messages for async delivery (SWHM-T-0226)
-- [ ] 3.3 Handle delivery failures gracefully (SWHM-T-0226)
+- [x] 3.1 Send notifications via AsyncSender EJB (SWHM-T-0226)
+- [x] 3.2 Queue messages for async delivery (SWHM-T-0226)
+- [x] 3.3 Handle delivery failures gracefully (SWHM-T-0226)
 
 ## 4. Testing
 
