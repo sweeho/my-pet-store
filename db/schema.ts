@@ -288,6 +288,22 @@ export const supplierPoLineItem = sqliteTable(
   (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
 );
 
+// A row recording that the customer is owed word of a decision — nothing
+// sends it here; swhm-i-0012 owns delivery (design.md § Decisions D5).
+// order_id is NOT the primary key: unlike supplier_po, an order can be
+// owed more than one notification over its life. swhm-i-0012 will read
+// this table, so the column names are its contract and are not abbreviated
+// (PLAN.md § Fixed interface contracts).
+export const notifications = sqliteTable("notifications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => orders.orderId),
+  kind: text("kind").notNull(),
+  recipientEmail: text("recipient_email"),
+  queuedAt: integer("queued_at", { mode: "timestamp" }).notNull(),
+});
+
 // Quantity only — price is resolved on read through catalog/item.ts, so a
 // cart line never disagrees with the catalogue about what an item costs
 // (design.md D1). Both ON DELETE CASCADE declarations are intent only:

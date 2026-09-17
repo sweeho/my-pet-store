@@ -9,9 +9,18 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../db/client";
 import { orders } from "../db/schema";
-import type { ApprovalDecision, DecisionOutcome } from "./approval-types";
+import type { ApprovalDecision, DecisionOutcome, NotificationKind } from "./approval-types";
+import { queueNotification } from "./notification";
 import { readOrderDecidability } from "./status";
 import { createSupplierPo } from "./supplier-po";
+
+// ApprovalDecision and NotificationKind are deliberately different
+// vocabularies (order/approval-types.ts) — this is the one place that
+// translates between them.
+const NOTIFICATION_KIND: Record<ApprovalDecision, NotificationKind> = {
+  APPROVED: "APPROVAL",
+  DENIED: "DENIAL",
+};
 
 export function applyDecision(orderId: number, decision: ApprovalDecision): DecisionOutcome {
   const current = readOrderDecidability(orderId);
@@ -33,9 +42,11 @@ export function applyDecision(orderId: number, decision: ApprovalDecision): Deci
     createSupplierPo(orderId);
   }
 
-  // EXTENSION POINT: SWHM-T-0213 inserts the notification write here (both
-  // outcomes) — PLAN.md step 3. Runs inside the caller's transaction, same
-  // as the writes above.
+  // Both outcomes queue a notification, never a skip or a missing order
+  // (design.md § Decisions D5; PLAN.md step 4). On an approval this runs
+  // after createSupplierPo, inside the same transaction, so a PO failure
+  // queues nothing.
+  queueNotification(orderId, NOTIFICATION_KIND[decision]);
 
   return { orderId, result: "applied", status: decision };
 }
