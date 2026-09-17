@@ -18,13 +18,23 @@ export function readOrderStatus(orderId: number): OrderStatus | null {
   return (row?.status as OrderStatus | undefined) ?? null;
 }
 
+// The one place "which statuses may be fulfilled" is written (SWHM-T-0214,
+// design.md D1, D3) — a positive test for APPROVED rather than a list of
+// statuses to exclude, so a status added later is refused by default
+// instead of silently becoming fulfillable.
+export function isFulfillable(status: OrderStatus): boolean {
+  return status === "APPROVED";
+}
+
 // A second fulfilment run over a finished order is an ordinary event (D3),
 // not an error — an order already COMPLETED is not moved again, and this
 // reports that nothing changed by returning false rather than throwing.
+// An unknown order (status null) and a non-approved order both fail
+// isFulfillable and are refused the same way.
 export function markOrderCompleted(orderId: number): boolean {
   const status = readOrderStatus(orderId);
 
-  if (status === null || status === "COMPLETED") {
+  if (status === null || !isFulfillable(status)) {
     return false;
   }
 
