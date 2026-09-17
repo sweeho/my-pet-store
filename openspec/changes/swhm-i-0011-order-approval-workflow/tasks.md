@@ -18,12 +18,12 @@
 
 ## 3. Order Approval & Denial Workflow
 
-- [ ] 3.1 Implement approval workflow in OrderApprovalMDB (SWHM-T-0206)
-- [ ] 3.2 Create OrderApproval transfer object (SWHM-T-0206)
-- [ ] 3.3 Set status to APPROVED for approved orders (SWHM-T-0206)
-- [ ] 3.4 Set status to DENIED for denied orders (SWHM-T-0206)
-- [ ] 3.5 Implement status update via ProcessManager.updateStatus() (SWHM-T-0206)
-- [ ] 3.6 Trigger doTransition() after approval/denial (SWHM-T-0206)
+- [x] 3.1 Implement approval workflow in OrderApprovalMDB (SWHM-T-0206)
+- [x] 3.2 Create OrderApproval transfer object (SWHM-T-0206)
+- [x] 3.3 Set status to APPROVED for approved orders (SWHM-T-0206)
+- [x] 3.4 Set status to DENIED for denied orders (SWHM-T-0206)
+- [x] 3.5 Implement status update via ProcessManager.updateStatus() (SWHM-T-0206)
+- [x] 3.6 Trigger doTransition() after approval/denial (SWHM-T-0206)
 
 ## 4. Supplier PO Generation
 
