@@ -60,16 +60,23 @@ No charting or data-visualisation dependency is present. Where the product repor
 
 ## Routing
 
-**Frontend**: `src/pages/**/*.tsx` → routes (`about.tsx` → `/about`, `[id].tsx` → `/:id`, `[...all].tsx` → catch-all). `*.test.tsx` excluded via `Pages({ exclude })` in `vite.config.ts`.
+**Frontend**: `src/pages/**/*.tsx` → routes (`about.tsx` → `/about`, `[id].tsx` → `/:id`, `[...all].tsx` → catch-all). `Pages({ exclude })` in `vite.config.ts` names what under that directory must NOT become a route: the test files, and the components that live there for proximity to the screens that use them rather than because they are screens themselves.
 
 **Backend**: `routes/api/*.ts` → `/api/*`, `middleware/*.ts` runs first and can set `event.context`. Requires `nitro({ serverDir: "./" })` in `vite.config.ts` — the default is `false`, which scans nothing. `*.test.ts` excluded via `nitro({ ignore })`.
 
-Creating the file is the whole registration step on both sides; nothing lists routes anywhere. The
-converse holds too and is easier to miss: **a page file nothing links to is still a public screen.**
-There is no manifest whose absence would flag it, so a page survives by being forgotten — which is how
-the bootstrap template's example screens stayed reachable for seven sprints. Removing a screen means
-removing its file. This cuts hardest for a screen that is meant to be restricted: an administrative
-page is protected because its path is in the resource list, never because nothing links to it.
+Creating the file is the whole registration step on both sides. The converse holds too and is easier
+to miss: **a page file nothing links to is still a public screen.** A page survives by being
+forgotten — which is how the bootstrap template's example screens stayed reachable for seven sprints,
+and how its not-found screen and an unwired error boundary held addresses of their own for nine.
+Removing a screen means removing its file. This cuts hardest for a screen that is meant to be
+restricted: an administrative page is protected because its path is in the resource list, never
+because nothing links to it.
+
+On the frontend there is now one thing that does list routes: a repository-level test holding an
+inventory of the screens `src/pages/` is meant to publish. It is not a router and nothing reads it at
+runtime — it exists so that a file appearing in that directory is classified as a screen or as a
+component deliberately, and fails the unit suite until it is. The backend has no equivalent and a
+`routes/` file is still registered by existing alone.
 
 Nitro scans `api/`, `routes/`, `middleware/`, `plugins/` and `tasks/`, and auto-imports from `utils/**`. **Server-side code that is not an endpoint must live outside those directories** — a `.ts` file under `routes/` becomes an HTTP route whether or not it exports a handler. That is why capability modules get their own top-level directory — `auth/`, `account/`, `catalog/`, `admin/`, `cart/`, `order/`, `payment/`, `fulfillment/` and `notifications/` — and why a new one must not be named `utils`.
 
@@ -186,4 +193,5 @@ Decisions that bind work beyond the change that made them. Each is authored wher
 - **What the store contacts a customer at is resolved when it writes to them, not when the thing worth writing about happened.** A notification's recipient comes from the account's contact record at the moment it is sent, falling back to the address copied onto the order only when the account holds none. This is a deliberate, narrow exception to the copy-onto-the-order rule above, and the line between them is what the value is _for_: that rule protects what was **agreed** — a price, the address an order shipped to, the locale it was judged under — and none of those may move after the fact. An address to contact someone at is not an agreement, it is a current fact about a person, and a customer who changed it did so precisely so the store would use the new one. Anything later that reaches a customer rather than recording what they committed to inherits this. _Authored in change `swhm-i-0012-customer-notifications-commu` (D5)._
 - **A derived total is computed on read, never stored.** A cart's line totals, subtotal and item count are calculated from its rows each time it is read. Storing them creates a second source of truth that every mutation has to remember to update, and the first one that forgets produces a total that is wrong with nothing failing. Any later capability holding a summable collection follows this until a measured reason says otherwise. _Authored in change `swhm-i-0007-shopping-cart-management` (D6)._
 - **A screen asks who the visitor is by reading the session, never by probing a protected path.** `GET /api/signon/session` reports whether the visitor is signed on, their username and the role their identity holds, and it writes nothing. `GET /api/signon/check` answers the same question about a specific path but records that path as the post-sign-on destination as a side effect, so a screen that probed it to decide what to render would silently move where its visitor lands after signing in — the same failure mode the navigation-only return-address decision above was written for, arriving through a different door. Any later screen that needs to know something about the current identity extends the session read rather than adding a second probe. _Authored in change `swhm-i-0014-consistent-look-and-site-nav` (D2)._
+- **A screen is published deliberately, and the frontend keeps an inventory saying which files are screens.** File-based routing makes a new page a public address with no registration step, which means a component parked under `src/pages/` for proximity is a URL nobody chose to create. The countermeasure is a checked-in list, asserted by a repository-level test rather than enforced by the router: every `.tsx` in that directory is an intended screen or is named as excluded, and an unclassified one fails the suite. Any later capability adding a screen adds its line; any later component that wants to live beside the screens it serves declares itself as one. _Authored in change `swhm-s-0022-bugfix-swhm-t-0235-swhm-t-02` (D3)._
 - **A link shown only to those allowed to follow it is a convenience, never the protection.** The header offers an administrator the route to `/admin`; what keeps everyone else out is the resource list and the single decision function, enforced in the middleware and in the client route guard. Hiding a control is presentation, and presentation is reversible by anyone with a browser. This binds every later privileged surface: the decision to show a control and the decision to permit the action behind it are separate, and only the second one is access control. _Authored in change `swhm-i-0014-consistent-look-and-site-nav` (D4)._

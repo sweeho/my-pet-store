@@ -10,7 +10,9 @@ The running My Pet Store application and the automated gate that proves it: what
 
 The application SHALL identify itself as My Pet Store everywhere a person or a user agent can read
 its name, and SHALL NOT present the name, placeholder copy, example screens or hosted assets of the
-boilerplate it was generated from.
+boilerplate it was generated from. It SHALL publish an address only for a screen it intends a visitor
+to reach: a component that is not a screen SHALL NOT be reachable at an address of its own, and no
+screen SHALL be reachable at more than one address.
 
 #### Scenario: Home page names the product
 
@@ -49,6 +51,29 @@ boilerplate it was generated from.
 - **WHEN** a visitor navigates directly to `/users`, to `/users/1`, or to `/users/profile`
 - **THEN** each path renders the application's not-found screen, and no page presents the
   boilerplate's placeholder people or example-route copy
+
+#### Scenario: Components that are not screens have no address of their own
+
+- **GIVEN** the application is running
+- **WHEN** a visitor navigates directly to `/NotFound` or to `/RootErrorBoundary`
+- **THEN** each path renders the application's not-found screen, and neither page presents the
+  error-boundary's "An error occurred" copy
+
+#### Scenario: The not-found screen keeps its single address
+
+- **GIVEN** the application is running
+- **WHEN** a visitor navigates to a path no screen claims
+- **THEN** the application's not-found screen renders, reached through the catch-all rather than
+  through an address of its own
+
+#### Scenario: Regression guard rejects an unclassified page file
+
+- **GIVEN** a `.tsx` source file under the application's pages directory that is neither recorded as
+  an intended screen nor named as excluded from route generation
+
+- **WHEN** the repository's automated checks run
+- **THEN** a check fails and names that file, so a component parked in the pages directory cannot
+  become a public address unnoticed
 
 ### Requirement: Verified build from a clean checkout
 

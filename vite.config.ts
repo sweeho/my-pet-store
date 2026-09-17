@@ -30,8 +30,18 @@ export default defineConfig({
       extensions: ["tsx", "jsx"],
       // UnavailableInLanguage.tsx is a shared component, not a route — it
       // lives under src/pages/catalog because it's used only by that
-      // capability's screens (SWHM-T-0075).
-      exclude: ["**/*.test.tsx", "**/*.test.ts", "**/UnavailableInLanguage.tsx"],
+      // capability's screens (SWHM-T-0075). NotFound.tsx is the catch-all's
+      // target ([...all].tsx re-exports it) and RootErrorBoundary.tsx is an
+      // errorElement nothing wires up — neither is a screen a visitor
+      // navigates to directly, so both are excluded from route generation
+      // rather than reachable at their own address (SWHM-T-0239).
+      exclude: [
+        "**/*.test.tsx",
+        "**/*.test.ts",
+        "**/UnavailableInLanguage.tsx",
+        "**/NotFound.tsx",
+        "**/RootErrorBoundary.tsx",
+      ],
       importMode: "sync",
     }),
     svgr(),
