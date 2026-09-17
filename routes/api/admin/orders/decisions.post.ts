@@ -7,6 +7,7 @@ import {
 } from "../../../../admin/order-status";
 import { isAdminError, requireAdmin } from "../../../../admin/request";
 import type { AdminError } from "../../../../admin/types";
+import { dispatchQueued } from "../../../../notifications/dispatch";
 import type { ApprovalDecision } from "../../../../order/approval-types";
 
 type DecisionsBody = {
@@ -76,5 +77,14 @@ export default defineHandler(async (event): Promise<Result> => {
     return { error: decisions.error };
   }
 
-  return applyOrderDecisions(decisions);
+  const result = applyOrderDecisions(decisions);
+
+  // After applyOrderDecisions's own transaction has committed, never
+  // inside it (design.md § Decisions D4) — the status update is already
+  // final by the time anything is handed to a transport, so this request
+  // never waits on delivery. A drain failure changes neither the status
+  // code nor the body below (design.md § Error Handling; PLAN.md step 4).
+  dispatchQueued();
+
+  return result;
 });

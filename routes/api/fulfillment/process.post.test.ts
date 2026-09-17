@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { authUsers, inventory, item, orderLineItem, orders } from "../../../db/schema";
 import { db } from "../../../db/client";
+import { recordingTransport } from "../../../notifications/transport";
 import processFulfillment from "./process.post";
 
 /**
@@ -26,7 +27,12 @@ function seedItem(quantityHeld: number): string {
 }
 
 let userCounter = 0;
-function seedOrder(itemid: string, quantity: number, status: string = "APPROVED"): number {
+function seedOrder(
+  itemid: string,
+  quantity: number,
+  status: string = "APPROVED",
+  billingEmail: string | null = null,
+): number {
   userCounter += 1;
   const userName = `fulfillment-route-user-${userCounter}`;
   db.insert(authUsers).values({ userName, password: "hash", role: null }).run();
@@ -37,6 +43,7 @@ function seedOrder(itemid: string, quantity: number, status: string = "APPROVED"
       orderDate: new Date("2024-01-01T00:00:00.000Z"),
       orderAmount: 0,
       status,
+      billingEmail,
     })
     .returning({ orderId: orders.orderId })
     .get();
@@ -192,6 +199,25 @@ describe("POST /api/fulfillment/process", () => {
     expect(db.select().from(inventory).where(eq(inventory.itemid, itemid)).get()).toEqual(
       inventoryBefore,
     );
+  });
+
+  it("PT-09 / AC-6: the request still succeeds and completes the order when the notification transport throws", async () => {
+    const itemid = seedItem(10);
+    const orderId = seedOrder(itemid, 5, "APPROVED", "billing@example.com");
+    vi.spyOn(recordingTransport, "send").mockImplementation(() => {
+      throw new Error("simulated transport failure");
+    });
+
+    const event = postRequest({ orderId });
+    const result = await processFulfillment(event);
+
+    expect(event.res.status).not.toBe(500);
+    expect(result).toEqual({
+      orderId,
+      invoice: expect.stringContaining("<invoice>"),
+      status: "COMPLETED",
+    });
+    expect(orderSnapshot(orderId).status).toBe("COMPLETED");
   });
 
   it("PT-08: a PENDING order is answered 200 with a null invoice, its own unchanged status, and nothing shipped (SWHM-T-0214 regression, AC-2)", async () => {

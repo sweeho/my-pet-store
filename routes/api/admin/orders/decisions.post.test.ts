@@ -1,10 +1,11 @@
 import { eq } from "drizzle-orm";
 import { H3Event } from "nitro/h3";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { db } from "../../../../db/client";
 import { authUsers, orders } from "../../../../db/schema";
 import { SESSION_COOKIE, setSignedOn, useSignOnSession } from "../../../../auth/session";
+import { recordingTransport } from "../../../../notifications/transport";
 import postDecisions from "./decisions.post";
 
 /**
@@ -61,6 +62,10 @@ function statusOf(orderId: number): string | undefined {
 }
 
 describe("POST /api/admin/orders/decisions", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("RD-01: a request with no signed-on session is refused 401", async () => {
     const event = requestWithCookie({ decisions: [{ orderId: 1, status: "APPROVED" }] });
 
@@ -206,5 +211,33 @@ describe("POST /api/admin/orders/decisions", () => {
     expect(second).toEqual({ applied: [], skipped: [a, b], notFound: [] });
     expect(statusOf(a)).toBe("APPROVED");
     expect(statusOf(b)).toBe("DENIED");
+  });
+
+  it("RD-11 / AC-6: the request still succeeds and the decision still applies when the notification transport throws", async () => {
+    userCounter += 1;
+    const userName = `decisions-route-user-${userCounter}`;
+    db.insert(authUsers).values({ userName, password: "hash", role: null }).run();
+    const { orderId } = db
+      .insert(orders)
+      .values({
+        userName,
+        orderDate: new Date(),
+        orderAmount: 10,
+        status: "PENDING",
+        billingEmail: "billing@example.com",
+      })
+      .returning({ orderId: orders.orderId })
+      .get();
+    const cookieValue = signedOnAdminCookie("admin-decisions-transport-throws");
+    vi.spyOn(recordingTransport, "send").mockImplementation(() => {
+      throw new Error("simulated transport failure");
+    });
+
+    const event = requestWithCookie({ decisions: [{ orderId, status: "APPROVED" }] }, cookieValue);
+    const result = await postDecisions(event);
+
+    expect(event.res.status).not.toBe(500);
+    expect(result).toEqual({ applied: [orderId], skipped: [], notFound: [] });
+    expect(statusOf(orderId)).toBe("APPROVED");
   });
 });
