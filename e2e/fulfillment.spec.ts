@@ -109,6 +109,14 @@ test.describe("Supplier — fulfilment run", () => {
     expect(orderResponse.ok()).toBe(true);
     const { orderId } = (await orderResponse.json()) as { orderId: number };
 
+    // Fulfilment now requires APPROVED (SWHM-T-0214) — the order jps_admin
+    // places above lands PENDING, since the seeded administrator has no
+    // profile row for placeOrder's locale lookup to read (design.md F8).
+    const decision = await page.request.post("/api/admin/orders/decisions", {
+      data: { decisions: [{ orderId, status: "APPROVED" }] },
+    });
+    expect(decision.ok()).toBe(true);
+
     const firstRun = await page.request.post("/api/fulfillment/process", {
       data: { orderId },
     });
@@ -130,6 +138,51 @@ test.describe("Supplier — fulfilment run", () => {
     expect(secondResult.invoice).toBeNull();
     expect(secondResult.status).toBe(firstResult.status);
     expect(await inventoryQuantity(page, ITEM_ID)).toBe(inventoryAfterFirst);
+  });
+
+  test("a denied order's fulfilment run ships nothing and leaves it DENIED (SWHM-T-0214 regression, AC-1)", async ({
+    page,
+  }) => {
+    await signOnAsAdmin(page);
+
+    const addToCart = await page.request.post("/api/cart", {
+      data: { itemId: OTHER_ITEM_ID, quantity: 1 },
+    });
+    expect(addToCart.ok()).toBe(true);
+
+    const address = {
+      givenName: "Jamie",
+      familyName: "Rivera",
+      streetName1: "500 Fulfilment Way",
+      city: "Austin",
+      state: "Texas",
+      zipCode: "73301",
+      country: "USA",
+      telephone: "512-555-0100",
+      email: "jamie.rivera@example.com",
+    };
+    const orderResponse = await page.request.post("/api/order", {
+      data: { billingAddress: address, shippingAddress: address },
+    });
+    expect(orderResponse.ok()).toBe(true);
+    const { orderId } = (await orderResponse.json()) as { orderId: number };
+
+    const inventoryBefore = await inventoryQuantity(page, OTHER_ITEM_ID);
+
+    const decision = await page.request.post("/api/admin/orders/decisions", {
+      data: { decisions: [{ orderId, status: "DENIED" }] },
+    });
+    expect(decision.ok()).toBe(true);
+
+    const run = await page.request.post("/api/fulfillment/process", {
+      data: { orderId },
+    });
+    expect(run.ok()).toBe(true);
+    const result = (await run.json()) as { invoice: string | null; status: string };
+
+    expect(result.invoice).toBeNull();
+    expect(result.status).toBe("DENIED");
+    expect(await inventoryQuantity(page, OTHER_ITEM_ID)).toBe(inventoryBefore);
   });
 });
 

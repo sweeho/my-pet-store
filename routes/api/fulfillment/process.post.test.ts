@@ -26,7 +26,7 @@ function seedItem(quantityHeld: number): string {
 }
 
 let userCounter = 0;
-function seedOrder(itemid: string, quantity: number): number {
+function seedOrder(itemid: string, quantity: number, status: string = "APPROVED"): number {
   userCounter += 1;
   const userName = `fulfillment-route-user-${userCounter}`;
   db.insert(authUsers).values({ userName, password: "hash", role: null }).run();
@@ -36,7 +36,7 @@ function seedOrder(itemid: string, quantity: number): number {
       userName,
       orderDate: new Date("2024-01-01T00:00:00.000Z"),
       orderAmount: 0,
-      status: "PENDING",
+      status,
     })
     .returning({ orderId: orders.orderId })
     .get();
@@ -97,7 +97,7 @@ describe("POST /api/fulfillment/process", () => {
     expect(body.error).not.toMatch(/\bat\s+\S+:\d+:\d+/); // no stack frame
     expect(body.error.toLowerCase()).not.toContain("error:");
 
-    expect(orderSnapshot(orderId)).toEqual({ status: "PENDING", quantityShipped: 0 });
+    expect(orderSnapshot(orderId)).toEqual({ status: "APPROVED", quantityShipped: 0 });
     expect(db.select().from(inventory).where(eq(inventory.itemid, itemid)).get()).toEqual(
       inventoryBefore,
     );
@@ -168,9 +168,35 @@ describe("POST /api/fulfillment/process", () => {
     });
   });
 
-  it("PT-04: an order whose line lacks sufficient inventory is answered with a null invoice and the order left PENDING", async () => {
+  it("PT-04: an order whose line lacks sufficient inventory is answered with a null invoice and the order left APPROVED", async () => {
     const itemid = seedItem(1);
     const orderId = seedOrder(itemid, 5);
+
+    const event = postRequest({ orderId });
+    const result = await processFulfillment(event);
+
+    expect(result).toEqual({ orderId, invoice: null, status: "APPROVED" });
+  });
+
+  it("PT-07: a DENIED order is answered 200 with a null invoice, its own unchanged status, and nothing shipped (SWHM-T-0214 regression, AC-1)", async () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder(itemid, 30, "DENIED");
+    const inventoryBefore = db.select().from(inventory).where(eq(inventory.itemid, itemid)).get();
+
+    const event = postRequest({ orderId });
+    const result = await processFulfillment(event);
+
+    expect(event.res.status).not.toBe(400);
+    expect(event.res.status).not.toBe(404);
+    expect(result).toEqual({ orderId, invoice: null, status: "DENIED" });
+    expect(db.select().from(inventory).where(eq(inventory.itemid, itemid)).get()).toEqual(
+      inventoryBefore,
+    );
+  });
+
+  it("PT-08: a PENDING order is answered 200 with a null invoice, its own unchanged status, and nothing shipped (SWHM-T-0214 regression, AC-2)", async () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder(itemid, 30, "PENDING");
 
     const event = postRequest({ orderId });
     const result = await processFulfillment(event);

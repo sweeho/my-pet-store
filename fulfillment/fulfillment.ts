@@ -9,7 +9,7 @@ import { OrderNotFoundError } from "./errors";
 import { checkInventory } from "./inventory";
 import { createInvoice } from "./invoice";
 import { isAlreadyShipped, markLineShipped, readLineItems } from "./line-items";
-import { markOrderCompleted } from "./status";
+import { isFulfillable, markOrderCompleted, readOrderStatus } from "./status";
 import type { FulfillmentLine, InvoiceOrder } from "./types";
 
 // user_name and order_date are needed for the invoice; no sibling module
@@ -35,6 +35,14 @@ function readInvoiceOrder(orderId: number): InvoiceOrder {
 export function processOrder(orderId: number, shippingDate: Date = new Date()): string | null {
   return db.transaction(() => {
     const order = readInvoiceOrder(orderId);
+
+    // Refuse before anything commits (SWHM-T-0214, design.md D2) — a
+    // non-approved order leaves with no inventory checked, no line shipped
+    // and no invoice, the same answer as an order with nothing in stock.
+    if (!isFulfillable(readOrderStatus(orderId)!)) {
+      return null;
+    }
+
     const lines = readLineItems(orderId);
 
     let allItemsAvailable = true;
@@ -56,7 +64,7 @@ export function processOrder(orderId: number, shippingDate: Date = new Date()): 
     }
 
     // Completed only when every line has gone out; otherwise the status
-    // is left untouched and the order stays PENDING (D3).
+    // is left untouched — the order stays APPROVED (D3, D5).
     if (allItemsAvailable) {
       markOrderCompleted(orderId);
     }

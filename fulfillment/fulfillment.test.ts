@@ -86,7 +86,7 @@ describe("fulfillment/fulfillment", () => {
 
   it("PT-02: fully-stocked order ships every line, completes the order, and returns the invoice XML", () => {
     const itemid = seedItem(100);
-    const orderId = seedOrder("PENDING", [{ itemid, quantity: 30, unitPrice: 12.5 }]);
+    const orderId = seedOrder("APPROVED", [{ itemid, quantity: 30, unitPrice: 12.5 }]);
 
     const invoice = processOrder(orderId, SHIPPING_DATE);
 
@@ -98,22 +98,22 @@ describe("fulfillment/fulfillment", () => {
     expect(inventoryOf(itemid)).toBe(70);
   });
 
-  it("PT-03: an order with no available inventory ships nothing, stays PENDING, and returns null", () => {
+  it("PT-03: an order with no available inventory ships nothing, stays APPROVED, and returns null", () => {
     const itemid = seedItem(0);
-    const orderId = seedOrder("PENDING", [{ itemid, quantity: 10 }]);
+    const orderId = seedOrder("APPROVED", [{ itemid, quantity: 10 }]);
 
     const invoice = processOrder(orderId, SHIPPING_DATE);
 
     expect(invoice).toBeNull();
-    expect(readOrder(orderId).status).toBe("PENDING");
+    expect(readOrder(orderId).status).toBe("APPROVED");
     expect(readLines(orderId)[0].quantityShipped).toBe(0);
     expect(inventoryOf(itemid)).toBe(0);
   });
 
-  it("PT-04: a partially fillable order ships only the available lines, stays PENDING, and invoices only what shipped", () => {
+  it("PT-04: a partially fillable order ships only the available lines, stays APPROVED, and invoices only what shipped", () => {
     const stockedItem = seedItem(50);
     const shortItem = seedItem(5);
-    const orderId = seedOrder("PENDING", [
+    const orderId = seedOrder("APPROVED", [
       { itemid: stockedItem, quantity: 20 },
       { itemid: shortItem, quantity: 10 },
     ]);
@@ -122,7 +122,7 @@ describe("fulfillment/fulfillment", () => {
 
     expect(invoice).toContain(`<itemId>${stockedItem}</itemId>`);
     expect(invoice).not.toContain(`<itemId>${shortItem}</itemId>`);
-    expect(readOrder(orderId).status).toBe("PENDING");
+    expect(readOrder(orderId).status).toBe("APPROVED");
     const [lineA, lineB] = readLines(orderId);
     expect(lineA.quantityShipped).toBe(20);
     expect(lineB.quantityShipped).toBe(0);
@@ -133,7 +133,7 @@ describe("fulfillment/fulfillment", () => {
   it("PT-05: rerunning after restocking ships only what was outstanding, without deducting the already-shipped line again (idempotence, AC-3)", () => {
     const stockedItem = seedItem(50);
     const shortItem = seedItem(5);
-    const orderId = seedOrder("PENDING", [
+    const orderId = seedOrder("APPROVED", [
       { itemid: stockedItem, quantity: 20 },
       { itemid: shortItem, quantity: 10 },
     ]);
@@ -160,7 +160,7 @@ describe("fulfillment/fulfillment", () => {
   it("PT-06: an already-shipped line is skipped without an inventory check (S6)", () => {
     const shippedItem = seedItem(0);
     const unshippedItem = seedItem(0);
-    const orderId = seedOrder("PENDING", [
+    const orderId = seedOrder("APPROVED", [
       { itemid: shippedItem, quantity: 5, quantityShipped: 5 },
       { itemid: unshippedItem, quantity: 5 },
     ]);
@@ -177,7 +177,7 @@ describe("fulfillment/fulfillment", () => {
 
   it("PT-07: a failure partway through the pass leaves no deduction, no shipped quantity and no status change", () => {
     const itemid = seedItem(100);
-    const orderId = seedOrder("PENDING", [{ itemid, quantity: 30 }]);
+    const orderId = seedOrder("APPROVED", [{ itemid, quantity: 30 }]);
 
     const originalUpdate = db.update.bind(db);
     let updateCount = 0;
@@ -196,8 +196,44 @@ describe("fulfillment/fulfillment", () => {
       "simulated shipped-quantity write failure",
     );
 
+    expect(readOrder(orderId).status).toBe("APPROVED");
+    expect(readLines(orderId)[0].quantityShipped).toBe(0);
+    expect(inventoryOf(itemid)).toBe(100);
+  });
+
+  it("PT-08: a DENIED order holding stock ships nothing, deducts no inventory, produces no invoice, and stays DENIED (SWHM-T-0214 regression, AC-1)", () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder("DENIED", [{ itemid, quantity: 30 }]);
+
+    const invoice = processOrder(orderId, SHIPPING_DATE);
+
+    expect(invoice).toBeNull();
+    expect(readOrder(orderId).status).toBe("DENIED");
+    expect(readLines(orderId)[0].quantityShipped).toBe(0);
+    expect(inventoryOf(itemid)).toBe(100);
+  });
+
+  it("PT-09: a PENDING order holding stock ships nothing, deducts no inventory, produces no invoice, and stays PENDING (SWHM-T-0214 regression, AC-2)", () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder("PENDING", [{ itemid, quantity: 30 }]);
+
+    const invoice = processOrder(orderId, SHIPPING_DATE);
+
+    expect(invoice).toBeNull();
     expect(readOrder(orderId).status).toBe("PENDING");
     expect(readLines(orderId)[0].quantityShipped).toBe(0);
+    expect(inventoryOf(itemid)).toBe(100);
+  });
+
+  it("PT-10: a second run over a COMPLETED order changes nothing further (AC-7)", () => {
+    const itemid = seedItem(100);
+    const orderId = seedOrder("COMPLETED", [{ itemid, quantity: 30, quantityShipped: 30 }]);
+
+    const invoice = processOrder(orderId, SHIPPING_DATE);
+
+    expect(invoice).toBeNull();
+    expect(readOrder(orderId).status).toBe("COMPLETED");
+    expect(readLines(orderId)[0].quantityShipped).toBe(30);
     expect(inventoryOf(itemid)).toBe(100);
   });
 });
