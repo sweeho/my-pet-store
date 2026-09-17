@@ -2,11 +2,11 @@
 
 ## 1. Auto-Approval Logic
 
-- [ ] 1.1 Implement canIApprove(PurchaseOrder po) method (SWHM-T-0204)
-- [ ] 1.2 Add locale comparison for US orders (threshold: $500 USD) (SWHM-T-0204)
-- [ ] 1.3 Add locale comparison for Japan orders (threshold: ¥50,000 JPY) (SWHM-T-0204)
-- [ ] 1.4 Return false for all other orders (requiring manual approval) (SWHM-T-0204)
-- [ ] 1.5 Integrate canIApprove() into PurchaseOrderMDB message processing (SWHM-T-0204)
+- [x] 1.1 Implement canIApprove(PurchaseOrder po) method (SWHM-T-0204)
+- [x] 1.2 Add locale comparison for US orders (threshold: $500 USD) (SWHM-T-0204)
+- [x] 1.3 Add locale comparison for Japan orders (threshold: ¥50,000 JPY) (SWHM-T-0204)
+- [x] 1.4 Return false for all other orders (requiring manual approval) (SWHM-T-0204)
+- [x] 1.5 Integrate canIApprove() into PurchaseOrderMDB message processing (SWHM-T-0204)
 
 ## 2. Status Validation & Guard
 
