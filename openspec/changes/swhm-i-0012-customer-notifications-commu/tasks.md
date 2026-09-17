@@ -2,9 +2,9 @@
 
 ## 1. Notification Service
 
-- [ ] 1.1 Implement OrderApprovalNotifier for approval/denial events (SWHM-T-0224)
-- [ ] 1.2 Implement OrderCompletionNotifier for fulfillment events (SWHM-T-0224)
-- [ ] 1.3 Retrieve customer email from account ContactInfo (SWHM-T-0224)
+- [x] 1.1 Implement OrderApprovalNotifier for approval/denial events (SWHM-T-0224)
+- [x] 1.2 Implement OrderCompletionNotifier for fulfillment events (SWHM-T-0224)
+- [x] 1.3 Retrieve customer email from account ContactInfo (SWHM-T-0224)
 
 ## 2. Email Generation
 
