@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { ADMIN_CONTENT_WIDTH } from "./layout";
+
 type AccessCheckResult =
   | { allowed: true }
   | { allowed: false; reason: "not-signed-on"; redirectTo: string }
@@ -35,7 +37,7 @@ export function RequireAdmin({ children }: RequireAdminProps) {
 
   if (result === null) {
     return (
-      <div role="status" className="mx-auto max-w-[672px] p-6">
+      <div role="status" className={`mx-auto ${ADMIN_CONTENT_WIDTH} p-6`}>
         Checking access…
       </div>
     );
@@ -43,7 +45,7 @@ export function RequireAdmin({ children }: RequireAdminProps) {
 
   if (!result.allowed) {
     return (
-      <div role="alert" className="mx-auto max-w-[672px] p-6">
+      <div role="alert" className={`mx-auto ${ADMIN_CONTENT_WIDTH} p-6`}>
         You don&apos;t have permission to view this page.
       </div>
     );

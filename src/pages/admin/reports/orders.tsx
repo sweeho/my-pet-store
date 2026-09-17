@@ -2,8 +2,6 @@ import { AdminShell, ReportBars, RequireAdmin } from "@/components";
 
 import type { Report } from "../../../../admin/types";
 
-type SessionInfo = { j_signon_username: string | null };
-
 const COUNT_FORMAT = new Intl.NumberFormat("en-US");
 
 function formatCount(value: number): string {
@@ -37,24 +35,9 @@ function isReport(result: unknown): result is Report {
 }
 
 export function OrderCountReportContent() {
-  const [username, setUsername] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>(defaultStartDate);
   const [endDate, setEndDate] = useState<string>(defaultEndDate);
   const [report, setReport] = useState<Report | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/signon/session")
-      .then((response) => response.json() as Promise<SessionInfo>)
-      .then((session) => {
-        if (!cancelled) setUsername(session.j_signon_username);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // The date range lives in this screen's state and is applied to every
   // subsequent query, same as the revenue screen.
@@ -79,7 +62,7 @@ export function OrderCountReportContent() {
   }, [startDate, endDate]);
 
   return (
-    <AdminShell username={username} backTo="/admin" backLabel="Back to admin home">
+    <AdminShell backTo="/admin" backLabel="Back to admin home">
       <h1 className="text-foreground mt-4 text-2xl font-bold">Order Counts by Category</h1>
       <p className="text-muted-foreground mt-1.5 text-sm">
         Order quantities by category over a date range.
