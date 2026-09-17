@@ -71,6 +71,13 @@
       "when": 1789597311464,
       "tag": "0009_steady_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789619062760,
+      "tag": "0010_fast_polaris",
+      "breakpoints": true
     }
   ]
 }
