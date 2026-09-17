@@ -11,6 +11,7 @@ import { db } from "../db/client";
 import { orders } from "../db/schema";
 import type { ApprovalDecision, DecisionOutcome } from "./approval-types";
 import { readOrderDecidability } from "./status";
+import { createSupplierPo } from "./supplier-po";
 
 export function applyDecision(orderId: number, decision: ApprovalDecision): DecisionOutcome {
   const current = readOrderDecidability(orderId);
@@ -25,10 +26,16 @@ export function applyDecision(orderId: number, decision: ApprovalDecision): Deci
 
   db.update(orders).set({ status: decision }).where(eq(orders.orderId, orderId)).run();
 
-  // EXTENSION POINT: SWHM-T-0207 inserts the supplier PO write here
-  // (approved outcomes only), SWHM-T-0213 inserts the notification write
-  // here (both outcomes) — PLAN.md step 3. Both run inside the caller's
-  // transaction, same as the status write above.
+  // Approved only, never on a denial and never on a skip (design.md § D4;
+  // PLAN.md tasks.md 4.7). Runs inside the caller's transaction, same as
+  // the status write above.
+  if (decision === "APPROVED") {
+    createSupplierPo(orderId);
+  }
+
+  // EXTENSION POINT: SWHM-T-0213 inserts the notification write here (both
+  // outcomes) — PLAN.md step 3. Runs inside the caller's transaction, same
+  // as the writes above.
 
   return { orderId, result: "applied", status: decision };
 }

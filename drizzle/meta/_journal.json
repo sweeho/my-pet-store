@@ -78,6 +78,13 @@
       "when": 1789619062760,
       "tag": "0010_fast_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1789620430484,
+      "tag": "0011_tiresome_jubilee",
+      "breakpoints": true
     }
   ]
 }

@@ -244,6 +244,50 @@ export const orderLineItem = sqliteTable(
   (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
 );
 
+// Two rows, not a document (design.md § Decisions D4, S2): no XML, no
+// queue — the fulfilment capability reads these rows directly. Keyed on
+// order_id, not a surrogate id, so an order can carry at most one PO — the
+// schema itself makes a repeat approval unable to produce a second (D7).
+// Every field is copied from the order at approval time, never joined back
+// (D4), so a PO still says where that order shipped even if the order's
+// own columns changed later.
+export const supplierPo = sqliteTable("supplier_po", {
+  orderId: integer("order_id")
+    .primaryKey()
+    .references(() => orders.orderId),
+  poDate: integer("po_date", { mode: "timestamp" }).notNull(),
+  shippingGivenName: text("shipping_given_name"),
+  shippingFamilyName: text("shipping_family_name"),
+  shippingTelephone: text("shipping_telephone"),
+  shippingEmail: text("shipping_email"),
+  shippingStreetName1: text("shipping_street_name1"),
+  shippingStreetName2: text("shipping_street_name2"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingZipCode: text("shipping_zip_code"),
+  shippingCountry: text("shipping_country"),
+});
+
+// One row per line, copied from order_line_item at approval time (D4).
+// catid/productid stay nullable — the order's own line can carry either as
+// null (the demo seed sets neither) and the PO records what the order
+// recorded rather than inventing a value.
+export const supplierPoLineItem = sqliteTable(
+  "supplier_po_line_item",
+  {
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => supplierPo.orderId, { onDelete: "cascade" }),
+    lineNumber: integer("line_number").notNull(),
+    catid: text("catid"),
+    productid: text("productid"),
+    itemid: text("itemid").notNull(),
+    quantity: integer("quantity").notNull(),
+    unitPrice: real("unit_price").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.orderId, t.lineNumber] })],
+);
+
 // Quantity only — price is resolved on read through catalog/item.ts, so a
 // cart line never disagrees with the catalogue about what an item costs
 // (design.md D1). Both ON DELETE CASCADE declarations are intent only:

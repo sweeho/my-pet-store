@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { db } from "../db/client";
-import { authUsers, orders } from "../db/schema";
+import { authUsers, orders, supplierPo } from "../db/schema";
 import { applyDecision } from "./decision";
 
 /**
@@ -35,6 +35,10 @@ function seedOrder(status: string): number {
 function readStatus(orderId: number): string {
   return db.select({ status: orders.status }).from(orders).where(eq(orders.orderId, orderId)).get()!
     .status;
+}
+
+function readSupplierPo(orderId: number) {
+  return db.select().from(supplierPo).where(eq(supplierPo.orderId, orderId)).get();
 }
 
 describe("applyDecision", () => {
@@ -99,5 +103,21 @@ describe("applyDecision", () => {
 
   it("DA-08: an unknown order id is reported notFound", () => {
     expect(applyDecision(999999, "APPROVED")).toEqual({ orderId: 999999, result: "notFound" });
+  });
+
+  it("DA-09: an APPROVED decision writes a supplier PO row (SWHM-T-0207)", () => {
+    const orderId = seedOrder("PENDING");
+
+    applyDecision(orderId, "APPROVED");
+
+    expect(readSupplierPo(orderId)).toBeDefined();
+  });
+
+  it("DA-10: a DENIED decision writes no supplier PO row (SWHM-T-0207)", () => {
+    const orderId = seedOrder("PENDING");
+
+    applyDecision(orderId, "DENIED");
+
+    expect(readSupplierPo(orderId)).toBeUndefined();
   });
 });
