@@ -90,7 +90,7 @@ test.describe("Administrator — order approval journey", () => {
   test("selects three pending orders, approves and commits them, and sees them move to APPROVED", async ({
     page,
   }) => {
-    await signOnShopper(page, uniqueUsername("approval-shopper"));
+    await signOnShopper(page, uniqueUsername("appr"));
     const orderIds = [
       await placePendingOrder(page),
       await placePendingOrder(page),

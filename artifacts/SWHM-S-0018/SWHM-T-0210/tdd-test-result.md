@@ -70,4 +70,10 @@ NODE_ENV=test bun --bun vitest run
       Tests  818 passed (818)
 ```
 
+CI (which has a real Chromium) caught what this container could not: `uniqueUsername("approval-shopper")`
+exceeded `MAX_USERID_LENGTH` (25) once combined with the `Date.now()` suffix — the same guard
+`e2e/order.spec.ts`'s own helper carries, and it fired correctly. Fixed by shortening the label to
+`"appr"`. Re-verified `bun run verify` green after the fix (same 818/818); the corrected commit is what
+CI re-ran and passed.
+
 TDD-RESULT: 818 passed, 0 failed
