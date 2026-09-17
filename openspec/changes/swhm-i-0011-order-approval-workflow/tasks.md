@@ -66,11 +66,11 @@
 
 ## 8. Message Queue Integration
 
-- [ ] 8.1 Configure OrderApprovalMDB as message-driven bean (SWHM-T-0211)
-- [ ] 8.2 Declare Required transaction attribute (SWHM-T-0211)
-- [ ] 8.3 Configure message selector for Approval queue (SWHM-T-0211)
-- [ ] 8.4 Implement onMessage() entry point (SWHM-T-0211)
-- [ ] 8.5 Parse approval decision messages (SWHM-T-0211)
+- [x] 8.1 Configure OrderApprovalMDB as message-driven bean (SWHM-T-0211)
+- [x] 8.2 Declare Required transaction attribute (SWHM-T-0211)
+- [x] 8.3 Configure message selector for Approval queue (SWHM-T-0211)
+- [x] 8.4 Implement onMessage() entry point (SWHM-T-0211)
+- [x] 8.5 Parse approval decision messages (SWHM-T-0211)
 
 ## 9. Process Manager Integration
 
