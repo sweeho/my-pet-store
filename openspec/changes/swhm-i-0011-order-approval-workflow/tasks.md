@@ -48,12 +48,12 @@
 
 ## 6. Status Color Coding
 
-- [ ] 6.1 Create statusRenderer with DefaultTableCellRenderer (SWHM-T-0209)
-- [ ] 6.2 Add setValue() method for color logic (SWHM-T-0209)
-- [ ] 6.3 Set green background for APPROVED status (SWHM-T-0209)
-- [ ] 6.4 Set red background for DENIED status (SWHM-T-0209)
-- [ ] 6.5 Set yellow background for PENDING status (SWHM-T-0209)
-- [ ] 6.6 Apply renderer to Status column (SWHM-T-0209)
+- [x] 6.1 Create statusRenderer with DefaultTableCellRenderer (SWHM-T-0209)
+- [x] 6.2 Add setValue() method for color logic (SWHM-T-0209)
+- [x] 6.3 Set green background for APPROVED status (SWHM-T-0209)
+- [x] 6.4 Set red background for DENIED status (SWHM-T-0209)
+- [x] 6.5 Set yellow background for PENDING status (SWHM-T-0209)
+- [x] 6.6 Apply renderer to Status column (SWHM-T-0209)
 
 ## 7. Admin Operations
 
