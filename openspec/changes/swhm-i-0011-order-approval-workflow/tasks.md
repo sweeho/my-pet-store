@@ -37,14 +37,14 @@
 
 ## 5. Approval Screen UI (Rich Client)
 
-- [ ] 5.1 Create OrdersApprovePanel component (SWHM-T-0208)
-- [ ] 5.2 Implement createUI() method with panel layout (SWHM-T-0208)
-- [ ] 5.3 Define combo box with status options (PENDING, APPROVED, DENIED) (SWHM-T-0208)
-- [ ] 5.4 Create Orders table with columns (ID, User ID, Date, Amount, Status) (SWHM-T-0208)
-- [ ] 5.5 Set Status column to editable via combo box cell editor (SWHM-T-0208)
-- [ ] 5.6 Implement three buttons: Approve, Deny, Commit (SWHM-T-0208)
-- [ ] 5.7 Wire button action listeners to update selected rows (SWHM-T-0208)
-- [ ] 5.8 Implement status cell renderer with color coding (SWHM-T-0208)
+- [x] 5.1 Create OrdersApprovePanel component (SWHM-T-0208)
+- [x] 5.2 Implement createUI() method with panel layout (SWHM-T-0208)
+- [x] 5.3 Define combo box with status options (PENDING, APPROVED, DENIED) (SWHM-T-0208)
+- [x] 5.4 Create Orders table with columns (ID, User ID, Date, Amount, Status) (SWHM-T-0208)
+- [x] 5.5 Set Status column to editable via combo box cell editor (SWHM-T-0208)
+- [x] 5.6 Implement three buttons: Approve, Deny, Commit (SWHM-T-0208)
+- [x] 5.7 Wire button action listeners to update selected rows (SWHM-T-0208)
+- [x] 5.8 Implement status cell renderer with color coding (SWHM-T-0208)
 
 ## 6. Status Color Coding
 
