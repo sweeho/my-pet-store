@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ADMIN_CONTENT_WIDTH } from "./layout";
+import { CONTENT_WIDTH } from "./layout";
 import { RequireSignOn } from "./RequireSignOn";
 
 /**
@@ -53,7 +53,7 @@ describe("RequireSignOn", () => {
     expect(screen.queryByText("protected content")).not.toBeInTheDocument();
   });
 
-  it("AC-8: the pending state takes the shared administration content width, not a width of its own", () => {
+  it("AC-8: the pending state takes the shared store content width, not a width of its own", () => {
     fetchMock.mockReturnValueOnce(new Promise(() => {}));
 
     render(
@@ -64,7 +64,7 @@ describe("RequireSignOn", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("status").className).toContain(ADMIN_CONTENT_WIDTH);
+    expect(screen.getByRole("status").className).toContain(CONTENT_WIDTH);
   });
 
   it("renders its children once the access check answers allowed", async () => {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ADMIN_CONTENT_WIDTH } from "./layout";
+import { CONTENT_WIDTH } from "./layout";
 
 type AccessCheckResult = { allowed: true } | { allowed: false; redirectTo: string };
 
@@ -34,7 +34,7 @@ export function RequireSignOn({ children }: RequireSignOnProps) {
 
   if (!allowed) {
     return (
-      <div role="status" className={`mx-auto ${ADMIN_CONTENT_WIDTH} p-6`}>
+      <div role="status" className={`mx-auto ${CONTENT_WIDTH} p-6`}>
         Checking access…
       </div>
     );
