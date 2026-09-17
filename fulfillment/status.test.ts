@@ -1,7 +1,8 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { db } from "../db/client";
-import { authUsers, orders } from "../db/schema";
+import { authUsers, notifications, orders } from "../db/schema";
 
 import { isFulfillable, markOrderCompleted, readOrderStatus } from "./status";
 
@@ -13,6 +14,10 @@ import { isFulfillable, markOrderCompleted, readOrderStatus } from "./status";
  * second call returns false and the row is unchanged; an unknown order id
  * returns false rather than throwing; PENDING and DENIED both refuse and
  * leave the row untouched (design.md D1, the fix for SWHM-T-0214).
+ *
+ * PLAN.md step 6 / SWHM-T-0224: markOrderCompleted queues exactly one
+ * COMPLETION notification on the path that actually transitions the
+ * order, and none on a refused or repeat call.
  */
 
 let userCounter = 0;
@@ -31,6 +36,10 @@ function seedOrder(status: string): number {
     .returning({ orderId: orders.orderId })
     .get();
   return orderId;
+}
+
+function readNotifications(orderId: number) {
+  return db.select().from(notifications).where(eq(notifications.orderId, orderId)).all();
 }
 
 describe("fulfillment/status", () => {
@@ -98,5 +107,32 @@ describe("fulfillment/status", () => {
     expect(isFulfillable("PENDING")).toBe(false);
     expect(isFulfillable("DENIED")).toBe(false);
     expect(isFulfillable("COMPLETED")).toBe(false);
+  });
+
+  it("ST-10 / AC-2: completing an order queues exactly one COMPLETION notification", () => {
+    const orderId = seedOrder("APPROVED");
+
+    markOrderCompleted(orderId);
+
+    const rows = readNotifications(orderId);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ orderId, kind: "COMPLETION" });
+  });
+
+  it("ST-11 / AC-3: a second call over an already-COMPLETED order queues no additional notification", () => {
+    const orderId = seedOrder("APPROVED");
+
+    markOrderCompleted(orderId);
+    markOrderCompleted(orderId);
+
+    expect(readNotifications(orderId)).toHaveLength(1);
+  });
+
+  it("ST-12 / AC-3: refusing a PENDING order queues no notification", () => {
+    const orderId = seedOrder("PENDING");
+
+    markOrderCompleted(orderId);
+
+    expect(readNotifications(orderId)).toHaveLength(0);
   });
 });

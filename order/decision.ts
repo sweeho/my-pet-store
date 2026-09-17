@@ -9,8 +9,8 @@ import { eq } from "drizzle-orm";
 
 import { db } from "../db/client";
 import { orders } from "../db/schema";
+import { notify } from "../notifications/notify";
 import type { ApprovalDecision, DecisionOutcome, NotificationKind } from "./approval-types";
-import { queueNotification } from "./notification";
 import { readOrderDecidability } from "./status";
 import { createSupplierPo } from "./supplier-po";
 
@@ -46,7 +46,7 @@ export function applyDecision(orderId: number, decision: ApprovalDecision): Deci
   // (design.md § Decisions D5; PLAN.md step 4). On an approval this runs
   // after createSupplierPo, inside the same transaction, so a PO failure
   // queues nothing.
-  queueNotification(orderId, NOTIFICATION_KIND[decision]);
+  notify(orderId, NOTIFICATION_KIND[decision]);
 
   return { orderId, result: "applied", status: decision };
 }

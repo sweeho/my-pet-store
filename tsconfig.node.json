@@ -27,6 +27,7 @@
     "order",
     "payment",
     "fulfillment",
+    "notifications",
     "e2e"
   ]
 }

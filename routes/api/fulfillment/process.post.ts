@@ -10,6 +10,7 @@ import { processOrder } from "../../../fulfillment/fulfillment";
 import { parseFulfillmentRequest } from "../../../fulfillment/receive";
 import { readOrderStatus } from "../../../fulfillment/status";
 import type { FulfillmentResponse } from "../../../fulfillment/types";
+import { dispatchQueued } from "../../../notifications/dispatch";
 
 type FulfillmentErrorResult = { error: string };
 type Result = FulfillmentResponse | FulfillmentErrorResult;
@@ -30,6 +31,14 @@ export default defineHandler(async (event): Promise<Result> => {
     // exist — it throws OrderNotFoundError otherwise — so status cannot be
     // null here.
     const status = readOrderStatus(request.orderId)!;
+
+    // After processOrder's own transaction has committed, never inside it
+    // (design.md § Decisions D4) — the status update is already final by
+    // the time anything is handed to a transport, so this request never
+    // waits on delivery. A drain failure changes neither the status code
+    // nor the body below (design.md § Error Handling; PLAN.md step 4).
+    dispatchQueued();
+
     return { orderId: request.orderId, invoice, status };
   } catch (error) {
     if (error instanceof OrderNotFoundError) {
