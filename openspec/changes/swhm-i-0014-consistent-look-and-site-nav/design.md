@@ -100,26 +100,52 @@ the idea text.
   `middleware/signon.ts` server-side and `RequireAdmin` in the browser. Nothing about the header may
   be relied on as a guard, and the header is not a place to add one.
 
-- **D5 — The unresolved state renders no identity controls and no live region.** Until the session
-  read answers, the header shows neither Sign in, nor a username, nor Admin — that is the idea's
-  own criterion, and it is what stops a visitor seeing the wrong one for a frame. It does _not_
-  announce itself with `role="status"`: the header is persistent chrome on every screen, so a live
-  region there would announce on every navigation, and the screen's own content is not gated on the
-  read. This retires `AdminShell`'s current "Signing in…" status element. The standing requirement
-  _Observable pending state on data-gated screens_ is unaffected — it governs the route guards
-  (`RequireSignOn`, `RequireAdmin`) and the screens beneath them, both of which keep their
+- **D5 — The unresolved state names itself but claims nothing, and is not a live region.** Until
+  the session read answers, the header shows neither Sign in, nor a username, nor Admin, and in
+  their place it shows the words the mockup gives — "Checking your session…" (`mk-states`, the
+  sixth stage). Showing the text rather than an empty slot is what stops the control row shifting
+  when the read lands; showing none of the three is what stops a visitor seeing the wrong one. It
+  is _not_ a `role="status"` live region: the header is persistent chrome on every screen, so a
+  live region there would announce on every navigation, and the screen's own content is not gated
+  on the read. This retires `AdminShell`'s current "Signing in…" status element. The standing
+  requirement _Observable pending state on data-gated screens_ is unaffected — it governs the route
+  guards (`RequireSignOn`, `RequireAdmin`) and the screens beneath them, both of which keep their
   `role="status"` indicators.
 
-- **D6 — One shared content width, `max-w-[52rem]` (832px), exported as a single constant.**
-  `52rem` is chosen over `672px` because the administration tables and the checkout form need the
-  room, and over `1160px` because a list of catalogue links reads badly at that width. It is
-  exported from `src/components/layout.ts` as a class string rather than duplicated per screen, so
-  a future change to it is one edit. The four sign-on cards keep `max-w-md` (out of scope).
+- **D6 — TWO shared content widths, each declared once: `672px` for the store and `832px` for
+  administration.** This comes from the mockup, not from judgement: `mk-states` renders every
+  customer-facing stage at `max-width:672px` and marks the administration stage `.stage.wide` at
+  `832px`, and `mk-home` and `mk-cart` are both 672px. The header's inner container takes the same
+  width as the content beneath it on each, so the two edges line up.
+
+  **This is a deviation from the idea's acceptance criterion**, which asks for _one_ shared width,
+  and it is deliberate. The criterion's target is the six one-off widths in F8 and the sideways jump
+  they cause during a purchase; two widths that are each declared once and shared by a whole surface
+  are not one-offs, and a shopper never crosses between the two surfaces mid-purchase. Both figures
+  are also already in the codebase — 672px on nine customer screens, 832px on all seven `AdminShell`
+  screens — so what this change removes is the three genuine one-offs: `/enter-order-information`
+  (1160px), `/about` (`max-w-4xl`) and the home hero (`max-w-2xl`). QA should read the criterion
+  that way; if the one-width reading is insisted on, it is the mockup that has to move, not the code.
+
+  Exported from `src/components/layout.ts` as two class-string constants, so a future change to
+  either is one edit. The four sign-on cards keep `max-w-md` (out of scope).
 
 - **D7 — `/enter-order-information` re-flows to `lg:grid-cols-2` with the order summary spanning
-  both columns.** F9: the existing three-column grid does not fit the shared width. This is a
-  consequence of D6, not a redesign of checkout — the fields, their order and their validation are
-  untouched.
+  both columns.** F9: the existing `lg:grid-cols-[1fr_1fr_340px]` does not fit 672px — it barely
+  fits 832px. This is a consequence of D6, not a redesign of checkout — the fields, their order and
+  their validation are untouched.
+
+- **D7a — The header's control order differs per variant, and the mockup fixes all three.**
+  - _Store_ — mark · Catalog · Cart(count) · **spacer** · identity.
+  - _Catalogue_ — the same, with the language switcher immediately after the spacer, before the
+    identity controls.
+  - _Administration_ — mark · "· Administration" · **spacer** · Catalog · Cart(count) · "Signed in
+    as «name»" · Sign out. Note what the administration variant does _not_ carry: no **My account**
+    link and no **Admin** link, because the visitor is already there. It is a different arrangement
+    of the same controls, not the store row with a label bolted on.
+
+  Identity controls in the store variant read: [Admin] · "Signed in as «name»" · My account · Sign
+  out — the Admin link comes _before_ the username, not after it.
 
 - **D8 — `AdminShell` keeps its `backTo`/`backLabel`/`children` props and loses `username`.** It
   becomes `StoreHeader` in its administration variant plus the administration label, the back-link
@@ -139,16 +165,47 @@ the idea text.
   workaround.
 
 - **D11 — Conformance is enforced by two repository-level Vitest files, following F14.** One scans
-  `src/pages/**/*.tsx` for a page-level container `max-w-*` that is not the shared constant
+  `src/pages/**/*.tsx` for a page-level container `max-w-*` that is neither shared constant
   (exempting the four sign-on cards); one scans `src/pages/index.tsx` and `src/pages/about.tsx` for
   raw Tailwind palette classes. Both state a property of the codebase that no component test and no
   browser assertion can observe, and both fail loudly when a later screen reintroduces a one-off.
+
+- **D12 — Take structure and placement from the mockups, never their CSS.** The three mockups are
+  standalone HTML documents that link **Space Grotesk from `fonts.googleapis.com`** and re-declare
+  the OKLCH tokens inline. Copying either is a defect: the application ships and fetches no web font
+  (ARCHITECTURE.md § Cross-cutting constraints), `e2e/home.spec.ts` asserts that no request and no
+  `<head>` link names a third-party host, and the tokens already exist in `src/index.css`. Read the
+  mockups for the control order, the widths, the cart-count badge and the copy; build with the
+  project's own tokens and the system type stack. The wireframe says the same of itself — "structure
+  and placement only, not final colour or type".
 
 ### Promoted to ARCHITECTURE.md § Key Decisions
 
 D2 and D4 bind work beyond this change — every future screen reads identity the same way, and every
 future privileged link is a convenience over a server-side guard. D6 binds every future screen's
 container. The three are recorded there, citing this change by id.
+
+## Design reference
+
+Exported from idea SWHM-I-0014 (doc v21, frozen) and committed with this plan:
+
+- `artifacts/SWHM-S-0021/design/wireframe-before-after-shared-header-on-every-scre.html` — before/
+  after for the home page and for a typical inner screen.
+- `artifacts/SWHM-S-0021/design/mockup-header-states-visitor-customer-administr.html` — **the
+  authority for this change.** Six stages: visitor, customer, administrator, catalogue,
+  administration, and the pre-session state. Fixes the control order per variant (D7a), both column
+  widths (D6) and the pending copy (D5).
+- `artifacts/SWHM-S-0021/design/mockup-home-page-on-the-store-design-system-adm.html` — the home
+  page on the tokens, administrator signed in.
+- `artifacts/SWHM-S-0021/design/mockup-cart-with-the-shared-header-customer-sig.html` — the cart
+  with the shared header, customer signed in.
+
+Read D12 before opening any of them.
+
+> `a2a_get_idea_design`'s `write_to` argument reported `{path, bytes, sha256}` and wrote no file —
+> the fourth time on this project. These four were exported instead with
+> `curl "$VORTEX_CANVAS_BASE_URL/design/<ideaId>/<blockId>.html"` under the run token, and their
+> byte counts match the manifest exactly.
 
 ## Phases
 
@@ -200,8 +257,9 @@ export type StoreHeaderProps = {
 };
 export function StoreHeader(props: StoreHeaderProps): ReactElement;
 
-// src/components/layout.ts
-export const CONTENT_WIDTH = "max-w-[52rem]";
+// src/components/layout.ts — D6: two shared widths, each declared once
+export const CONTENT_WIDTH = "max-w-[672px]"; // the store
+export const ADMIN_CONTENT_WIDTH = "max-w-[52rem]"; // administration + supplier (832px)
 
 // GET /api/signon/session response
 type SessionResponse = {
@@ -218,36 +276,23 @@ type SessionResponse = {
   eighth title bar belongs to `admin/signon-failed`, which the idea's own non-scope list puts out of
   scope. Taken as a counting discrepancy in the idea, not an instruction to shell a sign-on card.
 - **A2 — `/user-creation-error` gets the header.** It is not one of the four screens the non-scope
-  section names, and the idea's own impact list includes it.
-- **A3 — The shared width is `52rem`.** The idea requires one width and does not name it; D6 gives
-  the reasoning. A mockup naming a different figure overrides this — change the constant, not the
-  screens.
+  section names, and the idea's own impact list includes it. The canvas's Out-of-Scope section
+  confirms the four by path and confirms A1's reading of `admin/signon-failed`.
 
 ## Open questions
 
-- **O1 — The design mockups were not read.** `a2a_get_idea_design` and `a2a_get_idea_canvas` both
-  refused for this run (see § Blocker), and the canvas renderer answered 403. Every visual decision
-  here — the shared width, the header's control order, its narrow-viewport behaviour — is derived
-  from the codebase and the idea text alone and should be checked against the mockup before
-  implementation. There is consequently no `artifacts/SWHM-S-0021/design/` export.
+- **O1 — The mockups give no narrow-viewport specification.** All three are authored at 1440px and
+  none carries a media query, yet the idea requires the header's controls to stay readable, not
+  overlap the page title, and remain reachable at a mobile width. The control row is a flex row of
+  up to seven items; at 375px it has to wrap or the secondary items have to collapse. Deciding which
+  is left to the implementing ticket, whose browser-tier assertion at 375px is the check — this is a
+  case where the spec fixes the outcome and no mockup fixes the means.
 - **O2 — `/NotFound` and `/RootErrorBoundary` are routable screens** (F13). `/RootErrorBoundary`
-  renders a bare "An error occurred" page to anyone who types the path. Out of scope; worth a
+  renders a bare "An error occurred" page to anyone who types the path. Out of scope; raised as a
   defect.
 - **O3 — Two fetches per screen** (D10). A shared session/cart read is worth revisiting if a layout
   route is ever introduced.
-
-## Blocker
-
-This change was authored without the platform's ticket tools. Every project-scoped `vortex_a2a`
-tool — `a2a_get_ticket`, `a2a_get_idea_canvas`, `a2a_get_idea_design`, `a2a_create_fsm_ticket`,
-`a2a_sprint_plan_checklist`, `a2a_comment_ticket`, `a2a_transition_ticket` — refuses with
-`requires a codebase context`, because this run's A2A binding carries no `VORTEX_A2A_CODEBASE_ID`.
-Only unscoped tools (for example `a2a_list_agent_availability`) answer.
-
-Two planning deliverables therefore do not exist yet and cannot be produced from this container:
-
-- the EPIC / STORY / TASK tickets, and with them the ticket keys that `tasks.md` checkboxes must
-  carry and the `artifacts/SWHM-S-0021/<TICKET-KEY>/PLAN.md` paths;
-- the design export under `artifacts/SWHM-S-0021/design/` (O1).
+- **O4 — The mockup keeps two column widths where the idea's criterion asks for one.** Resolved in
+  favour of the mockup; the reasoning and what QA should check are in D6.
 
 The decomposition above is complete and ready to be created as-is once the binding is fixed.

@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:oklch(1 0 0);
+  --foreground:oklch(0.145 0 0);
+  --card:oklch(1 0 0);
+  --primary:oklch(0.205 0 0);
+  --primary-foreground:oklch(0.985 0 0);
+  --secondary:oklch(0.97 0 0);
+  --muted:oklch(0.97 0 0);
+  --muted-foreground:oklch(0.556 0 0);
+  --accent:oklch(0.97 0 0);
+  --border:oklch(0.922 0 0);
+  --input:oklch(0.922 0 0);
+  --ring:oklch(0.87 0 0);
+  --radius:0.625rem;
+  --radius-md:calc(var(--radius) - 2px);
+  --radius-sm:calc(var(--radius) - 4px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--background);color:var(--foreground);
+  font-family:"Space Grotesk",-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.mark{display:inline-flex;align-items:center;gap:8px}
+.mark svg{height:26px;width:auto;fill:currentColor;flex:none}
+.mark .word{font-size:16px;font-weight:600;letter-spacing:-0.01em;white-space:nowrap}
+.hdr{border-bottom:1px solid var(--border)}
+.hdr-inner{margin:0 auto;max-width:672px;padding:14px 24px;display:flex;align-items:center;gap:18px}
+.navlink{font-size:14px;font-weight:500;white-space:nowrap}
+.navlink:hover{text-decoration:underline;text-underline-offset:4px}
+.cartcount{display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;
+  background:var(--secondary);color:var(--foreground);font-size:11px;font-weight:600;
+  font-variant-numeric:tabular-nums;vertical-align:1px}
+.spacer{flex:1}
+.acct{display:flex;align-items:center;gap:14px}
+.who{font-size:13px;color:var(--muted-foreground);white-space:nowrap}
+.who b{color:var(--foreground);font-weight:500}
+.small{font-size:13px;font-weight:500;white-space:nowrap}
+.small:hover{text-decoration:underline;text-underline-offset:4px}
+.adminlink{font-size:13px;font-weight:600;white-space:nowrap;
+  border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px 9px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:40px;
+  padding:0 16px;border-radius:var(--radius-md);font-size:14px;font-weight:500;
+  background:var(--primary);color:var(--primary-foreground);border:1px solid var(--primary)}
+.btn.outline{background:var(--background);color:var(--foreground);border:1px solid var(--input)}
+.btn.lg{height:44px;padding:0 32px}
+.col{margin:0 auto;max-width:672px;padding:24px}
+.hero{height:calc(900px - 57px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px}
+.pill{border:1px solid var(--border);border-radius:999px;padding:5px 14px;font-size:14px;color:var(--muted-foreground)}
+h1{margin-top:32px;font-size:60px;line-height:1.05;font-weight:600;letter-spacing:-0.03em}
+.lede{margin-top:24px;max-width:620px;text-align:center;font-size:19px;line-height:1.55;color:var(--muted-foreground);font-weight:400}
+.chips{margin-top:28px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.chip{background:var(--secondary);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--foreground)}
+</style></head><body>
+<header class="hdr"><div class="hdr-inner">
+  <a href="/" class="mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 4 9v14l12 6 12-6V9Zm0 3.4 8.4 4.2L16 14.8 7.6 10.6ZM6 11.2l9 4.5v10.6l-9-4.5Zm11 15.1V15.7l9-4.5v10.6Z"/></svg><span class="word">My Pet Store</span></a>
+  <a href="/catalog" class="navlink">Catalog</a>
+  <a href="/cart" class="navlink">Cart<span class="cartcount">2</span></a>
+  <span class="spacer"></span>
+  <div class="acct">
+    <a href="/admin" class="adminlink">Admin</a>
+    <span class="who">Signed in as <b>jdoe</b></span>
+    <a href="/customer" class="small">My account</a>
+    <a href="/signon" class="small">Sign out</a>
+  </div>
+</div></header>
+<main class="hero">
+  <span class="pill">Now open for the neighborhood.</span>
+  <h1>My Pet Store</h1>
+  <p class="lede">Food, toys, and supplies for every dog, cat, and small pet in the family &mdash; curated by people who actually own them.</p>
+  <a href="/catalog" class="btn lg" style="margin-top:32px">Get started</a>
+  <div class="chips"><span class="chip">Free shipping</span><span class="chip">Vet-approved</span><span class="chip">Curated brands</span><span class="chip">Local pickup</span></div>
+</main>
+</body></html>

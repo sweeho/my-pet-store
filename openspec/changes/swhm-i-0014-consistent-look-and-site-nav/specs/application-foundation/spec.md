@@ -54,8 +54,16 @@ control of its own.
 
 - **GIVEN** an administrator on the order queue screen at `/admin/orders`
 - **WHEN** the screen has rendered
-- **THEN** the header presents the administration context together with the signed-in username, and
-  the screen's back-link still leads to `/admin`
+- **THEN** the header presents the administration context together with the signed-in username, a
+  catalogue link, a cart link and a sign-out control, and the screen's back-link still leads to
+  `/admin`
+
+#### Scenario: The administration header offers no route to where the visitor already is
+
+- **GIVEN** an administrator on any administration or supplier screen
+- **WHEN** the screen has rendered
+- **THEN** the header presents no administration link and no account link, since the visitor is
+  already in the administration area
 
 #### Scenario: The header is reached before the screen's content
 
@@ -92,7 +100,8 @@ home page. Rendering the header SHALL NOT change where a visitor is taken after 
 
 - **GIVEN** a visitor loading a screen that carries the header
 - **WHEN** the session read has not yet answered
-- **THEN** the header presents no sign-in control, no username and no administrative link
+- **THEN** the header presents no sign-in control, no username and no administrative link, and says
+  instead that it is checking the visitor's session
 
 #### Scenario: A signed-out visitor is offered sign-in only
 
@@ -124,7 +133,8 @@ home page. Rendering the header SHALL NOT change where a visitor is taken after 
 ### Requirement: Administrative entry from the header
 
 A signed-on visitor holding the administrator role SHALL be offered a link to the administration
-home page at `/admin` in the header of every screen that carries one, including the home page. A
+home page at `/admin` in the header of every store screen that carries one, including the home page;
+the administration and supplier screens are excepted, because the visitor is already there. A
 visitor who does not hold that role SHALL be offered no such link on any screen. The presence of
 that link is a convenience and SHALL NOT be the mechanism that protects the administration area:
 `/admin` SHALL remain refused to a visitor who does not hold the role whether or not the link was
@@ -148,11 +158,14 @@ ever shown.
 - **WHEN** the visitor requests `/admin` directly
 - **THEN** the request is refused and the administration content is never presented
 
-### Requirement: One content column width
+### Requirement: Shared content column widths
 
-Every screen's main content SHALL sit in one shared column width, declared in one place in the
-codebase, and no screen SHALL declare a column width of its own. The four sign-on screens, which
-present a bare centred card rather than a column of content, are excepted.
+Every screen's main content SHALL sit in a shared column width, and no screen SHALL declare a column
+width of its own. There SHALL be exactly two such widths, each declared in one place in the codebase:
+one for the store's customer-facing screens, and a wider one for the administration and supplier
+screens. The header's own inner container on a screen SHALL take the same width as the content
+beneath it. The four sign-on screens, which present a bare centred card rather than a column of
+content, are excepted.
 
 #### Scenario: Two screens in a purchase sit in the same column
 
@@ -162,12 +175,19 @@ present a bare centred card rather than a column of content, are excepted.
 - **THEN** the main content of each occupies the same column width, and the page does not shift
   sideways between them
 
+#### Scenario: The header lines up with the content beneath it
+
+- **GIVEN** a visitor on any screen that carries the header
+- **WHEN** the screen has rendered
+- **THEN** the header's controls begin and end on the same vertical edges as the screen's own
+  content
+
 #### Scenario: No screen declares a width of its own
 
 - **GIVEN** the application's screen sources
 - **WHEN** they are examined for the column width each screen's main content container declares
-- **THEN** every screen but the four sign-on screens takes the one shared declaration, and the
-  project's test suite reports a failure naming any screen that declares its own
+- **THEN** every screen but the four sign-on screens takes one of the two shared declarations, and
+  the project's test suite reports a failure naming any screen that declares its own
 
 #### Scenario: The order form stays usable in the shared column
 
