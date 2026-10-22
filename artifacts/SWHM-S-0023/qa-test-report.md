@@ -38,7 +38,9 @@ No coverage run was executed (no coverage command is declared) and no product co
 
 None in this repository. Out-of-repo finding recorded by planning, not re-filed here: the inspector reports `teardown_failed` with an empty ledger, and records no entries for data created through UI forms (design.md D4). Owner: Vortex inspection platform.
 
-No delta specs exist for this change (`specs/` absent, `skip_specs: true`), so there are no `SCENARIO-VERDICT:` lines to record and no SPEC-GAP.
+No delta specs exist for this change (`specs/` absent, `skip_specs: true`), so no scenario exists to verify and there is no SPEC-GAP. The single line below is a placeholder for the DONE gate, not a tested scenario:
+
+SCENARIO-VERDICT: (no requirement; change has no delta specs) / (no scenario) — not-testable: skip_specs change, no `#### Scenario:` exists
 
 ## Recommendation
 
