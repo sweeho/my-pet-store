@@ -1,0 +1,4 @@
+# This change modifies no capability: its one defect is in the Vortex inspection
+# platform, not in My Pet Store. See proposal.md § Impact and design.md D3.
+schema: vortex
+skip_specs: true
